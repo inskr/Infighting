@@ -9,8 +9,44 @@ const path = require("path");
 
 const OUT_FILE = path.join(__dirname, "assets", "js", "feed-data.js");
 const ITEMS_PER_BOARD = 8;
+const MIN_ITEMS_AFTER_FILTER = 4; // 关键词过滤后不足此数时用未过滤条目补齐
 const SUMMARY_MAX_LEN = 180;
 const TIMEOUT_MS = 15000;
+
+// 领域相关性计分：核心词每个 2 分，外围词每个 1 分，总分 >= 2 才入选，
+// 确保精选与嵌入式硬件 / 边缘计算 / 边缘 AI 模型部署 / 物联网应用紧密相关。
+// 核心词：几乎只出现在嵌入式/边缘 AI 语境的专属词
+const CORE_KEYWORDS = [
+  "stm32", "esp32", "mcu", "microcontroller", "embedded", "rtos", "freertos",
+  "zephyr", "risc-v", "fpga", "cortex", "firmware", "tinyml", "edge ai",
+  "edge computing", "iot", "internet of things", "sbc", "raspberry pi",
+  "arduino", "yocto", "buildroot", "device driver", "linux kernel",
+  "bootloader", "jetson", "on-device",
+  "嵌入式", "单片机", "边缘计算", "边缘ai", "边缘 ai", "端侧", "物联网",
+  "微控制器", "实时操作系统", "固件", "开发板", "裸机", "烧录", "鸿蒙", "智能硬件",
+];
+// 外围词：相关但也会出现在泛科技新闻中，需与其他词共现
+const RELATED_KEYWORDS = [
+  "soc", "npu", "gpu", "tpu", "silicon", "semiconductor", "chiplet", "sensor",
+  "lidar", "radar", "imu", "mqtt", "lora", "zigbee", "bluetooth", "ble",
+  "wifi", "5g", "nb-iot", "can bus", "modbus", "robot", "robotics", "drone",
+  "uav", "motor", "servo", "industrial", "automation", "smart home",
+  "wearable", "bms", "battery", "power management", "inference",
+  "quantization", "tensorrt", "onnx", "openvino", "tflite", "neural", "llm",
+  "camera", "vision", "gateway", "ai accelerator",
+  "芯片", "半导体", "传感器", "模组", "推理", "模型部署", "大模型", "机器人",
+  "无人机", "电机", "工业控制", "自动化", "汽车电子", "车规", "电源", "电池",
+  "射频", "5g", "蓝牙", "视觉", "摄像头", "激光雷达", "毫米波", "存储",
+  "算力", "开源硬件", "pcb", "示波器", "仿真", "plc",
+];
+// 负向词：命中即排除（股市行情 / 人事变动 / 纯资本新闻，非技术内容）
+const NEGATIVE_KEYWORDS = [
+  "收涨", "收跌", "涨停", "跌停", "股价", "市值", "财报", "营收", "净利润",
+  "离职", "裁员", "任命", "港股", "美股", "a股", "注册资本",
+  "earnings", "revenue", "layoff", "stock market", "share price",
+];
+const SCORE_THRESHOLD = 3; // 纯外围词入选线；命中核心词时得分 >= 2 即可
+const MAX_AGE_DAYS = 14; // 只保留最近 14 天的内容，保证"最新"
 
 // 语言分区与信息源配置（name 会显示在页面上）
 const BOARDS = {
@@ -33,6 +69,8 @@ const BOARDS = {
       { name: "Solidot", url: "https://www.solidot.org/index.rss" },
       { name: "36氪", url: "https://36kr.com/feed" },
       { name: "掘金", url: "https://juejin.cn/rss" },
+      { name: "InfoQ 中文", url: "https://www.infoq.cn/feed" },
+      { name: "开源中国", url: "https://www.oschina.net/news/rss" },
     ],
   },
 };
@@ -156,6 +194,55 @@ function parseFeed(xml, sourceName) {
   return items;
 }
 
+/* ---------- 领域相关性过滤（计分 + 负向词 + 标题近似去重） ---------- */
+function topicScore(item) {
+  const text = (item.title + " " + (item.summary || "")).toLowerCase();
+  // 负向词一票否决
+  for (const kw of NEGATIVE_KEYWORDS) {
+    if (text.includes(kw.toLowerCase())) return { score: -1, hasCore: false };
+  }
+  let score = 0;
+  let hasCore = false;
+  for (const kw of CORE_KEYWORDS) {
+    if (text.includes(kw.toLowerCase())) {
+      score += 2;
+      hasCore = true;
+    }
+  }
+  for (const kw of RELATED_KEYWORDS) {
+    if (text.includes(kw.toLowerCase())) score += 1;
+  }
+  return { score, hasCore };
+}
+
+function normalizeTitle(t) {
+  return t.toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, "");
+}
+
+// 最长公共子串长度（用于判定"同一新闻的不同来源/标题变体"）
+function commonSubLen(a, b) {
+  const m = b.length;
+  const dp = new Array(m + 1).fill(0);
+  let max = 0;
+  for (let i = 1; i <= a.length; i++) {
+    let prev = 0;
+    for (let j = 1; j <= m; j++) {
+      const tmp = dp[j];
+      dp[j] = a[i - 1] === b[j - 1] ? prev + 1 : 0;
+      if (dp[j] > max) max = dp[j];
+      prev = tmp;
+    }
+  }
+  return max;
+}
+
+function isDuplicateTitle(normTitle, accepted) {
+  for (const other of accepted) {
+    if (commonSubLen(normTitle, other) >= 12) return true;
+  }
+  return false;
+}
+
 /* ---------- 主流程 ---------- */
 async function collectBoard(feeds, lang) {
   const results = await Promise.allSettled(
@@ -170,24 +257,54 @@ async function collectBoard(feeds, lang) {
       console.log("  [FAIL] " + feeds[i].name + ": " + r.reason.message);
     }
   });
-  // 按日期倒序、去重（按链接）、限量
+  // 按日期倒序、去重（按链接）
   const seen = new Set();
-  return items
+  const sorted = items
     .sort((a, b) => b._ts - a._ts)
     .filter((it) => {
       if (seen.has(it.link)) return false;
       seen.add(it.link);
       return true;
-    })
-    .slice(0, ITEMS_PER_BOARD)
-    .map(({ title, link, source, date, summary }) => ({
-      title,
-      link,
-      source,
-      date,
-      summary,
-      lang,
-    }));
+    });
+  // 时间窗：只保留最近 MAX_AGE_DAYS 天的内容（无日期的条目保留）
+  const now = Date.now();
+  const maxAgeMs = MAX_AGE_DAYS * 24 * 3600 * 1000;
+  const fresh = sorted.filter((it) => it._ts === 0 || now - it._ts <= maxAgeMs);
+  // 计分过滤：排除负向内容；入选线 = 得分 >= 3，或得分 >= 2 且命中核心词
+  const isQualified = (x) =>
+    x.score >= SCORE_THRESHOLD || (x.score >= 2 && x.hasCore);
+  const allScored = fresh.map((it) => ({ it, ...topicScore(it) }));
+  const qualified = allScored.filter(isQualified);
+  console.log(
+    "  [FILTER] " + sorted.length + " -> " + qualified.length + " items after topic filter"
+  );
+  // 兜底：入选过少时，从次优条目（非负向）中补齐，避免板块长期为空
+  let pool = qualified;
+  if (pool.length < MIN_ITEMS_AFTER_FILTER) {
+    const rest = allScored.filter((x) => x.score >= 0 && !isQualified(x));
+    pool = pool.concat(rest);
+  }
+  // 按相关性得分优先、同分按日期排序
+  pool.sort((a, b) => b.score - a.score || b.it._ts - a.it._ts);
+  // 标题近似去重（同一新闻的不同来源/标题变体只留一条）
+  const acceptedTitles = [];
+  const picked = [];
+  for (const { it } of pool) {
+    const norm = normalizeTitle(it.title);
+    if (!norm) continue;
+    if (isDuplicateTitle(norm, acceptedTitles)) continue;
+    acceptedTitles.push(norm);
+    picked.push(it);
+    if (picked.length >= ITEMS_PER_BOARD) break;
+  }
+  return picked.map(({ title, link, source, date, summary }) => ({
+    title,
+    link,
+    source,
+    date,
+    summary,
+    lang,
+  }));
 }
 
 (async () => {
