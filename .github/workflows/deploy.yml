@@ -55,3 +55,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          enablement: true   # Pages 未启用时自动启用（需仓库为 Public 或具备资格）
