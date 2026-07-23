@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infighting · 嵌入式与边缘计算开发博客</title>
+  <meta name="description" content="专注嵌入式系统与边缘计算的个人技术博客：STM32、ESP32、Linux 驱动、边缘 AI 部署实战笔记。">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="vendor/highlight-theme.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html">
+        <span class="logo">&gt;_</span>
+        Infighting
+        <small>嵌入式 × 边缘计算</small>
+      </a>
+      <nav class="site-nav">
+        <a href="index.html" data-nav="home">首页</a>
+        <a href="tags.html" data-nav="tags">标签</a>
+        <a href="about.html" data-nav="about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="daily-section" id="daily-section">
+      <div class="section-head">
+        <h2 class="section-title">每日精选</h2>
+        <span class="feed-updated" id="feed-updated"></span>
+      </div>
+      <p class="section-desc">每日自动抓取的中英文嵌入式与边缘计算领域最新资讯。</p>
+      <div class="daily-boards">
+        <div class="board board-en">
+          <h3 class="board-title"><span class="board-dot"></span>国外 <span class="lang-tag">国外</span></h3>
+          <ul class="feed-list" id="feed-en"></ul>
+        </div>
+        <div class="board-divider" role="separator"></div>
+        <div class="board board-zh">
+          <h3 class="board-title"><span class="board-dot"></span>国内 <span class="lang-tag">国内</span></h3>
+          <ul class="feed-list" id="feed-zh"></ul>
+        </div>
+      </div>
+    </section>
+
+    <h1 class="page-title" id="posts-title">最新文章</h1>
+    <p class="page-desc">记录嵌入式与边缘计算开发中的实践与思考 —— 从裸机调度到边缘 AI 部署。</p>
+
+    <div class="post-list" id="post-list"></div>
+    <nav class="pagination" id="pagination"></nav>
+  </main>
+
+  <footer class="site-footer">
+    © <span id="year"></span> Infighting | 嵌入式与边缘计算开发笔记
+  </footer>
+
+  <script src="vendor/marked.min.js"></script>
+  <script src="vendor/highlight.min.js"></script>
+  <script src="assets/js/feed-data.js"></script>
+  <script src="assets/js/posts-data.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

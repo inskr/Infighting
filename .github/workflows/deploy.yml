@@ -1,0 +1,57 @@
+name: Build & Deploy to GitHub Pages
+
+on:
+  # 1. 每次推送到 main 分支自动部署（发新文章时）
+  push:
+    branches: [main]
+  # 2. 每天 08:00（北京时间）自动抓取「每日精选」并发布
+  schedule:
+    - cron: "0 0 * * *"   # UTC 00:00 = 北京时间 08:00
+  # 3. 允许在 Actions 页面手动触发
+  workflow_dispatch:
+
+# GitHub Pages 部署所需权限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只跑一个部署，新的取消旧的
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # 无第三方依赖，脚本仅用 Node 内置模块
+      - name: Build posts data
+        run: node build.js
+
+      - name: Fetch daily feeds
+        run: node fetch-feeds.js
+        continue-on-error: true   # 抓取失败不阻断部署，保留上次数据
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."   # 整个仓库根目录作为站点
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

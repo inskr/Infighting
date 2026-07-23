@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标签 · Infighting</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="vendor/highlight-theme.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html">
+        <span class="logo">&gt;_</span>
+        Infighting
+        <small>嵌入式 × 边缘计算</small>
+      </a>
+      <nav class="site-nav">
+        <a href="index.html" data-nav="home">首页</a>
+        <a href="tags.html" data-nav="tags">标签</a>
+        <a href="about.html" data-nav="about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">标签分类</h1>
+    <p class="page-desc">按主题浏览文章，标签旁的数字为对应文章数量。</p>
+
+    <div class="tag-cloud" id="tag-cloud"></div>
+
+    <h2 class="page-title" style="font-size:20px" id="tag-result-title"></h2>
+    <div class="post-list" id="tag-post-list" style="margin-top:16px"></div>
+  </main>
+
+  <footer class="site-footer">
+    © <span id="year"></span> Infighting | 嵌入式与边缘计算开发笔记
+  </footer>
+
+  <script src="vendor/marked.min.js"></script>
+  <script src="vendor/highlight.min.js"></script>
+  <script src="assets/js/posts-data.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
