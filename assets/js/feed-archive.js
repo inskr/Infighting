@@ -138,6 +138,111 @@ window.FEED_ARCHIVE = {
           }
         ]
       }
+    },
+    {
+      "date": "2026-07-23",
+      "boards": {
+        "en": [
+          {
+            "title": "IoTextra modular automation boards with 4 inputs, 4 outputs work with Raspberry Pi and ESP32 MCU boards",
+            "link": "https://www.cnx-software.com/2026/07/20/iotextra-modular-automation-boards-with-4-inputs-4-outputs-work-with-raspberry-pi-and-esp32-mcu-boards/",
+            "source": "CNX Software",
+            "date": "2026-07-20",
+            "summary": "Last week, we wrote about the Olimex PICO-EVB automation board equipped with four relays and four isolated inputs and designed for Raspberry Pi Pico-compatible boards. Make Things…",
+            "lang": "en"
+          },
+          {
+            "title": "ART-Pi II development board features 600 MHz STM32H7R7 Cortex-M7 MCU with NeoChrom GPU",
+            "link": "https://www.cnx-software.com/2026/07/21/art-pi-ii-development-board-features-600-mhz-stm32h7r7-cortex-m7-mcu-with-neochrom-gpu/",
+            "source": "CNX Software",
+            "date": "2026-07-21",
+            "summary": "The 600 MHz STM32H7R/S Cortex-M7 microcontroller family with an optional NeoChrom 2.5D GPU and up to 640 KB SRAM and 64 KB flash was introduced in 2024. However, apart from…",
+            "lang": "en"
+          },
+          {
+            "title": "reCamera Pro &#8220;Open AI Camera&#8221; supports computer vision, LLM, VLM, STT, and TTS workloads",
+            "link": "https://www.cnx-software.com/2026/07/17/recamera-pro-open-ai-camera-supports-computer-vision-llm-vlm-stt-and-tts-workloads/",
+            "source": "CNX Software",
+            "date": "2026-07-17",
+            "summary": "Seeed Studio&#8217;s reCamera Pro is an AI camera powered by a Rockchip RV1126B quad-core Cortex-A53 SoC with a 3 TOPS NPU for on-device AI vision, but also large language models…",
+            "lang": "en"
+          },
+          {
+            "title": "$50 Forgix board pairs Raspberry Pi RP2354 MCU with Trion T8 FPGA in Teensy form factor",
+            "link": "https://www.cnx-software.com/2026/07/14/50-forgix-board-pairs-raspberry-pi-rp2354-mcu-with-trion-t8-fpga-in-teensy-form-factor/",
+            "source": "CNX Software",
+            "date": "2026-07-14",
+            "summary": "Adiuvo Engineering&#8217;s Forgix is a development board pairing a Raspberry Pi RP2354 microcontroller with 2MB flash and an Efinix Trion T8 FPGA in the Teensy 4.0 form factor.…",
+            "lang": "en"
+          },
+          {
+            "title": "Geniatech XPI-3576-CM5 &#8211; A Raspberry Pi CM5-compatible Rockchip RK3576 AI Compute Module with WiFi 6, Bluetooth 5.3",
+            "link": "https://www.cnx-software.com/2026/07/20/geniatech-xpi-3576-cm5-a-raspberry-pi-cm5-compatible-rockchip-rk3576-ai-compute-module-with-wifi-6-bluetooth-5-3/",
+            "source": "CNX Software",
+            "date": "2026-07-20",
+            "summary": "Geniatech XPI-3576-CM5 is a Rockchip RK3576 octa-core Arm Cortex-A72/A53 system-on-module based on the Raspberry Pi CM4/CM5 form factor with up to 16GB LPDDR5 and 128GB eMMC…",
+            "lang": "en"
+          },
+          {
+            "title": "IoTLabs wM-Bus gateway &#8211; An ESP32 device with Wireless M-Bus connectivity for Home Assistant",
+            "link": "https://www.cnx-software.com/2026/07/14/iotlabs-wm-bus-gateway-an-esp32-device-with-wireless-m-bus-connectivity-for-home-assistant/",
+            "source": "CNX Software",
+            "date": "2026-07-14",
+            "summary": "IoTLabs wM-Bus Gateway is an ESP32 device supporting the Wireless M-Bus (wM-Bus) standard for receiving data from compatible meters and sensors, designed for full integration with…",
+            "lang": "en"
+          },
+          {
+            "title": "Ambient Scientific GPX10 Pro MCU delivers years of always-on AI on a coin-cell battery",
+            "link": "https://www.cnx-software.com/2026/07/13/ambient-scientific-gpx10-pro-mcu-delivers-years-of-always-on-ai-on-a-coin-cell-battery/",
+            "source": "CNX Software",
+            "date": "2026-07-13",
+            "summary": "Ambient Scientific GPX10 Pro is a processor/microcontroller for always-on embedded AI applications on power-constrained edge devices. With a consumption of under &#60;100μW, it…",
+            "lang": "en"
+          },
+          {
+            "title": "Hybrid Microcontrollers Reshape Embedded Computing",
+            "link": "https://www.embedded.com/hybrid-microcontrollers-reshape-embedded-computing/",
+            "source": "Embedded.com",
+            "date": "2026-07-22",
+            "summary": "Hybrid MCUs optimize performance and functionality by assigning workloads to the best on-chip hardware block for higher efficiency in complex designs. The post Hybrid…",
+            "lang": "en"
+          }
+        ],
+        "zh": [
+          {
+            "title": "北京：鼓励发展Token（词元）经济，加大算力券等支持力度",
+            "link": "https://36kr.com/newsflashes/3907987232035975?f=rss",
+            "source": "36氪",
+            "date": "2026-07-23",
+            "summary": "36氪获悉，北京市发展改革委等部门联合印发《北京市关于加快智能体引领发展的若干措施》，推动智能体创新引领发展，率先培育智能经济新形态。鼓励发展Token(词元)经济。推动创新主体研发适配智能体系统调用、复杂任务调度与高频决策的通用处理器，开发低延迟、高吞吐专用推理芯片。推动创新主体开展推理架构等关键技术攻关，通过异构协同、存算协同以及智能调度等降低推理成本，…",
+            "lang": "zh"
+          },
+          {
+            "title": "【论文解读】复数 CVNet：跳过 FFT，Jetson 上 2.75 ms 如何完成雷达手势识别？",
+            "link": "https://my.oschina.net/u/9756519/blog/19725038",
+            "source": "开源中国",
+            "date": "2026-07-22",
+            "summary": "这篇工作选择直接吃 FMCW 原始复值 ADC 立方体，用 (2+1) D 复值卷积在时域学空时特征，并把 Monte Carlo Dropout 与 Deep Ensemble 接进不确定性估计。 结果是 10 类手势 99.38% 准确率、仅约 6.75k 参数；在 Jetson Nano 上端到端 2.75 ms，相对多种 FFT 管线总时延快 4×…",
+            "lang": "zh"
+          },
+          {
+            "title": "🚀 手把手带你写一个端侧 AI 应用的\"加载进度条\"与\"聊天对话框\"",
+            "link": "https://juejin.cn/post/7665331286681206799",
+            "source": "掘金",
+            "date": "2026-07-23",
+            "summary": "一、项目长什么样？ 先看一眼最终效果——一个典型的端侧 AI 应用，就三个核心区域： 两个硬需求： 加载时：模型文件可能有好几个，每个都要显示文件名 + 百分比 + 文件大小 加载完：输入框才能用，支",
+            "lang": "zh"
+          },
+          {
+            "title": "不拼通用能力、聚焦端侧，腾讯副总裁林松涛：Marvis专注做好系统级操作",
+            "link": "https://36kr.com/p/3907676111983745?f=rss",
+            "source": "36氪",
+            "date": "2026-07-23",
+            "summary": "文｜王欣逸 编辑｜张雨忻 “技术突破决定AI能走多快，真正能否创造价值决定AI能走多远。”在今年的WAIC腾讯AI应用创新论坛上，腾讯公司副总裁林松涛分享了这样一个观点。 同样是“Claw热”之后上线的产品，腾讯的三大Agent产品WorkBuddy、QClaw和Marvis迎来了各自不同的命运。…",
+            "lang": "zh"
+          }
+        ]
+      }
     }
   ]
 };

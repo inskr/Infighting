@@ -172,9 +172,8 @@
     var archive = window.FEED_ARCHIVE;
 
     if (!archive || !Array.isArray(archive.days)) {
-      container.innerHTML =
-        '<p class="feed-empty">暂无归档内容，每日抓取后会自动累积最近 7 天的精选。</p>';
-      if (updatedEl) updatedEl.textContent = "待更新";
+      container.innerHTML = "";
+      if (updatedEl) updatedEl.textContent = "";
       return;
     }
 
@@ -187,10 +186,10 @@
       return d && d.date && d.date !== todayKey;
     });
 
+    // 无历史内容时不渲染任何占位元素
     if (!days.length) {
-      container.innerHTML =
-        '<p class="feed-empty">暂无历史归档，今日精选请见首页；明日起这里会自动累积最近 7 天的内容。</p>';
-      if (updatedEl) updatedEl.textContent = "待累积";
+      container.innerHTML = "";
+      if (updatedEl) updatedEl.textContent = "";
       return;
     }
 
