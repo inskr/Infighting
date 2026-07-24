@@ -129,7 +129,7 @@ push 后 **Actions 会自动执行 `build.js`**，把你的 `.md` 编译进 `ass
 - **定时规则**：`.github/workflows/deploy.yml` 中 `cron: "0 0 * * *"` = UTC 00:00 = 北京时间 08:00。改时间改这里（注意用 UTC）。
 - **抓取容错**：`fetch-feeds.js` 步骤设了 `continue-on-error`，某天 RSS 源失败也不会中断部署，页面继续展示上一次成功数据。
 - **内容过滤**：`fetch-feeds.js` 内置领域相关性机制——关键词计分（核心词 2 分/外围词 1 分，入选线 3 分或「核心词+2 分」）、负向词排除（股市行情/人事变动等非技术内容）、14 天时间窗、标题近似去重，确保精选与嵌入式/边缘 AI/物联网紧密相关。词表在文件顶部 `CORE_KEYWORDS` / `RELATED_KEYWORDS` / `NEGATIVE_KEYWORDS`，可按需调整。
-- **精选归档**：每次抓取后自动把当天精选合并进 `assets/js/feed-archive.js`（同日覆盖），只保留最近 7 天（`ARCHIVE_DAYS` 常量），超出自动裁剪。归档页 `archive.html` 按天倒序展示，从导航栏「精选归档」进入。
+- **精选归档**：每次抓取后自动把当天精选合并进 `assets/js/feed-archive.js`（同日覆盖，当日数据留存供次日归档），只保留最近 7 天（`ARCHIVE_DAYS` 常量），超出自动裁剪。归档页 `archive.html` 按天倒序展示，**渲染时自动排除当日**（当日精选在首页展示，两个模块内容不重复），从导航栏「精选归档」进入。
 - **触发部署的三种方式**：push 到 `main` / 每天定时 / Actions 页手动 **Run workflow**。
 
 ---
