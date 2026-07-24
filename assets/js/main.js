@@ -162,6 +162,90 @@
     });
   }
 
+  /* ---------- 精选归档页：最近 7 天每日精选 ---------- */
+  function renderArchive() {
+    var container = document.getElementById("archive-days");
+    if (!container) return;
+    setActiveNav("archive");
+
+    var updatedEl = document.getElementById("archive-updated");
+    var archive = window.FEED_ARCHIVE;
+
+    if (!archive || !Array.isArray(archive.days) || !archive.days.length) {
+      container.innerHTML =
+        '<p class="feed-empty">暂无归档内容，每日抓取后会自动累积最近 7 天的精选。</p>';
+      if (updatedEl) updatedEl.textContent = "待更新";
+      return;
+    }
+
+    if (updatedEl && archive.updatedAt) {
+      var d = new Date(archive.updatedAt);
+      updatedEl.textContent =
+        "更新于 " +
+        d.getFullYear() +
+        "-" +
+        String(d.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(d.getDate()).padStart(2, "0");
+    }
+
+    function boardHtml(items, langKey) {
+      if (!items || !items.length) {
+        return '<ul class="feed-list"><li class="feed-empty">当日未获取到内容。</li></ul>';
+      }
+      return (
+        '<ul class="feed-list">' +
+        items
+          .map(function (item) {
+            return (
+              "<li>" +
+              '<a class="feed-link" href="' +
+              escapeHtml(item.link) +
+              '" target="_blank" rel="noopener noreferrer">' +
+              escapeHtml(item.title) +
+              '</a><span class="feed-summary">' +
+              escapeHtml(item.summary || "") +
+              '</span><span class="feed-meta">' +
+              '<span class="feed-lang">' +
+              escapeHtml(feedLangLabel(item.lang || langKey)) +
+              "</span>" +
+              escapeHtml(item.source) +
+              (item.date ? " · " + escapeHtml(item.date) : "") +
+              "</span>" +
+              "</li>"
+            );
+          })
+          .join("") +
+        "</ul>"
+      );
+    }
+
+    // days 已是日期倒序（最新在前），直接按序渲染
+    container.innerHTML = archive.days
+      .map(function (day) {
+        var boards = day.boards || {};
+        return (
+          '<div class="archive-day">' +
+          '<h3 class="archive-date">' +
+          escapeHtml(day.date) +
+          "</h3>" +
+          '<div class="daily-boards">' +
+          '<div class="board board-en">' +
+          '<h4 class="board-title"><span class="board-dot"></span>国外 <span class="lang-tag">国外</span></h4>' +
+          boardHtml(boards.en, "en") +
+          "</div>" +
+          '<div class="board-divider" role="separator"></div>' +
+          '<div class="board board-zh">' +
+          '<h4 class="board-title"><span class="board-dot"></span>国内 <span class="lang-tag">国内</span></h4>' +
+          boardHtml(boards.zh, "zh") +
+          "</div>" +
+          "</div>" +
+          "</div>"
+        );
+      })
+      .join("");
+  }
+
   /* ---------- 首页：文章列表 + 分页 ---------- */
   function renderList() {
     var listEl = document.getElementById("post-list");
@@ -364,6 +448,7 @@
   renderList();
   renderPost();
   renderTags();
+  renderArchive();
   initAbout();
   initReveal();
 

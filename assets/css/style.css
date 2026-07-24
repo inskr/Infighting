@@ -508,6 +508,25 @@ a.tag:hover { background: var(--accent); color: #fff; text-decoration: none; }
 }
 .feed-empty { color: var(--muted); font-size: 13.5px; }
 
+/* ================= 精选归档 ================= */
+.archive-day { margin-bottom: 30px; }
+
+.archive-date {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.archive-date::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
 /* ================= 动效 ================= */
 @keyframes pageFadeIn {
   from { opacity: 0; }
