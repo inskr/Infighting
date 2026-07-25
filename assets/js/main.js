@@ -440,17 +440,14 @@
           /* 网络失败：维持 statBarHtml 初始渲染值 */
         });
 
-      // 同时拉取最新统计，回填点赞数 / 浏览数
+      // 同时拉取最新统计，回填点赞数（浏览数交由 reportView 负责，
+      // 避免与 reportView 并发时读到 +1 落库前的旧值并覆盖导致计数回退）
       window.Stats
         .fetchStats(id)
         .then(function (data) {
           if (!data) return;
           var likeEl = container.querySelector(".article .stats-bar .like-count");
           if (likeEl) likeEl.textContent = window.Stats.formatCount(data.likeCount || 0);
-          var viewEl = container.querySelector(".article .stats-bar .view-count-num");
-          if (viewEl && typeof data.viewCount === "number") {
-            viewEl.textContent = window.Stats.formatCount(data.viewCount);
-          }
         })
         .catch(function () {
           /* 忽略 */
