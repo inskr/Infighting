@@ -19,24 +19,23 @@
     '<circle cx="12" cy="12.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/>' +
     "</svg>";
 
-  // 生成卡片/详情页底部的统计条（点赞按钮 + 浏览数），数据实时从 Stats 读取
+  // 生成卡片/详情页底部的统计条（点赞按钮 + 浏览数）
+  // 数据从服务端缓存（Stats.getCache）实时读取，服务端统一计数。
   function statBarHtml(p) {
-    var liked = false;
     var likeCount = 0;
     var viewCount = 0;
     if (window.Stats) {
-      var state = window.Stats.getLikeState(p.id) || { liked: false, count: 0 };
-      liked = state.liked;
-      likeCount = state.count;
-      viewCount = window.Stats.getViewCount(p.id) || 0;
+      var cached = (window.Stats.getCache() || {})[p.id];
+      if (cached) {
+        likeCount = cached.likeCount || 0;
+        viewCount = cached.viewCount || 0;
+      }
     }
-    var likedClass = liked ? " liked" : "";
-    var pressed = liked ? "true" : "false";
     var likeNum = window.Stats ? window.Stats.formatCount(likeCount) : String(likeCount);
     var viewNum = window.Stats ? window.Stats.formatCount(viewCount) : String(viewCount);
     return (
       '<div class="stats-bar">' +
-      '<button class="like-btn' + likedClass + '" data-id="' + p.id + '" type="button" aria-pressed="' + pressed + '" aria-label="点赞">' +
+      '<button class="like-btn" data-id="' + p.id + '" type="button" aria-label="点赞">' +
       HEART_SVG +
       '<span class="like-count">' + likeNum + "</span>" +
       "</button>" +
@@ -429,11 +428,33 @@
 
     container.innerHTML = html;
 
-    // 浏览数统计：仅在详情页记录一次真实访问（含防刷），并写回最新数字
+    // 进入详情页：上报浏览（+1）并回填最新浏览数
     if (window.Stats && id) {
-      var newView = window.Stats.recordView(id);
-      var viewEl = container.querySelector(".article .stats-bar .view-count-num");
-      if (viewEl) viewEl.textContent = window.Stats.formatCount(newView);
+      window.Stats
+        .reportView(id)
+        .then(function (viewCount) {
+          var viewEl = container.querySelector(".article .stats-bar .view-count-num");
+          if (viewEl) viewEl.textContent = window.Stats.formatCount(viewCount);
+        })
+        .catch(function () {
+          /* 网络失败：维持 statBarHtml 初始渲染值 */
+        });
+
+      // 同时拉取最新统计，回填点赞数 / 浏览数
+      window.Stats
+        .fetchStats(id)
+        .then(function (data) {
+          if (!data) return;
+          var likeEl = container.querySelector(".article .stats-bar .like-count");
+          if (likeEl) likeEl.textContent = window.Stats.formatCount(data.likeCount || 0);
+          var viewEl = container.querySelector(".article .stats-bar .view-count-num");
+          if (viewEl && typeof data.viewCount === "number") {
+            viewEl.textContent = window.Stats.formatCount(data.viewCount);
+          }
+        })
+        .catch(function () {
+          /* 忽略 */
+        });
     }
 
     // 代码高亮
@@ -517,23 +538,59 @@
       if (!btn) return;
       var id = btn.getAttribute("data-id");
       if (!id) return;
-      var state = window.Stats.toggleLike(id);
-      btn.classList.toggle("liked", state.liked);
-      btn.setAttribute("aria-pressed", state.liked ? "true" : "false");
+
       var numEl = btn.querySelector(".like-count");
-      if (numEl) numEl.textContent = window.Stats.formatCount(state.count);
+      // 当前真实点赞数取缓存（避免由缩写文本反解导致精度丢失）
+      var cached = (window.Stats.getCache() || {})[id];
+      var cur = cached && typeof cached.likeCount === "number" ? cached.likeCount : 0;
+
+      // 乐观更新：先 +1 并触发点击动效
+      if (!window.Stats.getCache()[id]) {
+        window.Stats.getCache()[id] = { viewCount: 0, likeCount: 0 };
+      }
+      window.Stats.getCache()[id].likeCount = cur + 1;
+      if (numEl) numEl.textContent = window.Stats.formatCount(cur + 1);
+      btn.classList.add("is-bumping");
+      setTimeout(function () {
+        btn.classList.remove("is-bumping");
+      }, 300);
+
+      // 上报点赞：成功用真实值校正；失败回退为原值
+      window.Stats
+        .reportLike(id)
+        .then(function (likeCount) {
+          if (numEl) numEl.textContent = window.Stats.formatCount(likeCount);
+        })
+        .catch(function () {
+          window.Stats.getCache()[id].likeCount = cur;
+          if (numEl) numEl.textContent = window.Stats.formatCount(cur);
+        });
     });
   }
 
-  /* ---------- 启动 ---------- */
-  setYear();
-  initLikeDelegation();
-  renderList();
-  renderPost();
-  renderTags();
-  renderArchive();
-  initAbout();
-  initReveal();
+  /* ---------- 启动（异步：先拉取统计缓存，再渲染） ---------- */
+  async function init() {
+    setYear();
+    initLikeDelegation();
+
+    // 列表 / 标签页渲染前先批量拉取统计，使卡片初始即显示真实计数
+    if (window.Stats) {
+      try {
+        await window.Stats.fetchAllStats();
+      } catch (e) {
+        /* 拉取失败不影响渲染，统计条显示 0 */
+      }
+    }
+
+    renderList();
+    renderPost();
+    renderTags();
+    renderArchive();
+    initAbout();
+    initReveal();
+  }
+
+  init();
 
   // 浏览器前进/后退时按 URL 中的 page 参数重渲染列表
   window.addEventListener("popstate", function () {

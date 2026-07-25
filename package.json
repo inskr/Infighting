@@ -1,0 +1,6 @@
+{
+  "name": "infighting",
+  "private": true,
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.19.2", "better-sqlite3": "^11.0.0" }
+}
