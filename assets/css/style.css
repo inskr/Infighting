@@ -583,3 +583,82 @@ body { animation: pageFadeIn 0.35s ease; }
   .tag,
   .feed-list li a { transition: none; }
 }
+
+/* ================= 点赞 / 浏览统计 ================= */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* 点赞按钮 + 浏览数共用同一行内布局 */
+.like-btn,
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1;
+}
+
+/* 去除点赞按钮默认样式 */
+.like-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.like-btn:hover { color: var(--accent); }
+
+/* 数字与图标间距 */
+.like-btn .like-count,
+.view-count-num { min-width: 1ch; }
+
+/* 图标尺寸 */
+.like-btn .icon-heart,
+.stat .icon-eye {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* 心形默认态：浅灰描边（未赞） */
+.like-btn .icon-heart {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.7;
+  transition: fill 0.15s ease, stroke 0.15s ease, transform 0.15s ease;
+}
+.like-btn:hover .icon-heart { stroke: var(--accent); }
+
+/* 已赞态：实心 + 强调色 */
+.like-btn.liked,
+.like-btn.liked .like-count { color: var(--accent-dark); }
+.like-btn.liked .icon-heart { fill: var(--accent); stroke: var(--accent); }
+.like-btn.liked:hover { color: var(--accent); }
+
+/* 浏览数眼睛图标着色 */
+.stat .icon-eye { stroke: var(--muted); }
+.like-btn:active .icon-heart { transform: scale(0.88); }
+
+/* 详情页：统计条与正文之间留出呼吸感并用分隔线收尾 */
+.article .stats-bar {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+/* 响应式：图标与间距略缩小 */
+@media (max-width: 640px) {
+  .stats-bar { gap: 14px; margin-top: 12px; }
+  .like-btn .icon-heart,
+  .stat .icon-eye { width: 15px; height: 15px; }
+  .article .stats-bar { margin-top: 18px; padding-top: 14px; }
+}
