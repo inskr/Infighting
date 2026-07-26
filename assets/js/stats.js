@@ -56,8 +56,12 @@
     return "l_" + sanitizeKey(id);
   }
 
+  // GET /get 为只读查询；加 no-store 防止浏览器 HTTP 缓存返回旧计数
   function abacusGet(key) {
-    return fetch(ABACUS_BASE + "/get/" + ABACUS_NS + "/" + encodeURIComponent(key))
+    return fetch(
+      ABACUS_BASE + "/get/" + ABACUS_NS + "/" + encodeURIComponent(key),
+      { cache: "no-store" }
+    )
       .then(function (res) {
         return res.json();
       })
@@ -70,8 +74,14 @@
   }
 
   // hit = +1 并返回最新值；失败返回 -1 表示"未变更"（便于调用方决定是否回退）
+  // 关键：abacus /hit 是 GET 且带 +1 副作用，服务端未返回 Cache-Control，
+  // 浏览器会启发式缓存响应，导致重复访问命中缓存、请求不到达服务端、计数不递增。
+  // 因此必须显式 cache:"no-store" 绕过 HTTP 缓存（与 detectMode 一致）。
   function abacusHit(key) {
-    return fetch(ABACUS_BASE + "/hit/" + ABACUS_NS + "/" + encodeURIComponent(key))
+    return fetch(
+      ABACUS_BASE + "/hit/" + ABACUS_NS + "/" + encodeURIComponent(key),
+      { cache: "no-store" }
+    )
       .then(function (res) {
         return res.json();
       })

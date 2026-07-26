@@ -11,8 +11,9 @@ on:
   workflow_dispatch:
 
 # GitHub Pages 部署所需权限
+# contents: write —— 允许把每日精选数据 commit 回 main 分支
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -43,6 +44,23 @@ jobs:
       - name: Fetch daily feeds
         run: node fetch-feeds.js
         continue-on-error: true   # 抓取失败不阻断部署，保留上次数据
+
+      # 把抓取更新的每日精选数据 commit 回 main 分支，保证仓库数据文件与
+      # Pages 部署一致。即使某天部署失败，下次仍能从仓库恢复历史数据，
+      # 而非依赖 Actions runner 的临时工作目录。
+      # commit 信息含 [skip ci] 避免本次 push 再次触发 workflow（防无限循环）。
+      - name: Commit updated feed data
+        continue-on-error: true   # commit/push 失败不阻断 Pages 部署（最佳努力回写仓库）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/js/feed-data.js assets/js/feed-archive.js
+          if git diff --cached --quiet; then
+            echo "No feed data changes to commit."
+          else
+            git commit -m "chore(feed): auto-update daily feeds [skip ci]"
+            git push
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
