@@ -642,6 +642,17 @@ body { animation: pageFadeIn 0.35s ease; }
 .stat .icon-eye { stroke: var(--muted); }
 .like-btn:active .icon-heart { transform: scale(0.88); }
 
+/* 已点赞状态：心形填充主色，按钮禁用不可再点 */
+.like-btn.is-liked {
+  color: var(--accent);
+  cursor: not-allowed;
+  opacity: 1;
+}
+.like-btn.is-liked .icon-heart {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
 /* 点赞点击动效：点击时触发 is-bumping 类，播放一次放大回弹 */
 .like-btn.is-bumping .icon-heart { animation: like-pop .3s ease; }
 @keyframes like-pop {

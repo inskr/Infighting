@@ -33,9 +33,17 @@
     }
     var likeNum = window.Stats ? window.Stats.formatCount(likeCount) : String(likeCount);
     var viewNum = window.Stats ? window.Stats.formatCount(viewCount) : String(viewCount);
+    // 已点赞的文章：按钮渲染为禁用态，防止重复点赞
+    var liked = !!(window.LikesStorage && window.LikesStorage.hasLiked(p.id));
+    var likeBtnAttrs =
+      'class="like-btn' + (liked ? " is-liked" : "") + '"' +
+      ' data-id="' + p.id + '"' +
+      ' type="button"' +
+      ' aria-label="' + (liked ? "已点赞" : "点赞") + '"' +
+      (liked ? " disabled" : "");
     return (
       '<div class="stats-bar">' +
-      '<button class="like-btn" data-id="' + p.id + '" type="button" aria-label="点赞">' +
+      "<button " + likeBtnAttrs + ">" +
       HEART_SVG +
       '<span class="like-count">' + likeNum + "</span>" +
       "</button>" +
@@ -536,6 +544,11 @@
       var id = btn.getAttribute("data-id");
       if (!id) return;
 
+      // 防重复：已点赞则直接忽略（disabled 按钮本不应触发 click，此处为防御性检查）
+      if (window.LikesStorage && window.LikesStorage.hasLiked(id)) {
+        return;
+      }
+
       var numEl = btn.querySelector(".like-count");
       // 当前真实点赞数取缓存（避免由缩写文本反解导致精度丢失）
       var cached = (window.Stats.getCache() || {})[id];
@@ -557,6 +570,11 @@
         .reportLike(id)
         .then(function (likeCount) {
           if (numEl) numEl.textContent = window.Stats.formatCount(likeCount);
+          // 成功后持久化已点赞状态并禁用按钮，防止重复点赞
+          if (window.LikesStorage) window.LikesStorage.markLiked(id);
+          btn.classList.add("is-liked");
+          btn.setAttribute("disabled", "");
+          btn.setAttribute("aria-label", "已点赞");
         })
         .catch(function () {
           window.Stats.getCache()[id].likeCount = cur;
