@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>精选归档 · Infighting</title>
-  <meta name="description" content="最近 7 天的每日精选归档：嵌入式与边缘 AI 领域最新技术动态与行业资讯。">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>标签 · Infighting</title>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -26,25 +25,22 @@
   </header>
 
   <main class="container">
-    <section class="daily-section">
-      <div class="section-head">
-        <h2 class="section-title">精选归档</h2>
-        <span class="feed-updated" id="archive-updated"></span>
-      </div>
-      <p class="section-desc">自动归档最近 7 天的历史每日精选（当日精选见首页，此处不再重复），按时间倒序排列，超过 7 天的内容不再保留。</p>
-      <div id="archive-days"></div>
-    </section>
+    <h1 class="page-title">标签分类</h1>
+    <p class="page-desc">按主题浏览文章，标签旁的数字为对应文章数量。</p>
+
+    <div class="tag-cloud" id="tag-cloud"></div>
+
+    <h2 class="page-title" style="font-size:20px" id="tag-result-title"></h2>
+    <div class="post-list" id="tag-post-list" style="margin-top:16px"></div>
   </main>
 
   <footer class="site-footer">
     © <span id="year"></span> Infighting | 嵌入式与边缘计算开发笔记
   </footer>
 
-  <script src="vendor/marked.min.js"></script>
-  <script src="vendor/highlight.min.js"></script>
   <script src="assets/js/posts-data.js"></script>
-  <script src="assets/js/feed-data.js"></script>
-  <script src="assets/js/feed-archive.js"></script>
+  <script src="assets/js/stats.js"></script>
+  <script src="assets/js/likes-storage.js"></script>
   <script src="assets/js/main.js"></script>
 </body>
 </html>

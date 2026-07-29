@@ -12,7 +12,7 @@
  * ============================================================ */
 
 var path = require('path');
-var MODULE_PATH = path.join(__dirname, '..', 'assets', 'js', 'likes-storage.js');
+var MODULE_PATH = path.join(__dirname, '..', 'public', 'assets', 'js', 'likes-storage.js');
 var STORAGE_KEY = 'infighting:liked';
 
 var PASS = 0;

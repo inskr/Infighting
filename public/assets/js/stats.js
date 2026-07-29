@@ -63,6 +63,7 @@
       { cache: "no-store" }
     )
       .then(function (res) {
+        if (!res.ok) throw new Error("abacus http " + res.status);
         return res.json();
       })
       .then(function (json) {
@@ -83,6 +84,7 @@
       { cache: "no-store" }
     )
       .then(function (res) {
+        if (!res.ok) throw new Error("abacus http " + res.status);
         return res.json();
       })
       .then(function (json) {
@@ -97,20 +99,23 @@
    * 同源 GET /api/content/stats：HTTP 200 且返回 { code:0, data } → backend；
    * 否则（404 / 非 JSON / 网络错误）→ abacus。
    */
+  function readBackendData(res) {
+    return res.json().then(function (json) {
+      if (!res.ok || !json || json.code !== 0) {
+        throw new Error((json && json.message) || "backend http " + res.status);
+      }
+      return json.data;
+    });
+  }
+
   function detectMode() {
     if (mode !== "unknown") return Promise.resolve(mode);
     return fetch(BACKEND_STATS_URL, { cache: "no-store" })
-      .then(function (res) {
-        if (!res.ok) throw new Error("http " + res.status);
-        return res.json();
-      })
-      .then(function (json) {
-        if (json && json.code === 0 && json.data) {
-          mode = "backend";
-          statsCache = json.data;
-        } else {
-          mode = "abacus";
-        }
+      .then(readBackendData)
+      .then(function (data) {
+        if (!data || typeof data !== "object") throw new Error("invalid backend data");
+        mode = "backend";
+        statsCache = data;
         return mode;
       })
       .catch(function () {
@@ -126,11 +131,9 @@
     return detectMode().then(function (m) {
       if (m === "backend") {
         return fetch("/api/content/stats")
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (json) {
-            if (json && json.code === 0 && json.data) statsCache = json.data;
+          .then(readBackendData)
+          .then(function (data) {
+            if (data && typeof data === "object") statsCache = data;
             return statsCache;
           });
       }
@@ -160,11 +163,9 @@
     return detectMode().then(function (m) {
       if (m === "backend") {
         return fetch("/api/content/" + encodeURIComponent(id) + "/stats")
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (json) {
-            if (json && json.code === 0 && json.data) statsCache[id] = json.data;
+          .then(readBackendData)
+          .then(function (data) {
+            if (data && typeof data === "object") statsCache[id] = data;
             return statsCache[id];
           });
       }
@@ -184,17 +185,12 @@
         return fetch("/api/content/" + encodeURIComponent(id) + "/view", {
           method: "POST"
         })
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (json) {
-            if (json && json.code === 0 && json.data) {
-              var vc = toCount(json.data.viewCount);
-              if (!statsCache[id]) statsCache[id] = { viewCount: 0, likeCount: 0 };
-              statsCache[id].viewCount = vc;
-              return vc;
-            }
-            return 0;
+          .then(readBackendData)
+          .then(function (data) {
+            var vc = toCount(data && data.viewCount);
+            if (!statsCache[id]) statsCache[id] = { viewCount: 0, likeCount: 0 };
+            statsCache[id].viewCount = vc;
+            return vc;
           });
       }
       return abacusHit(abacusKeyView(id)).then(function (vc) {
@@ -216,17 +212,12 @@
         return fetch("/api/content/" + encodeURIComponent(id) + "/like", {
           method: "POST"
         })
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (json) {
-            if (json && json.code === 0 && json.data) {
-              var lc = toCount(json.data.likeCount);
-              if (!statsCache[id]) statsCache[id] = { viewCount: 0, likeCount: 0 };
-              statsCache[id].likeCount = lc;
-              return lc;
-            }
-            return 0;
+          .then(readBackendData)
+          .then(function (data) {
+            var lc = toCount(data && data.likeCount);
+            if (!statsCache[id]) statsCache[id] = { viewCount: 0, likeCount: 0 };
+            statsCache[id].likeCount = lc;
+            return lc;
           });
       }
       return abacusHit(abacusKeyLike(id)).then(function (lc) {

@@ -39,10 +39,10 @@ jobs:
 
       # 无第三方依赖，脚本仅用 Node 内置模块
       - name: Build posts data
-        run: node build.js
+        run: node scripts/build-posts.js
 
       - name: Fetch daily feeds
-        run: node fetch-feeds.js
+        run: node scripts/fetch-feeds.js
         continue-on-error: true   # 抓取失败不阻断部署，保留上次数据
 
       # 把抓取更新的每日精选数据 commit 回 main 分支，保证仓库数据文件与
@@ -54,7 +54,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/js/feed-data.js assets/js/feed-archive.js
+          git add public/assets/js/feed-data.js public/assets/js/feed-archive.js
           if git diff --cached --quiet; then
             echo "No feed data changes to commit."
           else
@@ -68,7 +68,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "."   # 整个仓库根目录作为站点
+          path: "public"   # 只发布明确的静态目录，不暴露源码、测试或配置
 
       - name: Deploy to GitHub Pages
         id: deployment

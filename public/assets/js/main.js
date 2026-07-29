@@ -68,8 +68,13 @@
       .replace(/"/g, "&quot;");
   }
 
+  function safeFeedHref(value) {
+    if (!window.UrlPolicy) return "#";
+    return window.UrlPolicy.safeExternalUrl(value) || "#";
+  }
+
   function formatDate(iso) {
-    return iso || "";
+    return escapeHtml(iso || "");
   }
 
   function tagLinks(tags) {
@@ -192,7 +197,7 @@
           return (
             "<li>" +
             '<a class="feed-link" href="' +
-            escapeHtml(item.link) +
+            escapeHtml(safeFeedHref(item.link)) +
             '" target="_blank" rel="noopener noreferrer">' +
             escapeHtml(item.title) +
             '</a><span class="feed-summary">' +
@@ -264,7 +269,7 @@
             return (
               "<li>" +
               '<a class="feed-link" href="' +
-              escapeHtml(item.link) +
+              escapeHtml(safeFeedHref(item.link)) +
               '" target="_blank" rel="noopener noreferrer">' +
               escapeHtml(item.title) +
               '</a><span class="feed-summary">' +
@@ -541,6 +546,7 @@
     document.addEventListener("click", function (e) {
       var btn = e.target && e.target.closest ? e.target.closest(".like-btn") : null;
       if (!btn) return;
+      if (btn.disabled || btn.getAttribute("data-pending") === "true") return;
       var id = btn.getAttribute("data-id");
       if (!id) return;
 
@@ -560,6 +566,9 @@
       }
       window.Stats.getCache()[id].likeCount = cur + 1;
       if (numEl) numEl.textContent = window.Stats.formatCount(cur + 1);
+      btn.disabled = true;
+      btn.setAttribute("data-pending", "true");
+      btn.setAttribute("aria-busy", "true");
       btn.classList.add("is-bumping");
       setTimeout(function () {
         btn.classList.remove("is-bumping");
@@ -573,12 +582,17 @@
           // 成功后持久化已点赞状态并禁用按钮，防止重复点赞
           if (window.LikesStorage) window.LikesStorage.markLiked(id);
           btn.classList.add("is-liked");
+          btn.removeAttribute("data-pending");
+          btn.removeAttribute("aria-busy");
           btn.setAttribute("disabled", "");
           btn.setAttribute("aria-label", "已点赞");
         })
         .catch(function () {
           window.Stats.getCache()[id].likeCount = cur;
           if (numEl) numEl.textContent = window.Stats.formatCount(cur);
+          btn.disabled = false;
+          btn.removeAttribute("data-pending");
+          btn.removeAttribute("aria-busy");
         });
     });
   }

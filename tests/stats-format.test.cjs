@@ -3,10 +3,10 @@
 /* ============================================================
  * Infighting 统计模块 - formatCount 纯函数单元测试
  * 仅依赖模块导出的纯函数，无需浏览器 / 存储环境。
- * 运行：node tests/stats.test.js
+ * 运行：node tests/stats-format.test.cjs
  * ============================================================ */
 
-var Stats = require("../assets/js/stats.js");
+var Stats = require("../public/assets/js/stats.js");
 var formatCount = Stats.formatCount;
 
 var PASS = 0;

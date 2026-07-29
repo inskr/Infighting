@@ -1,14 +1,16 @@
 // 每日资讯抓取脚本：按语言（en/zh）拉取多个 RSS/Atom 源，
-// 生成 assets/js/feed-data.js（window.FEEDS），供首页"每日精选"展示。
-// 用法: node fetch-feeds.js
+// 生成 public/assets/js/feed-data.js（window.FEEDS），供首页"每日精选"展示。
+// 用法: node scripts/fetch-feeds.js
 // 无第三方依赖；单个源失败不影响整体结果。
 
 const https = require("https");
 const fs = require("fs");
 const path = require("path");
+const UrlPolicy = require("../public/assets/js/url-policy.js");
 
-const OUT_FILE = path.join(__dirname, "assets", "js", "feed-data.js");
-const ARCHIVE_FILE = path.join(__dirname, "assets", "js", "feed-archive.js");
+const PUBLIC_DIR = path.join(__dirname, "..", "public");
+const OUT_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-data.js");
+const ARCHIVE_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-archive.js");
 const ARCHIVE_DAYS = 7; // 归档只保留最近 7 天的每日精选
 const ITEMS_PER_BOARD = 8;
 const MIN_ITEMS_AFTER_FILTER = 4; // 关键词过滤后不足此数时用未过滤条目补齐
@@ -182,6 +184,7 @@ function parseFeed(xml, sourceName) {
     const ts = Date.parse(dateStr);
     if (!isNaN(ts)) date = new Date(ts).toISOString().slice(0, 10);
 
+    link = UrlPolicy.safeExternalUrl(link);
     if (title && link) {
       items.push({
         title,
@@ -356,7 +359,7 @@ function updateArchive(boards, updatedAt) {
   );
 }
 
-(async () => {
+async function main() {
   console.log("Fetching daily feeds...");
   const boards = {};
   let total = 0;
@@ -364,6 +367,10 @@ function updateArchive(boards, updatedAt) {
     console.log("Board: " + BOARDS[key].label + " (" + BOARDS[key].lang + ")");
     boards[key] = await collectBoard(BOARDS[key].feeds, BOARDS[key].lang);
     total += boards[key].length;
+  }
+
+  if (total === 0) {
+    throw new Error("No feed items were fetched; existing generated data was preserved.");
   }
 
   const payload = {
@@ -384,7 +391,16 @@ function updateArchive(boards, updatedAt) {
     "Generated " + OUT_FILE + " (" + total + " items, updatedAt " + payload.updatedAt + ")"
   );
   updateArchive(boards, payload.updatedAt);
-  if (total === 0) {
-    console.warn("WARNING: no items fetched from any source. Page will show fallback text.");
-  }
-})();
+}
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error("Feed update failed:", error.message);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  main,
+  parseFeed
+};

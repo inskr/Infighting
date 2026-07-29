@@ -1,78 +1,40 @@
 'use strict';
 
-/**
- * Infighting - 单进程服务：托管静态站点 + 统计 API
- *
- * 静态站点与接口同源（均挂在项目根），前端 fetch 相对路径即可，免 CORS。
- * 统一响应体：{ code:0, data:{...}, message:"ok" }；异常时 code!=0。
- */
-
 const path = require('path');
-const express = require('express');
-const db = require('./src/db');
+const { createApp } = require('./src/app');
+const { loadContentIds } = require('./src/content-catalog');
+const { createStatsStore } = require('./src/db');
 
-const app = express();
-app.use(express.json());
+function startServer(options = {}) {
+  const publicDir = options.publicDir || path.join(__dirname, 'public');
+  const databaseFile =
+    options.databaseFile ||
+    process.env.STATS_DB_PATH ||
+    path.join(__dirname, 'data', 'stats.db');
+  const statsStore = options.statsStore || createStatsStore({ filename: databaseFile });
+  const contentIds =
+    options.contentIds ||
+    loadContentIds(path.join(publicDir, 'assets', 'js', 'posts-data.js'));
 
-// 静态托管项目根（含 index.html / assets/ 等）
-app.use(express.static(__dirname));
-
-// 统一异常包裹：业务逻辑抛错时返回 code:1 + 500
-function guard(handler) {
-  return function (req, res) {
-    try {
-      handler(req, res);
-    } catch (err) {
-      res.status(500).json({
-        code: 1,
-        data: null,
-        message: (err && err.message) || 'internal error'
-      });
-    }
-  };
+  const app = createApp({
+    statsStore,
+    contentIds,
+    publicDir,
+    logger: options.logger,
+    mutationLimit: options.mutationLimit
+  });
+  const port = options.port ?? process.env.PORT ?? 3000;
+  const server = app.listen(port, () => {
+    const address = server.address();
+    const actualPort = typeof address === 'object' && address ? address.port : port;
+    console.log(`Infighting server on ${actualPort}`);
+  });
+  server.once('close', () => statsStore.close());
+  return server;
 }
 
-// 批量统计
-app.get(
-  '/api/content/stats',
-  guard(function (req, res) {
-    res.json({ code: 0, data: db.getAllStats(), message: 'ok' });
-  })
-);
+if (require.main === module) {
+  startServer();
+}
 
-// 单条统计
-app.get(
-  '/api/content/:id/stats',
-  guard(function (req, res) {
-    res.json({ code: 0, data: db.getStats(req.params.id), message: 'ok' });
-  })
-);
-
-// 浏览 +1（原子）
-app.post(
-  '/api/content/:id/view',
-  guard(function (req, res) {
-    res.json({
-      code: 0,
-      data: { viewCount: db.incrementView(req.params.id) },
-      message: 'ok'
-    });
-  })
-);
-
-// 点赞 +1（原子，可累加）
-app.post(
-  '/api/content/:id/like',
-  guard(function (req, res) {
-    res.json({
-      code: 0,
-      data: { likeCount: db.incrementLike(req.params.id) },
-      message: 'ok'
-    });
-  })
-);
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, function () {
-  console.log('Infighting stats server on ' + PORT);
-});
+module.exports = { startServer };

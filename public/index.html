@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
   <title>Infighting · 嵌入式与边缘计算开发博客</title>
   <meta name="description" content="专注嵌入式系统与边缘计算的个人技术博客：STM32、ESP32、Linux 驱动、边缘 AI 部署实战笔记。">
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -56,12 +56,11 @@
     © <span id="year"></span> Infighting | 嵌入式与边缘计算开发笔记
   </footer>
 
-  <script src="vendor/marked.min.js"></script>
-  <script src="vendor/highlight.min.js"></script>
   <script src="assets/js/feed-data.js"></script>
   <script src="assets/js/posts-data.js"></script>
   <script src="assets/js/stats.js"></script>
   <script src="assets/js/likes-storage.js"></script>
+  <script src="assets/js/url-policy.js"></script>
   <script src="assets/js/main.js"></script>
 </body>
 </html>
