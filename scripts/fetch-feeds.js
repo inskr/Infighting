@@ -16,8 +16,8 @@ const ITEMS_PER_BOARD = 8;
 const SUMMARY_MAX_LEN = 180;
 const TIMEOUT_MS = 15000;
 
-// 领域相关性计分：核心词每个 2 分，外围词每个 1 分，总分 >= 2 才入选，
-// 确保精选与嵌入式硬件 / 边缘计算 / 边缘 AI 模型部署 / 物联网应用紧密相关。
+// 领域相关性计分：核心词每个 2 分，命中核心词可在 2 分入选；外围词每个 1 分，
+// 纯外围词内容至少需要 3 分且标题中命中外围词，确保内容与目标领域紧密相关。
 // 核心词：几乎只出现在嵌入式/边缘 AI 语境的专属词
 const CORE_KEYWORDS = [
   "stm32", "esp32", "mcu", "microcontroller", "embedded", "rtos", "freertos",
@@ -45,12 +45,25 @@ const RELATED_KEYWORDS = [
 // 负向词：命中即排除（股市行情 / 人事变动 / 纯资本新闻，非技术内容）
 const NEGATIVE_KEYWORDS = [
   "股票", "股市", "股价", "市值", "涨停", "跌停", "收盘", "收跌",
-  "财报", "营收", "净利润", "融资", "募资", "估值", "上市",
+  "港股", "美股", "a股", "注册资本",
+  "财报", "营收", "净利润", "融资", "募资", "估值",
+  "申请上市", "拟上市", "计划上市", "筹备上市", "上市申请", "上市计划",
+  "上市公司", "挂牌上市",
   "收购", "并购", "裁员", "离职", "任命", "证券", "券商", "研报",
   "stock market", "stock price", "share price", "market cap", "shares rose",
   "earnings", "revenue", "funding round", "venture capital", "valuation",
-  "initial public offering",
-  "acquires", "acquisition", "merger", "layoff", "appoints", "appointed", "resigns",
+  "initial public offering", "ipo", "listed company", "publicly listed",
+  "merger", "resigns",
+];
+const NEGATIVE_PATTERNS = [
+  /\b(?:raises?|raised|raising|closes?|closed)\b.{0,80}\b(?:funding|financing|capital|investment|seed|series\s+[a-z0-9]+|round|\d+(?:\.\d+)?\s*(?:million|billion)|[$€£¥]\s*\d+)\b/,
+  /\b(?:funding|financing|seed|series\s+[a-z0-9]+|investment)\b.{0,80}\b(?:round|raises?|raised|raising|closes?|closed)\b/,
+  /\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b.{0,80}\b(?:acquire|acquires|acquired|acquiring|acquisition)\b/,
+  /\b(?:acquire|acquires|acquired|acquiring|acquisition)\b.{0,80}\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b/,
+  /\b(?:layoffs?|lays?\s+off|laid\s+off)\b/,
+  /\b(?:names?|named|appoints?|appointed)\b.{0,60}\b(?:ceo|cfo|cto|chief\s+executive(?:\s+officer)?|chief\s+(?:financial|technology|operating)\s+officer|president|chair(?:man|woman|person)?)\b/,
+  /\b(?:ceo|cfo|cto|chief\s+executive(?:\s+officer)?|chief\s+(?:financial|technology|operating)\s+officer|president|chair(?:man|woman|person)?)\b.{0,60}\b(?:appointment|appointed|named)\b/,
+  /\b(?:plans?|planning|applies?|applying|files?|filing)\s+(?:to|for)\s+(?:list|listing|an?\s+ipo)\b/,
 ];
 const SCORE_THRESHOLD = 3; // 纯外围词入选线；命中核心词时得分 >= 2 即可
 const MAX_AGE_DAYS = 14; // 只保留最近 14 天的内容，保证"最新"
@@ -218,6 +231,9 @@ function topicScore(item) {
   for (const kw of NEGATIVE_KEYWORDS) {
     if (includesKeyword(text, kw)) return { score: -1, hasCore: false };
   }
+  for (const pattern of NEGATIVE_PATTERNS) {
+    if (pattern.test(text)) return { score: -1, hasCore: false };
+  }
   let score = 0;
   let hasCore = false;
   let hasRelatedInTitle = false;
@@ -275,6 +291,7 @@ function selectBoardItems(items, lang, now = Date.now()) {
   // 按日期倒序、去重（按链接）
   const seen = new Set();
   const sorted = items
+    .slice()
     .sort((a, b) => b._ts - a._ts)
     .filter((it) => {
       if (seen.has(it.link)) return false;

@@ -29,6 +29,59 @@ test('rejects capital and corporate news even when it mentions edge AI', () => {
   for (const item of rejected) assert.equal(isTopicRelevant(item), false, item.title);
 });
 
+test('rejects finance and corporate morphology around embedded and edge AI terms', () => {
+  const cases = [
+    { title: 'Edge AI startup raises 10 million in a new round', want: false },
+    { title: 'Embedded startup closes Series A funding', want: false },
+    { title: 'Company plans to acquire embedded systems vendor', want: false },
+    { title: 'Edge AI startup was acquired by a semiconductor company', want: false },
+    { title: 'Acquisition of an embedded systems company is complete', want: false },
+    { title: 'New edge AI company announces layoffs', want: false },
+    { title: 'Embedded vendor laid off staff after restructuring', want: false },
+    { title: 'Edge AI company names new CEO', want: false },
+    { title: 'Embedded systems company named a new chief executive', want: false },
+    { title: '美股边缘AI概念公司走强', want: false },
+    { title: '港股嵌入式芯片公司今日上涨', want: false },
+    { title: 'A股 STM32 芯片公司表现强势', want: false },
+    { title: '边缘AI公司注册资本增至1亿元', want: false },
+  ];
+
+  for (const { title, want } of cases) {
+    assert.equal(isTopicRelevant({ title }), want, title);
+  }
+});
+
+test('distinguishes technical product releases from capital-market listings', () => {
+  const cases = [
+    {
+      title: '新款STM32开发板正式上市，支持边缘AI推理',
+      want: true,
+    },
+    { title: 'Edge AI startup files for an IPO', want: false },
+    { title: 'Embedded company prepares an initial public offering', want: false },
+    { title: 'STM32芯片公司申请上市', want: false },
+    { title: '边缘AI公司拟上市', want: false },
+    { title: '上市公司发布STM32开发板', want: false },
+    { title: '嵌入式芯片公司挂牌上市', want: false },
+  ];
+
+  for (const { title, want } of cases) {
+    assert.equal(isTopicRelevant({ title }), want, title);
+  }
+});
+
+test('does not confuse technical uses of corporate morphology with corporate news', () => {
+  const cases = [
+    { title: 'STM32 data acquisition with an external ADC', want: true },
+    { title: 'STM32 raises a GPIO interrupt during edge capture', want: true },
+    { title: 'Round-robin scheduling on FreeRTOS', want: true },
+  ];
+
+  for (const { title, want } of cases) {
+    assert.equal(isTopicRelevant({ title }), want, title);
+  }
+});
+
 test('rejects generic technology news without enough domain relevance', () => {
   assert.equal(
     isTopicRelevant({ title: 'Cloud platform launches a new developer dashboard' }),
@@ -180,4 +233,189 @@ test('does not pad a board with unrelated items when few technical items qualify
     'Zephyr RTOS adds a new STM32 device driver',
   ]);
   assert.equal(selected[0].lang, 'en');
+});
+
+test('deduplicates links before selecting board items', () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const items = [
+    {
+      title: 'Older STM32 firmware release',
+      summary: '',
+      link: 'https://example.com/shared-release',
+      source: 'Older Source',
+      date: '2026-08-01',
+      _ts: Date.parse('2026-08-01T00:00:00Z'),
+    },
+    {
+      title: 'Newer STM32 firmware release',
+      summary: '',
+      link: 'https://example.com/shared-release',
+      source: 'Newer Source',
+      date: '2026-08-02',
+      _ts: Date.parse('2026-08-02T00:00:00Z'),
+    },
+  ];
+
+  const selected = selectBoardItems(items, 'en', now);
+
+  assert.deepEqual(selected.map((item) => item.title), [
+    'Newer STM32 firmware release',
+  ]);
+});
+
+test('excludes items older than 14 days and accepts the exact boundary', () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const items = [
+    {
+      title: 'STM32 firmware just outside the freshness window',
+      summary: '',
+      link: 'https://example.com/stale',
+      source: 'Fixture',
+      date: '2026-07-19',
+      _ts: now - 14 * 86400000 - 1,
+    },
+    {
+      title: 'STM32 firmware exactly at the freshness boundary',
+      summary: '',
+      link: 'https://example.com/boundary',
+      source: 'Fixture',
+      date: '2026-07-20',
+      _ts: now - 14 * 86400000,
+    },
+  ];
+
+  const selected = selectBoardItems(items, 'en', now);
+
+  assert.deepEqual(selected.map((item) => item.title), [
+    'STM32 firmware exactly at the freshness boundary',
+  ]);
+});
+
+test('orders selected board items newest first', () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const items = [
+    {
+      title: 'STM32 bootloader deep dive Monday',
+      summary: '',
+      link: 'https://example.com/monday',
+      source: 'Fixture',
+      date: '2026-07-27',
+      _ts: Date.parse('2026-07-27T00:00:00Z'),
+    },
+    {
+      title: 'Zephyr device driver walkthrough Sunday',
+      summary: '',
+      link: 'https://example.com/sunday',
+      source: 'Fixture',
+      date: '2026-08-02',
+      _ts: Date.parse('2026-08-02T00:00:00Z'),
+    },
+    {
+      title: 'ESP32 low power sleep modes Friday',
+      summary: '',
+      link: 'https://example.com/friday',
+      source: 'Fixture',
+      date: '2026-07-31',
+      _ts: Date.parse('2026-07-31T00:00:00Z'),
+    },
+  ];
+
+  const selected = selectBoardItems(items, 'en', now);
+
+  assert.deepEqual(selected.map((item) => item.title), [
+    'Zephyr device driver walkthrough Sunday',
+    'ESP32 low power sleep modes Friday',
+    'STM32 bootloader deep dive Monday',
+  ]);
+});
+
+test('deduplicates fuzzy title variants and keeps the newest one', () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const items = [
+    {
+      title: 'STM32 RTOS driver tutorial for beginners',
+      summary: '',
+      link: 'https://example.com/older-tutorial',
+      source: 'Older Source',
+      date: '2026-08-01',
+      _ts: Date.parse('2026-08-01T00:00:00Z'),
+    },
+    {
+      title: 'Updated: STM32 RTOS driver tutorial for beginners',
+      summary: '',
+      link: 'https://example.com/newer-tutorial',
+      source: 'Newer Source',
+      date: '2026-08-02',
+      _ts: Date.parse('2026-08-02T00:00:00Z'),
+    },
+  ];
+
+  const selected = selectBoardItems(items, 'en', now);
+
+  assert.deepEqual(selected.map((item) => item.title), [
+    'Updated: STM32 RTOS driver tutorial for beginners',
+  ]);
+});
+
+test('caps a board at eight items', () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const items = [
+    ['STM32 interrupt latency alpha', 'alpha', 1],
+    ['ESP32 deep sleep bravo', 'bravo', 2],
+    ['Zephyr device tree charlie', 'charlie', 3],
+    ['FreeRTOS queue patterns delta', 'delta', 4],
+    ['TinyML quantization echo', 'echo', 5],
+    ['Jetson camera pipeline foxtrot', 'foxtrot', 6],
+    ['RISC-V vector extension golf', 'golf', 7],
+    ['Arduino motor control hotel', 'hotel', 8],
+    ['Yocto image recipes india', 'india', 9],
+    ['Buildroot rootfs tuning juliet', 'juliet', 10],
+  ].map(([title, slug, age]) => ({
+    title,
+    summary: '',
+    link: `https://example.com/${slug}`,
+    source: 'Fixture',
+    date: '2026-08-02',
+    _ts: now - age * 1000,
+  }));
+
+  const selected = selectBoardItems(items, 'en', now);
+
+  assert.deepEqual(selected.map((item) => item.title), [
+    'STM32 interrupt latency alpha',
+    'ESP32 deep sleep bravo',
+    'Zephyr device tree charlie',
+    'FreeRTOS queue patterns delta',
+    'TinyML quantization echo',
+    'Jetson camera pipeline foxtrot',
+    'RISC-V vector extension golf',
+    'Arduino motor control hotel',
+  ]);
+});
+
+test('does not mutate its caller-owned item array', () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const items = [
+    {
+      title: 'Older STM32 firmware guide',
+      summary: '',
+      link: 'https://example.com/older',
+      source: 'Fixture',
+      date: '2026-08-01',
+      _ts: Date.parse('2026-08-01T00:00:00Z'),
+    },
+    {
+      title: 'Newer ESP32 firmware guide',
+      summary: '',
+      link: 'https://example.com/newer',
+      source: 'Fixture',
+      date: '2026-08-02',
+      _ts: Date.parse('2026-08-02T00:00:00Z'),
+    },
+  ];
+  const original = structuredClone(items);
+
+  selectBoardItems(items, 'en', now);
+
+  assert.deepEqual(items, original);
 });
