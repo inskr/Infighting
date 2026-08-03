@@ -13,6 +13,7 @@ const OUT_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-data.js");
 const ARCHIVE_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-archive.js");
 const ARCHIVE_DAYS = 7; // 归档只保留最近 7 天的每日精选
 const ITEMS_PER_BOARD = 8;
+const MIN_DOMESTIC_ITEMS = 4;
 const SUMMARY_MAX_LEN = 180;
 const TIMEOUT_MS = 15000;
 
@@ -134,6 +135,8 @@ const BOARDS = {
       { name: "掘金", url: "https://juejin.cn/rss" },
       { name: "InfoQ 中文", url: "https://www.infoq.cn/feed" },
       { name: "开源中国", url: "https://www.oschina.net/news/rss" },
+      { name: "IT之家", url: "https://www.ithome.com/rss/" },
+      { name: "SegmentFault", url: "https://segmentfault.com/feeds" },
     ],
   },
 };
@@ -317,6 +320,11 @@ function isTopicRelevant(item) {
   return result.score >= SCORE_THRESHOLD && result.hasRelatedInTitle;
 }
 
+function isTopicFallbackRelevant(item) {
+  const result = topicScore(item);
+  return result.score > 0 && (result.hasCore || result.hasRelatedInTitle);
+}
+
 function includesAnySignal(text, signals) {
   return signals.some((signal) => includesKeyword(text, signal));
 }
@@ -406,36 +414,54 @@ function selectBoardItems(items, lang, now = Date.now()) {
   // 时间窗：只保留最近 MAX_AGE_DAYS 天的内容（无日期的条目保留）
   const maxAgeMs = MAX_AGE_DAYS * 24 * 3600 * 1000;
   const fresh = sorted.filter((it) => it._ts === 0 || now - it._ts <= maxAgeMs);
-  const pool = fresh
+  const strict = fresh
     .filter((item) => isBoardItemRelevant(item, lang))
     .sort((a, b) => b._ts - a._ts);
+  const relaxed = lang === 'zh'
+    ? fresh
+      .filter((item) =>
+        !isDomesticTechnicalContent(item) && isTopicFallbackRelevant(item)
+      )
+      .sort((a, b) => b._ts - a._ts)
+    : [];
   console.log(
-    "  [FILTER] " + sorted.length + " -> " + pool.length + " items after topic filter"
+    "  [FILTER] " + sorted.length + " -> " + strict.length +
+      " strict, " + relaxed.length + " relaxed items"
   );
   // 标题近似去重（同一新闻的不同来源/标题变体只留一条）
   const acceptedTitles = [];
   const picked = [];
-  for (const it of pool) {
-    const norm = normalizeTitle(it.title);
-    if (!norm) continue;
-    if (isDuplicateTitle(norm, acceptedTitles)) continue;
-    acceptedTitles.push(norm);
-    picked.push(it);
-    if (picked.length >= ITEMS_PER_BOARD) break;
+  function appendUnique(candidates, limit, selectionTier) {
+    for (const item of candidates) {
+      const norm = normalizeTitle(item.title);
+      if (!norm || isDuplicateTitle(norm, acceptedTitles)) continue;
+      acceptedTitles.push(norm);
+      picked.push({ item, selectionTier });
+      if (picked.length >= limit) break;
+    }
   }
-  return picked.map(({ title, link, source, date, summary }) => ({
-    title,
-    link,
-    source,
-    date,
-    summary,
-    lang,
-  }));
+
+  appendUnique(strict, ITEMS_PER_BOARD, 'strict');
+  if (lang === 'zh' && picked.length < MIN_DOMESTIC_ITEMS) {
+    appendUnique(relaxed, MIN_DOMESTIC_ITEMS, 'relaxed');
+  }
+  return picked.map(({ item, selectionTier }) => {
+    const { title, link, source, date, summary } = item;
+    return {
+      title,
+      link,
+      source,
+      date,
+      summary,
+      lang,
+      ...(selectionTier === 'relaxed' ? { selectionTier } : {}),
+    };
+  });
 }
 
-async function collectBoard(feeds, lang) {
+async function collectBoard(feeds, lang, fetcher = fetchText, now = Date.now()) {
   const results = await Promise.allSettled(
-    feeds.map((f) => fetchText(f.url, 2).then((xml) => parseFeed(xml, f.name)))
+    feeds.map((f) => fetcher(f.url, 2).then((xml) => parseFeed(xml, f.name)))
   );
   const items = [];
   results.forEach((r, i) => {
@@ -446,7 +472,17 @@ async function collectBoard(feeds, lang) {
       console.log("  [FAIL] " + feeds[i].name + ": " + r.reason.message);
     }
   });
-  return selectBoardItems(items, lang);
+  return selectBoardItems(items, lang, now);
+}
+
+function assertPublishableBoards(boards) {
+  const domesticCount = Array.isArray(boards.zh) ? boards.zh.length : 0;
+  if (domesticCount < MIN_DOMESTIC_ITEMS) {
+    throw new Error(
+      "Domestic daily picks require at least " + MIN_DOMESTIC_ITEMS +
+        " items; got " + domesticCount + ". Existing generated data was preserved."
+    );
+  }
 }
 
 /* ---------- 7 天精选归档 ---------- */
@@ -471,7 +507,12 @@ function sanitizeArchiveBoards(boards) {
     Object.entries(boards || {}).map(([key, items]) => [
       key,
       Array.isArray(items)
-        ? items.filter((item) => isBoardItemRelevant(item, key))
+        ? items.filter((item) =>
+          isBoardItemRelevant(item, key) ||
+          (key === 'zh' &&
+            item.selectionTier === 'relaxed' &&
+            isTopicFallbackRelevant(item))
+        )
         : [],
     ])
   );
@@ -528,6 +569,7 @@ async function main() {
   if (total === 0) {
     throw new Error("No feed items were fetched; existing generated data was preserved.");
   }
+  assertPublishableBoards(boards);
 
   const payload = {
     updatedAt: new Date().toISOString(),
@@ -559,7 +601,10 @@ if (require.main === module) {
 module.exports = {
   main,
   parseFeed,
+  assertPublishableBoards,
+  collectBoard,
   isDomesticTechnicalContent,
+  isTopicFallbackRelevant,
   isTopicRelevant,
   mergeArchive,
   selectBoardItems,
