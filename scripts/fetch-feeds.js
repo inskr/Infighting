@@ -26,7 +26,7 @@ const CORE_KEYWORDS = [
   "arduino", "yocto", "buildroot", "device driver", "linux kernel",
   "bootloader", "jetson", "on-device",
   "嵌入式", "单片机", "边缘计算", "边缘ai", "边缘 ai", "端侧", "物联网",
-  "微控制器", "实时操作系统", "固件", "开发板", "裸机", "烧录", "鸿蒙", "智能硬件",
+  "微控制器", "实时操作系统", "固件", "开发板", "裸机", "烧录", "智能硬件",
 ];
 // 外围词：相关但也会出现在泛科技新闻中，需与其他词共现
 const RELATED_KEYWORDS = [
@@ -204,13 +204,15 @@ function parseFeed(xml, sourceName) {
 
 /* ---------- 领域相关性过滤（计分 + 负向词 + 标题近似去重） ---------- */
 function topicScore(item) {
-  const text = (item.title + " " + (item.summary || "")).toLowerCase();
+  const title = (item.title || "").toLowerCase();
+  const text = title + " " + (item.summary || "").toLowerCase();
   // 负向词一票否决
   for (const kw of NEGATIVE_KEYWORDS) {
     if (text.includes(kw.toLowerCase())) return { score: -1, hasCore: false };
   }
   let score = 0;
   let hasCore = false;
+  let hasRelatedInTitle = false;
   for (const kw of CORE_KEYWORDS) {
     if (text.includes(kw.toLowerCase())) {
       score += 2;
@@ -218,14 +220,18 @@ function topicScore(item) {
     }
   }
   for (const kw of RELATED_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) score += 1;
+    if (text.includes(kw.toLowerCase())) {
+      score += 1;
+      if (title.includes(kw.toLowerCase())) hasRelatedInTitle = true;
+    }
   }
-  return { score, hasCore };
+  return { score, hasCore, hasRelatedInTitle };
 }
 
 function isTopicRelevant(item) {
   const result = topicScore(item);
-  return result.score >= SCORE_THRESHOLD || (result.score >= 2 && result.hasCore);
+  if (result.hasCore) return result.score >= 2;
+  return result.score >= SCORE_THRESHOLD && result.hasRelatedInTitle;
 }
 
 function normalizeTitle(t) {

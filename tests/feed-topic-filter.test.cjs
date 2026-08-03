@@ -9,6 +9,7 @@ test('admits embedded and edge AI engineering content', () => {
     { title: 'Building a low-power STM32 FreeRTOS sensor node' },
     { title: 'Deploying quantized TinyML inference on an MCU' },
     { title: 'New Jetson edge AI developer kit adds an NPU' },
+    { title: 'NPU inference quantization for vision camera deployment' },
   ];
 
   for (const item of accepted) assert.equal(isTopicRelevant(item), true, item.title);
@@ -29,6 +30,32 @@ test('rejects generic technology news without enough domain relevance', () => {
   assert.equal(
     isTopicRelevant({ title: 'Cloud platform launches a new developer dashboard' }),
     false
+  );
+});
+
+test('rejects HarmonyOS app and UI content without embedded signals', () => {
+  const rejected = [
+    { title: '鸿蒙应用开发之路由：Router 页面路由使用教程' },
+    { title: '[鸿蒙从零到一] HarmonyOS Web 组件与 JSBridge 通信实战' },
+  ];
+
+  for (const item of rejected) assert.equal(isTopicRelevant(item), false, item.title);
+});
+
+test('rejects generic enterprise content with related signals only in its summary', () => {
+  assert.equal(
+    isTopicRelevant({
+      title: 'Palantir 带火了本体，APM 排障有了本体就够吗？',
+      summary: '传感器 | 推理 | 大模型',
+    }),
+    false
+  );
+});
+
+test('admits OpenHarmony embedded work with a real embedded signal', () => {
+  assert.equal(
+    isTopicRelevant({ title: 'OpenHarmony MCU device driver development tutorial' }),
+    true
   );
 });
 
