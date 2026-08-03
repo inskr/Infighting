@@ -44,6 +44,12 @@ test('domestic admission keeps source-code analysis with 解读', () => {
   assert.equal(isDomesticTechnicalContent(item), true, item.title);
 });
 
+test('domestic admission keeps technical principle analysis without source code', () => {
+  const item = { title: 'STM32 中断原理解析' };
+
+  assert.equal(isDomesticTechnicalContent(item), true, item.title);
+});
+
 test('domestic admission rejects general commentary with engineering words', () => {
   const item = { title: 'STM32 source code 开发观点' };
 

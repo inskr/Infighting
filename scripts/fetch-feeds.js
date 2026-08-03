@@ -50,6 +50,7 @@ const DOMESTIC_PRACTICE_SIGNALS = [
   '浠庨浂', '瀹炵幇', '寮€鍙?', '绉绘', '閮ㄧ讲', '璋冭瘯', '浼樺寲', '娴嬭瘯', '鎺掗殰',
   '韪╁潙', '閰嶇疆', '鏋勫缓', '澶嶇洏', 'tutorial', 'guide', 'walkthrough',
   'hands-on', 'source code', 'deep dive', 'porting', 'deployment', 'debugging',
+  '\u89e3\u6790', '\u539f\u7406',
 ];
 const DOMESTIC_ENGINEERING_EVIDENCE = [
   '浠ｇ爜', '姝ラ', '璁惧鏍?', '椹卞姩', '缂栬瘧', '鐑у綍', '閰嶇疆', '鎺ュ彛', '鍗忚',
@@ -74,8 +75,8 @@ const DOMESTIC_HARD_COMMENTARY_SIGNALS = [
   '\u89c2\u70b9', '\u8bc4\u8bba', '\u770b\u6cd5', '\u601d\u8003',
   '\u6b91\u7459\uff46\u703d',
 ];
-const DOMESTIC_SOURCE_ANALYSIS_SIGNALS = [
-  '瑙ｈ', '瑙ｆ瀽', '\u89e3\u8bfb', '\u89e3\u6790',
+const DOMESTIC_SOURCE_COMMENTARY_SIGNALS = [
+  '瑙ｈ', '\u89e3\u8bfb',
 ];
 const DOMESTIC_SOURCE_CODE_SIGNALS = [
   '婧愮爜', 'source code', '\u6e90\u7801',
@@ -314,7 +315,7 @@ function isDomesticTechnicalContent(item) {
   if (includesAnySignal(text, DOMESTIC_INELIGIBLE_SIGNALS)) return false;
   if (includesAnySignal(text, DOMESTIC_HARD_COMMENTARY_SIGNALS)) return false;
   if (
-    includesAnySignal(text, DOMESTIC_SOURCE_ANALYSIS_SIGNALS) &&
+    includesAnySignal(text, DOMESTIC_SOURCE_COMMENTARY_SIGNALS) &&
     !includesAnySignal(text, DOMESTIC_SOURCE_CODE_SIGNALS)
   ) return false;
   const titleHasPractice = includesAnySignal(title, DOMESTIC_PRACTICE_SIGNALS);
