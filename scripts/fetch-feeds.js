@@ -63,10 +63,16 @@ const DOMESTIC_NEWS_SIGNALS = [
   'release', 'launch', 'announces', 'announcement', 'report', 'white paper',
 ];
 const DOMESTIC_INELIGIBLE_SIGNALS = [
-  '合作', '战略', '计划', '公司动态', '企业动态',
+  '合作', '公司动态', '企业动态', '公司新闻', '企业新闻',
   '沙龙', '活动', '论坛', '大会', '峰会', '展会',
 ];
 const DOMESTIC_COMPANY_REFERENCE_SIGNALS = ['公司', '企业'];
+const DOMESTIC_COMPANY_EVENT_SIGNALS = ['战略', '计划'];
+const DOMESTIC_COMPANY_TECHNICAL_SIGNALS = [
+  '教程', '指南', '实战', '实践', '源码', '入门', '进阶', '从零',
+  '实现', '移植', '部署', '调试', '优化', '测试', '排障', '踩坑', '配置', '构建',
+  'tutorial', 'guide', 'walkthrough', 'hands-on', 'source code',
+];
 const DOMESTIC_HARD_COMMENTARY_SIGNALS = [
   '观点', '评论', '看法', '思考',
 ];
@@ -100,7 +106,7 @@ const ACQUISITION_TRANSACTION_PATTERNS = [
   /\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b.{0,80}\b(?:acquire|acquires|acquired|acquiring|acquisition)\b/,
   /\b(?:acquire|acquires|acquired|acquiring|acquisition)\b.{0,80}\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b/,
 ];
-const NAMED_EYEING_TRANSACTION_PATTERN = /\b[A-Z][A-Z0-9&.-]{1,}\s+Eying\s+[A-Z][A-Za-z0-9&.-]{1,}\b/;
+const NAMED_EYEING_TRANSACTION_PATTERN = /\b(?!(?:Developers?|Engineers?|Researchers?|Designers?|Makers?|Users?)\b)[A-Z][A-Za-z0-9&.-]{1,}\s+[Ee]ye?ing\s+[A-Z][A-Za-z0-9&.-]{1,}\b/;
 const CORPORATE_EYEING_TRANSACTION_PATTERN = /\b(?:company|startup|vendor|firm|business|manufacturer|corporation|chipmaker)\b.{0,80}\beye?ing\b.{0,80}\b(?:company|startup|vendor|firm|business|manufacturer|corporation|chipmaker)\b/;
 const SCORE_THRESHOLD = 3; // 纯外围词入选线；命中核心词时得分 >= 2 即可
 const MAX_AGE_DAYS = 14; // 只保留最近 14 天的内容，保证"最新"
@@ -327,22 +333,18 @@ function isDomesticTechnicalContent(item) {
     summary,
     DOMESTIC_ENGINEERING_EVIDENCE
   );
-  const hasReproducibleTutorial = titleHasPractice && summaryHasEngineeringEvidence;
+  const hasCompanyReference = includesAnySignal(text, DOMESTIC_COMPANY_REFERENCE_SIGNALS);
 
+  if (includesAnySignal(text, DOMESTIC_INELIGIBLE_SIGNALS)) return false;
   if (
-    includesAnySignal(title, DOMESTIC_INELIGIBLE_SIGNALS) ||
-    includesAnySignal(title, DOMESTIC_COMPANY_REFERENCE_SIGNALS)
-  ) return false;
-  if (includesAnySignal(title, DOMESTIC_HARD_COMMENTARY_SIGNALS)) return false;
-  if (
-    includesAnySignal(summary, DOMESTIC_COMPANY_REFERENCE_SIGNALS) &&
-    !titleHasPractice
+    hasCompanyReference &&
+    includesAnySignal(text, DOMESTIC_COMPANY_EVENT_SIGNALS)
   ) return false;
   if (
-    (includesAnySignal(summary, DOMESTIC_INELIGIBLE_SIGNALS) ||
-      includesAnySignal(summary, DOMESTIC_HARD_COMMENTARY_SIGNALS)) &&
-    !hasReproducibleTutorial
+    hasCompanyReference &&
+    !includesAnySignal(text, DOMESTIC_COMPANY_TECHNICAL_SIGNALS)
   ) return false;
+  if (includesAnySignal(text, DOMESTIC_HARD_COMMENTARY_SIGNALS)) return false;
   if (
     includesAnySignal(text, DOMESTIC_SOURCE_COMMENTARY_SIGNALS) &&
     !includesAnySignal(text, DOMESTIC_SOURCE_CODE_SIGNALS)

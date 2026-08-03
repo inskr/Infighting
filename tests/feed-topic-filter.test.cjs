@@ -86,13 +86,31 @@ test('domestic policy leakage rejects company news market events and commentary'
   }
 });
 
-test('domestic admission allows incidental company terminology in a reproducible tutorial', () => {
+test('domestic admission allows incidental company terminology in reproducible tutorials', () => {
+  const accepted = [
+    {
+      title: 'STM32 HAL 驱动开发教程',
+      summary: '本教程使用 ST 公司提供的 SDK。',
+    },
+    {
+      title: '使用 ST 公司提供的 SDK：STM32 GPIO 驱动开发教程',
+      summary: '从初始化到中断处理逐步演示。',
+    },
+  ];
+
+  assert.deepEqual(
+    accepted.map((item) => isDomesticTechnicalContent(item)),
+    [true, true]
+  );
+});
+
+test('domestic admission rejects company events despite weak engineering words', () => {
   const item = {
-    title: 'STM32 HAL 驱动开发教程',
-    summary: '本教程使用 ST 公司提供的 SDK。',
+    title: 'STM32 驱动开发教程',
+    summary: '某公司宣布合作计划，并在行业峰会上介绍驱动实现。',
   };
 
-  assert.equal(isDomesticTechnicalContent(item), true, item.title);
+  assert.equal(isDomesticTechnicalContent(item), false, item.title);
 });
 
 test('domestic mixed release content requires title intent and summary evidence', () => {
@@ -216,7 +234,19 @@ test('rejects acquisition euphemisms while keeping technical uses of eyeing', ()
       want: false,
     },
     {
+      title: 'Qualcomm Eying Ambarella for Its Edge AI Portfolio',
+      want: false,
+    },
+    {
+      title: 'Intel eyeing Ambarella for embedded computer vision',
+      want: false,
+    },
+    {
       title: 'Developers eyeing lower interrupt latency in STM32 firmware',
+      want: true,
+    },
+    {
+      title: 'Developers eyeing STM32 DMA latency in embedded firmware',
       want: true,
     },
   ];
