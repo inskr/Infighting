@@ -50,6 +50,18 @@ test('domestic admission rejects releases products and industry news', () => {
   }
 });
 
+test('domestic policy leakage rejects company news market events and commentary', () => {
+  const rejected = [
+    { title: 'STM32 寮€鍙?鍏徃涓庡悎浣滀紮浼翠笂绾跨敓鎬佸悎浣滆鍒?' },
+    { title: 'STM32 瀹炶返娌欓緳娲诲姩鍦ㄦ繁鍦充妇琛?' },
+    { title: 'STM32 瀵屽簱鍜屽紑鍙戠敓鎬佺殑瑙ｆ瀽涓庤鐐?' },
+  ];
+
+  for (const item of rejected) {
+    assert.equal(isDomesticTechnicalContent(item), false, item.title);
+  }
+});
+
 test('domestic mixed release content requires title intent and summary evidence', () => {
   const cases = [
     {
