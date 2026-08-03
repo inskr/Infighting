@@ -142,7 +142,7 @@
           }
         });
       },
-      { threshold: 0.08 }
+      { threshold: 0 }
     );
     targets.forEach(function (el) {
       observer.observe(el);
