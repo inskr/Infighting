@@ -13,22 +13,22 @@ const OUT_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-data.js");
 const ARCHIVE_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-archive.js");
 const ARCHIVE_DAYS = 7; // 归档只保留最近 7 天的每日精选
 const ITEMS_PER_BOARD = 8;
-const MIN_ITEMS_AFTER_FILTER = 4; // 关键词过滤后不足此数时用未过滤条目补齐
 const SUMMARY_MAX_LEN = 180;
 const TIMEOUT_MS = 15000;
 
-// 领域相关性计分：核心词每个 2 分，外围词每个 1 分，总分 >= 2 才入选，
-// 确保精选与嵌入式硬件 / 边缘计算 / 边缘 AI 模型部署 / 物联网应用紧密相关。
+// 领域相关性计分：核心词每个 2 分，命中核心词可在 2 分入选；外围词每个 1 分，
+// 纯外围词内容至少需要 3 分且标题中命中外围词，确保内容与目标领域紧密相关。
 // 核心词：几乎只出现在嵌入式/边缘 AI 语境的专属词
 const CORE_KEYWORDS = [
   "stm32", "esp32", "mcu", "microcontroller", "embedded", "rtos", "freertos",
-  "zephyr", "risc-v", "fpga", "cortex", "firmware", "tinyml", "edge ai",
+  "zephyr", "risc-v", "fpga", "arm cortex", "firmware", "tinyml", "edge ai",
   "edge computing", "iot", "internet of things", "sbc", "raspberry pi",
   "arduino", "yocto", "buildroot", "device driver", "linux kernel",
   "bootloader", "jetson", "on-device",
   "嵌入式", "单片机", "边缘计算", "边缘ai", "边缘 ai", "端侧", "物联网",
-  "微控制器", "实时操作系统", "固件", "开发板", "裸机", "烧录", "鸿蒙", "智能硬件",
+  "微控制器", "实时操作系统", "固件", "开发板", "裸机", "烧录", "智能硬件",
 ];
+const TECHNICAL_ACQUISITION_PATTERN = /\b(?:data|image|signal)\s+acquisition\b/g;
 // 外围词：相关但也会出现在泛科技新闻中，需与其他词共现
 const RELATED_KEYWORDS = [
   "soc", "npu", "gpu", "tpu", "silicon", "semiconductor", "chiplet", "sensor",
@@ -38,17 +38,76 @@ const RELATED_KEYWORDS = [
   "wearable", "bms", "battery", "power management", "inference",
   "quantization", "tensorrt", "onnx", "openvino", "tflite", "neural", "llm",
   "camera", "vision", "gateway", "ai accelerator",
+  "data acquisition", "image acquisition", "signal acquisition",
   "芯片", "半导体", "传感器", "模组", "推理", "模型部署", "大模型", "机器人",
   "无人机", "电机", "工业控制", "自动化", "汽车电子", "车规", "电源", "电池",
   "射频", "5g", "蓝牙", "视觉", "摄像头", "激光雷达", "毫米波", "存储",
   "算力", "开源硬件", "pcb", "示波器", "仿真", "plc",
 ];
 // 负向词：命中即排除（股市行情 / 人事变动 / 纯资本新闻，非技术内容）
-const NEGATIVE_KEYWORDS = [
-  "收涨", "收跌", "涨停", "跌停", "股价", "市值", "财报", "营收", "净利润",
-  "离职", "裁员", "任命", "港股", "美股", "a股", "注册资本",
-  "earnings", "revenue", "layoff", "stock market", "share price",
+const DOMESTIC_PRACTICE_SIGNALS = [
+  '教程', '指南', '实战', '实践', '源码', '解析', '原理', '入门', '进阶',
+  '从零', '实现', '开发', '移植', '部署', '调试', '优化', '测试', '排障',
+  '踩坑', '配置', '构建', '复盘', 'tutorial', 'guide', 'walkthrough',
+  'hands-on', 'source code', 'deep dive', 'porting', 'deployment', 'debugging',
 ];
+const DOMESTIC_ENGINEERING_EVIDENCE = [
+  '代码', '步骤', '设备树', '驱动', '编译', '烧录', '配置', '接口', '协议',
+  '日志', '测试', '调试', '迁移', '部署', '实现', '源码', 'code', 'build',
+  'flash', 'driver', 'configuration', 'benchmark', 'debug', 'deploy',
+];
+const DOMESTIC_NEWS_SIGNALS = [
+  '发布', '推出', '亮相', '新品', '正式上线', '上市', '峰会', '展会',
+  '行业报告', '产业报告', '趋势报告', '白皮书', '政策', '市场活动',
+  '产业动态', '重大突破', '成功研制', '首次', '获奖',
+  'release', 'launch', 'announces', 'announcement', 'report', 'white paper',
+];
+const DOMESTIC_INELIGIBLE_SIGNALS = [
+  '合作', '公司动态', '企业动态', '公司新闻', '企业新闻',
+  '沙龙', '活动', '论坛', '大会', '峰会', '展会',
+];
+const DOMESTIC_COMPANY_REFERENCE_SIGNALS = ['公司', '企业'];
+const DOMESTIC_COMPANY_EVENT_SIGNALS = ['战略', '计划'];
+const DOMESTIC_COMPANY_TECHNICAL_SIGNALS = [
+  '教程', '指南', '实战', '实践', '源码', '入门', '进阶', '从零',
+  '实现', '移植', '部署', '调试', '优化', '测试', '排障', '踩坑', '配置', '构建',
+  'tutorial', 'guide', 'walkthrough', 'hands-on', 'source code',
+];
+const DOMESTIC_HARD_COMMENTARY_SIGNALS = [
+  '观点', '评论', '看法', '思考',
+];
+const DOMESTIC_SOURCE_COMMENTARY_SIGNALS = [
+  '解读',
+];
+const DOMESTIC_SOURCE_CODE_SIGNALS = [
+  '源码', 'source code',
+];
+const NEGATIVE_KEYWORDS = [
+  "股票", "股市", "股价", "市值", "涨停", "跌停", "收盘", "收跌",
+  "港股", "美股", "a股", "注册资本",
+  "财报", "营收", "净利润", "融资", "募资", "估值",
+  "申请上市", "拟上市", "计划上市", "筹备上市", "上市申请", "上市计划",
+  "上市公司", "挂牌上市",
+  "收购", "并购", "裁员", "离职", "任命", "证券", "券商", "研报",
+  "stock market", "stock price", "share price", "market cap", "shares rose",
+  "earnings", "revenue", "funding round", "venture capital", "valuation",
+  "initial public offering", "ipo", "listed company", "publicly listed",
+  "merger", "resigns",
+];
+const NEGATIVE_PATTERNS = [
+  /\b(?:raises?|raised|raising|closes?|closed)\b.{0,80}\b(?:funding|financing|capital|investment|seed|series\s+[a-z0-9]+|round|\d+(?:\.\d+)?\s*(?:million|billion)|[$€£¥]\s*\d+)\b/,
+  /\b(?:funding|financing|seed|series\s+[a-z0-9]+|investment)\b.{0,80}\b(?:round|raises?|raised|raising|closes?|closed)\b/,
+  /\b(?:layoffs?|lays?\s+off|laid\s+off)\b/,
+  /\b(?:names?|named|appoints?|appointed)\b.{0,60}\b(?:ceo|cfo|cto|chief\s+executive(?:\s+officer)?|chief\s+(?:financial|technology|operating)\s+officer|president|chair(?:man|woman|person)?)\b/,
+  /\b(?:ceo|cfo|cto|chief\s+executive(?:\s+officer)?|chief\s+(?:financial|technology|operating)\s+officer|president|chair(?:man|woman|person)?)\b.{0,60}\b(?:appointment|appointed|named)\b/,
+  /\b(?:plans?|planning|applies?|applying|files?|filing)\s+(?:to|for)\s+(?:list|listing|an?\s+ipo)\b/,
+];
+const ACQUISITION_TRANSACTION_PATTERNS = [
+  /\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b.{0,80}\b(?:acquire|acquires|acquired|acquiring|acquisition)\b/,
+  /\b(?:acquire|acquires|acquired|acquiring|acquisition)\b.{0,80}\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b/,
+];
+const NAMED_EYEING_TRANSACTION_PATTERN = /\b(?!(?:Developers?|Engineers?|Researchers?|Designers?|Makers?|Users?)\b)[A-Z][A-Za-z0-9&.-]{1,}\s+[Ee]ye?ing\s+[A-Z][A-Za-z0-9&.-]{1,}\b/;
+const CORPORATE_EYEING_TRANSACTION_PATTERN = /\b(?:company|startup|vendor|firm|business|manufacturer|corporation|chipmaker)\b.{0,80}\beye?ing\b.{0,80}\b(?:company|startup|vendor|firm|business|manufacturer|corporation|chipmaker)\b/;
 const SCORE_THRESHOLD = 3; // 纯外围词入选线；命中核心词时得分 >= 2 即可
 const MAX_AGE_DAYS = 14; // 只保留最近 14 天的内容，保证"最新"
 
@@ -124,6 +183,13 @@ function fetchText(url, redirectsLeft) {
 function decodeEntities(s) {
   return s
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/&#(?:x([0-9a-f]+)|(\d+));/gi, (entity, hex, decimal) => {
+      const codePoint = Number.parseInt(hex || decimal, hex ? 16 : 10);
+      if (codePoint > 0x10ffff || (codePoint >= 0xd800 && codePoint <= 0xdfff)) {
+        return entity;
+      }
+      return String.fromCodePoint(codePoint);
+    })
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
@@ -200,24 +266,101 @@ function parseFeed(xml, sourceName) {
 }
 
 /* ---------- 领域相关性过滤（计分 + 负向词 + 标题近似去重） ---------- */
+function includesKeyword(text, keyword) {
+  const normalized = keyword.toLowerCase();
+  if (!/^[\x00-\x7f]+$/.test(normalized)) return text.includes(normalized);
+
+  const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("(^|[^a-z0-9])" + escaped + "(?=$|[^a-z0-9])").test(text);
+}
+
 function topicScore(item) {
-  const text = (item.title + " " + (item.summary || "")).toLowerCase();
+  const rawTitle = item.title || "";
+  const title = rawTitle.toLowerCase();
+  const text = title + " " + (item.summary || "").toLowerCase();
+  const acquisitionContext = text.replace(TECHNICAL_ACQUISITION_PATTERN, "");
   // 负向词一票否决
   for (const kw of NEGATIVE_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) return { score: -1, hasCore: false };
+    if (includesKeyword(text, kw)) return { score: -1, hasCore: false };
   }
+  for (const pattern of NEGATIVE_PATTERNS) {
+    if (pattern.test(text)) return { score: -1, hasCore: false };
+  }
+  for (const pattern of ACQUISITION_TRANSACTION_PATTERNS) {
+    if (pattern.test(acquisitionContext)) return { score: -1, hasCore: false };
+  }
+  if (
+    NAMED_EYEING_TRANSACTION_PATTERN.test(rawTitle) ||
+    CORPORATE_EYEING_TRANSACTION_PATTERN.test(text)
+  ) return { score: -1, hasCore: false };
   let score = 0;
   let hasCore = false;
+  let hasRelatedInTitle = false;
   for (const kw of CORE_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) {
+    if (includesKeyword(text, kw)) {
       score += 2;
       hasCore = true;
     }
   }
   for (const kw of RELATED_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) score += 1;
+    if (includesKeyword(text, kw)) {
+      score += 1;
+      if (includesKeyword(title, kw)) hasRelatedInTitle = true;
+    }
   }
-  return { score, hasCore };
+  return { score, hasCore, hasRelatedInTitle };
+}
+
+function isTopicRelevant(item) {
+  const result = topicScore(item);
+  if (result.hasCore) return result.score >= 2;
+  return result.score >= SCORE_THRESHOLD && result.hasRelatedInTitle;
+}
+
+function includesAnySignal(text, signals) {
+  return signals.some((signal) => includesKeyword(text, signal));
+}
+
+function isDomesticTechnicalContent(item) {
+  if (!isTopicRelevant(item)) return false;
+
+  const title = (item.title || '').toLowerCase();
+  const summary = (item.summary || '').toLowerCase();
+  const text = title + ' ' + summary;
+  const titleHasPractice = includesAnySignal(title, DOMESTIC_PRACTICE_SIGNALS);
+  const hasPractice = titleHasPractice || includesAnySignal(summary, DOMESTIC_PRACTICE_SIGNALS);
+  const summaryHasEngineeringEvidence = includesAnySignal(
+    summary,
+    DOMESTIC_ENGINEERING_EVIDENCE
+  );
+  const hasCompanyReference = includesAnySignal(text, DOMESTIC_COMPANY_REFERENCE_SIGNALS);
+
+  if (includesAnySignal(text, DOMESTIC_INELIGIBLE_SIGNALS)) return false;
+  if (
+    hasCompanyReference &&
+    includesAnySignal(text, DOMESTIC_COMPANY_EVENT_SIGNALS)
+  ) return false;
+  if (
+    hasCompanyReference &&
+    !includesAnySignal(text, DOMESTIC_COMPANY_TECHNICAL_SIGNALS)
+  ) return false;
+  if (includesAnySignal(text, DOMESTIC_HARD_COMMENTARY_SIGNALS)) return false;
+  if (
+    includesAnySignal(text, DOMESTIC_SOURCE_COMMENTARY_SIGNALS) &&
+    !includesAnySignal(text, DOMESTIC_SOURCE_CODE_SIGNALS)
+  ) return false;
+  if (!hasPractice) return false;
+
+  const hasNewsSignal = includesAnySignal(text, DOMESTIC_NEWS_SIGNALS);
+  if (!hasNewsSignal) return true;
+
+  return titleHasPractice && summaryHasEngineeringEvidence;
+}
+
+function isBoardItemRelevant(item, lang) {
+  return lang === 'zh'
+    ? isDomesticTechnicalContent(item)
+    : isTopicRelevant(item);
 }
 
 function normalizeTitle(t) {
@@ -249,22 +392,11 @@ function isDuplicateTitle(normTitle, accepted) {
 }
 
 /* ---------- 主流程 ---------- */
-async function collectBoard(feeds, lang) {
-  const results = await Promise.allSettled(
-    feeds.map((f) => fetchText(f.url, 2).then((xml) => parseFeed(xml, f.name)))
-  );
-  const items = [];
-  results.forEach((r, i) => {
-    if (r.status === "fulfilled") {
-      console.log("  [OK] " + feeds[i].name + ": " + r.value.length + " items");
-      items.push(...r.value);
-    } else {
-      console.log("  [FAIL] " + feeds[i].name + ": " + r.reason.message);
-    }
-  });
+function selectBoardItems(items, lang, now = Date.now()) {
   // 按日期倒序、去重（按链接）
   const seen = new Set();
   const sorted = items
+    .slice()
     .sort((a, b) => b._ts - a._ts)
     .filter((it) => {
       if (seen.has(it.link)) return false;
@@ -272,29 +404,18 @@ async function collectBoard(feeds, lang) {
       return true;
     });
   // 时间窗：只保留最近 MAX_AGE_DAYS 天的内容（无日期的条目保留）
-  const now = Date.now();
   const maxAgeMs = MAX_AGE_DAYS * 24 * 3600 * 1000;
   const fresh = sorted.filter((it) => it._ts === 0 || now - it._ts <= maxAgeMs);
-  // 计分过滤：排除负向内容；入选线 = 得分 >= 3，或得分 >= 2 且命中核心词
-  const isQualified = (x) =>
-    x.score >= SCORE_THRESHOLD || (x.score >= 2 && x.hasCore);
-  const allScored = fresh.map((it) => ({ it, ...topicScore(it) }));
-  const qualified = allScored.filter(isQualified);
+  const pool = fresh
+    .filter((item) => isBoardItemRelevant(item, lang))
+    .sort((a, b) => b._ts - a._ts);
   console.log(
-    "  [FILTER] " + sorted.length + " -> " + qualified.length + " items after topic filter"
+    "  [FILTER] " + sorted.length + " -> " + pool.length + " items after topic filter"
   );
-  // 兜底：入选过少时，从次优条目（非负向）中补齐，避免板块长期为空
-  let pool = qualified;
-  if (pool.length < MIN_ITEMS_AFTER_FILTER) {
-    const rest = allScored.filter((x) => x.score >= 0 && !isQualified(x));
-    pool = pool.concat(rest);
-  }
-  // 按时间倒序（最新在前）
-  pool.sort((a, b) => b.it._ts - a.it._ts);
   // 标题近似去重（同一新闻的不同来源/标题变体只留一条）
   const acceptedTitles = [];
   const picked = [];
-  for (const { it } of pool) {
+  for (const it of pool) {
     const norm = normalizeTitle(it.title);
     if (!norm) continue;
     if (isDuplicateTitle(norm, acceptedTitles)) continue;
@@ -310,6 +431,22 @@ async function collectBoard(feeds, lang) {
     summary,
     lang,
   }));
+}
+
+async function collectBoard(feeds, lang) {
+  const results = await Promise.allSettled(
+    feeds.map((f) => fetchText(f.url, 2).then((xml) => parseFeed(xml, f.name)))
+  );
+  const items = [];
+  results.forEach((r, i) => {
+    if (r.status === "fulfilled") {
+      console.log("  [OK] " + feeds[i].name + ": " + r.value.length + " items");
+      items.push(...r.value);
+    } else {
+      console.log("  [FAIL] " + feeds[i].name + ": " + r.reason.message);
+    }
+  });
+  return selectBoardItems(items, lang);
 }
 
 /* ---------- 7 天精选归档 ---------- */
@@ -329,11 +466,20 @@ function readArchive() {
   return { days: [] };
 }
 
-function updateArchive(boards, updatedAt) {
+function sanitizeArchiveBoards(boards) {
+  return Object.fromEntries(
+    Object.entries(boards || {}).map(([key, items]) => [
+      key,
+      Array.isArray(items)
+        ? items.filter((item) => isBoardItemRelevant(item, key))
+        : [],
+    ])
+  );
+}
+
+function mergeArchive(archive, boards, updatedAt) {
   const today = updatedAt.slice(0, 10); // UTC 日期，与条目 date 字段同源
-  const archive = readArchive();
-  // 移除当天的旧记录，插入今日新数据
-  const days = archive.days
+  const days = (archive.days || [])
     .filter((d) => d && d.date && d.date !== today)
     .concat([{ date: today, boards }]);
   // 截止线：今天往前推 (ARCHIVE_DAYS - 1) 天，超过的一律丢弃
@@ -342,10 +488,20 @@ function updateArchive(boards, updatedAt) {
     .slice(0, 10);
   const kept = days
     .filter((d) => d.date >= cutoff)
+    .map((d) => ({ ...d, boards: sanitizeArchiveBoards(d.boards) }))
     .sort((a, b) => (a.date < b.date ? 1 : -1)) // 日期倒序，最新在前
     .slice(0, ARCHIVE_DAYS);
 
-  const payload = { updatedAt, days: kept };
+  return { updatedAt, days: kept };
+}
+
+function updateArchive(boards, updatedAt) {
+  const payload = mergeArchive(readArchive(), boards, updatedAt);
+  const cutoff = new Date(
+    Date.parse(updatedAt.slice(0, 10) + "T00:00:00Z") - (ARCHIVE_DAYS - 1) * 86400000
+  )
+    .toISOString()
+    .slice(0, 10);
   const js =
     "// Auto-generated by fetch-feeds.js at " +
     updatedAt +
@@ -355,7 +511,7 @@ function updateArchive(boards, updatedAt) {
     ";\n";
   fs.writeFileSync(ARCHIVE_FILE, js, "utf8");
   console.log(
-    "Archive updated: " + kept.length + " day(s) kept (cutoff " + cutoff + ", file " + ARCHIVE_FILE + ")"
+    "Archive updated: " + payload.days.length + " day(s) kept (cutoff " + cutoff + ", file " + ARCHIVE_FILE + ")"
   );
 }
 
@@ -402,5 +558,9 @@ if (require.main === module) {
 
 module.exports = {
   main,
-  parseFeed
+  parseFeed,
+  isDomesticTechnicalContent,
+  isTopicRelevant,
+  mergeArchive,
+  selectBoardItems,
 };
