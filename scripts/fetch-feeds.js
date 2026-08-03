@@ -46,40 +46,35 @@ const RELATED_KEYWORDS = [
 ];
 // 负向词：命中即排除（股市行情 / 人事变动 / 纯资本新闻，非技术内容）
 const DOMESTIC_PRACTICE_SIGNALS = [
-  '鏁欑▼', '鎸囧崡', '瀹炴垬', '瀹炶返', '婧愮爜', '瑙ｆ瀽', '鍘熺悊', '鍏ラ棬', '杩涢樁',
-  '浠庨浂', '瀹炵幇', '寮€鍙?', '绉绘', '閮ㄧ讲', '璋冭瘯', '浼樺寲', '娴嬭瘯', '鎺掗殰',
-  '韪╁潙', '閰嶇疆', '鏋勫缓', '澶嶇洏', 'tutorial', 'guide', 'walkthrough',
+  '教程', '指南', '实战', '实践', '源码', '解析', '原理', '入门', '进阶',
+  '从零', '实现', '开发', '移植', '部署', '调试', '优化', '测试', '排障',
+  '踩坑', '配置', '构建', '复盘', 'tutorial', 'guide', 'walkthrough',
   'hands-on', 'source code', 'deep dive', 'porting', 'deployment', 'debugging',
-  '\u89e3\u6790', '\u539f\u7406',
 ];
 const DOMESTIC_ENGINEERING_EVIDENCE = [
-  '浠ｇ爜', '姝ラ', '璁惧鏍?', '椹卞姩', '缂栬瘧', '鐑у綍', '閰嶇疆', '鎺ュ彛', '鍗忚',
-  '鏃ュ織', '娴嬭瘯', '璋冭瘯', '杩佺Щ', '閮ㄧ讲', '瀹炵幇', '婧愮爜', 'code', 'build',
+  '代码', '步骤', '设备树', '驱动', '编译', '烧录', '配置', '接口', '协议',
+  '日志', '测试', '调试', '迁移', '部署', '实现', '源码', 'code', 'build',
   'flash', 'driver', 'configuration', 'benchmark', 'debug', 'deploy',
 ];
 const DOMESTIC_NEWS_SIGNALS = [
-  '鍙戝竷', '鎺ㄥ嚭', '浜浉', '鏂板搧', '姝ｅ紡涓婄嚎', '涓婂競', '宄颁細', '灞曚細',
-  '琛屼笟鎶ュ憡', '浜т笟鎶ュ憡', '瓒嬪娍鎶ュ憡', '鐧界毊涔?', '鏀跨瓥', '甯傚満娲诲姩',
-  '浜т笟鍔ㄦ€?', '閲嶅ぇ绐佺牬', '鎴愬姛鐮斿埗', '棣栨', '鑾峰',
+  '发布', '推出', '亮相', '新品', '正式上线', '上市', '峰会', '展会',
+  '行业报告', '产业报告', '趋势报告', '白皮书', '政策', '市场活动',
+  '产业动态', '重大突破', '成功研制', '首次', '获奖',
   'release', 'launch', 'announces', 'announcement', 'report', 'white paper',
 ];
 const DOMESTIC_INELIGIBLE_SIGNALS = [
-  '鍚堜綔', '鎴樼暐', '璁″垝', '鍏徃鍔ㄦ€?', '浼佷笟鍔ㄦ€?',
-  '娌欓緳', '媧诲姩', '璁哄潧', '澶т細', '宄颁細', '灞曚細',
-  '\u516c\u53f8', '\u4f01\u4e1a', '\u5408\u4f5c', '\u6218\u7565', '\u8ba1\u5212',
-  '\u6c99\u9f99', '\u6d3b\u52a8', '\u8bba\u575b', '\u5927\u4f1a', '\u5cf0\u4f1a', '\u5c55\u4f1a',
-  '\u934f\ue100\u5f83', '\u5a0c\u6b13\u7df3\u5a32\u8bf2',
+  '合作', '战略', '计划', '公司动态', '企业动态',
+  '沙龙', '活动', '论坛', '大会', '峰会', '展会',
 ];
+const DOMESTIC_COMPANY_REFERENCE_SIGNALS = ['公司', '企业'];
 const DOMESTIC_HARD_COMMENTARY_SIGNALS = [
-  '瑙傜偣', '璇勮', '鎬濊€?',
-  '\u89c2\u70b9', '\u8bc4\u8bba', '\u770b\u6cd5', '\u601d\u8003',
-  '\u6b91\u7459\uff46\u703d',
+  '观点', '评论', '看法', '思考',
 ];
 const DOMESTIC_SOURCE_COMMENTARY_SIGNALS = [
-  '瑙ｈ', '\u89e3\u8bfb',
+  '解读',
 ];
 const DOMESTIC_SOURCE_CODE_SIGNALS = [
-  '婧愮爜', 'source code', '\u6e90\u7801',
+  '源码', 'source code',
 ];
 const NEGATIVE_KEYWORDS = [
   "股票", "股市", "股价", "市值", "涨停", "跌停", "收盘", "收跌",
@@ -105,6 +100,8 @@ const ACQUISITION_TRANSACTION_PATTERNS = [
   /\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b.{0,80}\b(?:acquire|acquires|acquired|acquiring|acquisition)\b/,
   /\b(?:acquire|acquires|acquired|acquiring|acquisition)\b.{0,80}\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b/,
 ];
+const NAMED_EYEING_TRANSACTION_PATTERN = /\b[A-Z][A-Z0-9&.-]{1,}\s+Eying\s+[A-Z][A-Za-z0-9&.-]{1,}\b/;
+const CORPORATE_EYEING_TRANSACTION_PATTERN = /\b(?:company|startup|vendor|firm|business|manufacturer|corporation|chipmaker)\b.{0,80}\beye?ing\b.{0,80}\b(?:company|startup|vendor|firm|business|manufacturer|corporation|chipmaker)\b/;
 const SCORE_THRESHOLD = 3; // 纯外围词入选线；命中核心词时得分 >= 2 即可
 const MAX_AGE_DAYS = 14; // 只保留最近 14 天的内容，保证"最新"
 
@@ -180,6 +177,13 @@ function fetchText(url, redirectsLeft) {
 function decodeEntities(s) {
   return s
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/&#(?:x([0-9a-f]+)|(\d+));/gi, (entity, hex, decimal) => {
+      const codePoint = Number.parseInt(hex || decimal, hex ? 16 : 10);
+      if (codePoint > 0x10ffff || (codePoint >= 0xd800 && codePoint <= 0xdfff)) {
+        return entity;
+      }
+      return String.fromCodePoint(codePoint);
+    })
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
@@ -265,7 +269,8 @@ function includesKeyword(text, keyword) {
 }
 
 function topicScore(item) {
-  const title = (item.title || "").toLowerCase();
+  const rawTitle = item.title || "";
+  const title = rawTitle.toLowerCase();
   const text = title + " " + (item.summary || "").toLowerCase();
   const acquisitionContext = text.replace(TECHNICAL_ACQUISITION_PATTERN, "");
   // 负向词一票否决
@@ -278,6 +283,10 @@ function topicScore(item) {
   for (const pattern of ACQUISITION_TRANSACTION_PATTERNS) {
     if (pattern.test(acquisitionContext)) return { score: -1, hasCore: false };
   }
+  if (
+    NAMED_EYEING_TRANSACTION_PATTERN.test(rawTitle) ||
+    CORPORATE_EYEING_TRANSACTION_PATTERN.test(text)
+  ) return { score: -1, hasCore: false };
   let score = 0;
   let hasCore = false;
   let hasRelatedInTitle = false;
@@ -312,20 +321,38 @@ function isDomesticTechnicalContent(item) {
   const title = (item.title || '').toLowerCase();
   const summary = (item.summary || '').toLowerCase();
   const text = title + ' ' + summary;
-  if (includesAnySignal(text, DOMESTIC_INELIGIBLE_SIGNALS)) return false;
-  if (includesAnySignal(text, DOMESTIC_HARD_COMMENTARY_SIGNALS)) return false;
+  const titleHasPractice = includesAnySignal(title, DOMESTIC_PRACTICE_SIGNALS);
+  const hasPractice = titleHasPractice || includesAnySignal(summary, DOMESTIC_PRACTICE_SIGNALS);
+  const summaryHasEngineeringEvidence = includesAnySignal(
+    summary,
+    DOMESTIC_ENGINEERING_EVIDENCE
+  );
+  const hasReproducibleTutorial = titleHasPractice && summaryHasEngineeringEvidence;
+
+  if (
+    includesAnySignal(title, DOMESTIC_INELIGIBLE_SIGNALS) ||
+    includesAnySignal(title, DOMESTIC_COMPANY_REFERENCE_SIGNALS)
+  ) return false;
+  if (includesAnySignal(title, DOMESTIC_HARD_COMMENTARY_SIGNALS)) return false;
+  if (
+    includesAnySignal(summary, DOMESTIC_COMPANY_REFERENCE_SIGNALS) &&
+    !titleHasPractice
+  ) return false;
+  if (
+    (includesAnySignal(summary, DOMESTIC_INELIGIBLE_SIGNALS) ||
+      includesAnySignal(summary, DOMESTIC_HARD_COMMENTARY_SIGNALS)) &&
+    !hasReproducibleTutorial
+  ) return false;
   if (
     includesAnySignal(text, DOMESTIC_SOURCE_COMMENTARY_SIGNALS) &&
     !includesAnySignal(text, DOMESTIC_SOURCE_CODE_SIGNALS)
   ) return false;
-  const titleHasPractice = includesAnySignal(title, DOMESTIC_PRACTICE_SIGNALS);
-  const hasPractice = titleHasPractice || includesAnySignal(summary, DOMESTIC_PRACTICE_SIGNALS);
   if (!hasPractice) return false;
 
   const hasNewsSignal = includesAnySignal(text, DOMESTIC_NEWS_SIGNALS);
   if (!hasNewsSignal) return true;
 
-  return titleHasPractice && includesAnySignal(summary, DOMESTIC_ENGINEERING_EVIDENCE);
+  return titleHasPractice && summaryHasEngineeringEvidence;
 }
 
 function isBoardItemRelevant(item, lang) {
