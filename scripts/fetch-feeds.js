@@ -328,6 +328,12 @@ function isDomesticTechnicalContent(item) {
   return titleHasPractice && includesAnySignal(summary, DOMESTIC_ENGINEERING_EVIDENCE);
 }
 
+function isBoardItemRelevant(item, lang) {
+  return lang === 'zh'
+    ? isDomesticTechnicalContent(item)
+    : isTopicRelevant(item);
+}
+
 function normalizeTitle(t) {
   return t.toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, "");
 }
@@ -372,7 +378,7 @@ function selectBoardItems(items, lang, now = Date.now()) {
   const maxAgeMs = MAX_AGE_DAYS * 24 * 3600 * 1000;
   const fresh = sorted.filter((it) => it._ts === 0 || now - it._ts <= maxAgeMs);
   const pool = fresh
-    .filter(isTopicRelevant)
+    .filter((item) => isBoardItemRelevant(item, lang))
     .sort((a, b) => b._ts - a._ts);
   console.log(
     "  [FILTER] " + sorted.length + " -> " + pool.length + " items after topic filter"
@@ -435,7 +441,9 @@ function sanitizeArchiveBoards(boards) {
   return Object.fromEntries(
     Object.entries(boards || {}).map(([key, items]) => [
       key,
-      Array.isArray(items) ? items.filter(isTopicRelevant) : [],
+      Array.isArray(items)
+        ? items.filter((item) => isBoardItemRelevant(item, key))
+        : [],
     ])
   );
 }

@@ -264,6 +264,36 @@ test('admits OpenHarmony embedded work with a real embedded signal', () => {
   );
 });
 
+test('archive merge removes domestic news but preserves international releases', () => {
+  const domesticPractice = {
+    title: 'ESP32 driver source code analysis and debugging tutorial',
+    link: 'https://example.com/zh-practice',
+    source: 'Fixture', date: '2026-08-02',
+    summary: 'Includes code and debugging steps.', lang: 'zh',
+  };
+  const domesticRelease = {
+    title: 'ESP32 new edge AI developer board release',
+    link: 'https://example.com/zh-release',
+    source: 'Fixture', date: '2026-08-02',
+    summary: 'The new product was formally announced.', lang: 'zh',
+  };
+  const internationalRelease = {
+    title: 'New Jetson edge AI developer kit adds an NPU',
+    link: 'https://example.com/en-release',
+    source: 'Fixture', date: '2026-08-02', summary: '', lang: 'en',
+  };
+  const archive = { days: [{
+    date: '2026-08-02',
+    boards: { zh: [domesticPractice, domesticRelease], en: [internationalRelease] },
+  }] };
+
+  const merged = mergeArchive(archive, { zh: [], en: [] }, '2026-08-03T12:00:00.000Z');
+  const previous = merged.days.find((day) => day.date === '2026-08-02');
+
+  assert.deepEqual(previous.boards.zh.map((item) => item.title), [domesticPractice.title]);
+  assert.deepEqual(previous.boards.en.map((item) => item.title), [internationalRelease.title]);
+});
+
 test('sanitizes archived boards while merging today within the seven-day window', () => {
   const validArchived = {
     title: 'STM32 RTOS driver tutorial',
@@ -313,6 +343,43 @@ test('sanitizes archived boards while merging today within the seven-day window'
   assert.deepEqual(merged.days[1].boards.en.map((item) => item.title), [
     'STM32 RTOS driver tutorial',
   ]);
+});
+
+test('domestic selection does not pad with related release announcements', () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const items = [
+    {
+      title: 'STM32 FreeRTOS low-power configuration tutorial',
+      summary: 'Includes code, compiler configuration, and power test results.',
+      link: 'https://example.com/practice', source: 'Fixture',
+      date: '2026-08-03', _ts: now,
+    },
+    {
+      title: 'RuleGo v0.37.0 release: industrial protocols and edge computing upgrades',
+      summary: 'The new version was formally released today.',
+      link: 'https://example.com/release', source: 'Fixture',
+      date: '2026-08-03', _ts: now - 1000,
+    },
+  ];
+
+  assert.deepEqual(
+    selectBoardItems(items, 'zh', now).map((item) => item.title),
+    ['STM32 FreeRTOS low-power configuration tutorial']
+  );
+});
+
+test('international selection keeps the existing product-release policy', () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const item = {
+    title: 'New Jetson edge AI developer kit adds an NPU',
+    summary: '', link: 'https://example.com/jetson', source: 'Fixture',
+    date: '2026-08-03', _ts: now,
+  };
+
+  assert.deepEqual(
+    selectBoardItems([item], 'en', now).map((entry) => entry.title),
+    [item.title]
+  );
 });
 
 test('does not pad a board with unrelated items when few technical items qualify', () => {
