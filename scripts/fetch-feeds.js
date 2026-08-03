@@ -13,7 +13,6 @@ const OUT_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-data.js");
 const ARCHIVE_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-archive.js");
 const ARCHIVE_DAYS = 7; // 归档只保留最近 7 天的每日精选
 const ITEMS_PER_BOARD = 8;
-const MIN_ITEMS_AFTER_FILTER = 4; // 关键词过滤后不足此数时用未过滤条目补齐
 const SUMMARY_MAX_LEN = 180;
 const TIMEOUT_MS = 15000;
 
@@ -258,19 +257,7 @@ function isDuplicateTitle(normTitle, accepted) {
 }
 
 /* ---------- 主流程 ---------- */
-async function collectBoard(feeds, lang) {
-  const results = await Promise.allSettled(
-    feeds.map((f) => fetchText(f.url, 2).then((xml) => parseFeed(xml, f.name)))
-  );
-  const items = [];
-  results.forEach((r, i) => {
-    if (r.status === "fulfilled") {
-      console.log("  [OK] " + feeds[i].name + ": " + r.value.length + " items");
-      items.push(...r.value);
-    } else {
-      console.log("  [FAIL] " + feeds[i].name + ": " + r.reason.message);
-    }
-  });
+function selectBoardItems(items, lang, now = Date.now()) {
   // 按日期倒序、去重（按链接）
   const seen = new Set();
   const sorted = items
@@ -281,29 +268,18 @@ async function collectBoard(feeds, lang) {
       return true;
     });
   // 时间窗：只保留最近 MAX_AGE_DAYS 天的内容（无日期的条目保留）
-  const now = Date.now();
   const maxAgeMs = MAX_AGE_DAYS * 24 * 3600 * 1000;
   const fresh = sorted.filter((it) => it._ts === 0 || now - it._ts <= maxAgeMs);
-  // 计分过滤：排除负向内容；入选线 = 得分 >= 3，或得分 >= 2 且命中核心词
-  const isQualified = (x) =>
-    x.score >= SCORE_THRESHOLD || (x.score >= 2 && x.hasCore);
-  const allScored = fresh.map((it) => ({ it, ...topicScore(it) }));
-  const qualified = allScored.filter(isQualified);
+  const pool = fresh
+    .filter(isTopicRelevant)
+    .sort((a, b) => b._ts - a._ts);
   console.log(
-    "  [FILTER] " + sorted.length + " -> " + qualified.length + " items after topic filter"
+    "  [FILTER] " + sorted.length + " -> " + pool.length + " items after topic filter"
   );
-  // 兜底：入选过少时，从次优条目（非负向）中补齐，避免板块长期为空
-  let pool = qualified;
-  if (pool.length < MIN_ITEMS_AFTER_FILTER) {
-    const rest = allScored.filter((x) => x.score >= 0 && !isQualified(x));
-    pool = pool.concat(rest);
-  }
-  // 按时间倒序（最新在前）
-  pool.sort((a, b) => b.it._ts - a.it._ts);
   // 标题近似去重（同一新闻的不同来源/标题变体只留一条）
   const acceptedTitles = [];
   const picked = [];
-  for (const { it } of pool) {
+  for (const it of pool) {
     const norm = normalizeTitle(it.title);
     if (!norm) continue;
     if (isDuplicateTitle(norm, acceptedTitles)) continue;
@@ -319,6 +295,22 @@ async function collectBoard(feeds, lang) {
     summary,
     lang,
   }));
+}
+
+async function collectBoard(feeds, lang) {
+  const results = await Promise.allSettled(
+    feeds.map((f) => fetchText(f.url, 2).then((xml) => parseFeed(xml, f.name)))
+  );
+  const items = [];
+  results.forEach((r, i) => {
+    if (r.status === "fulfilled") {
+      console.log("  [OK] " + feeds[i].name + ": " + r.value.length + " items");
+      items.push(...r.value);
+    } else {
+      console.log("  [FAIL] " + feeds[i].name + ": " + r.reason.message);
+    }
+  });
+  return selectBoardItems(items, lang);
 }
 
 /* ---------- 7 天精选归档 ---------- */
@@ -413,4 +405,5 @@ module.exports = {
   main,
   parseFeed,
   isTopicRelevant,
+  selectBoardItems,
 };

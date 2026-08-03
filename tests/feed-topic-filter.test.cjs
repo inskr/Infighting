@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { isTopicRelevant } = require('../scripts/fetch-feeds');
+const { isTopicRelevant, selectBoardItems } = require('../scripts/fetch-feeds');
 
 test('admits embedded and edge AI engineering content', () => {
   const accepted = [
@@ -30,4 +30,33 @@ test('rejects generic technology news without enough domain relevance', () => {
     isTopicRelevant({ title: 'Cloud platform launches a new developer dashboard' }),
     false
   );
+});
+
+test('does not pad a board with unrelated items when few technical items qualify', () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const items = [
+    {
+      title: 'Zephyr RTOS adds a new STM32 device driver',
+      summary: '',
+      link: 'https://example.com/zephyr-driver',
+      source: 'Fixture',
+      date: '2026-08-03',
+      _ts: now,
+    },
+    {
+      title: 'Markets rally after company results',
+      summary: 'Stocks rise across major indexes',
+      link: 'https://example.com/markets',
+      source: 'Fixture',
+      date: '2026-08-03',
+      _ts: now - 1000,
+    },
+  ];
+
+  const selected = selectBoardItems(items, 'en', now);
+
+  assert.deepEqual(selected.map((item) => item.title), [
+    'Zephyr RTOS adds a new STM32 device driver',
+  ]);
+  assert.equal(selected[0].lang, 'en');
 });
