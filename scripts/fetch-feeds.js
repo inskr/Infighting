@@ -13,7 +13,7 @@ const OUT_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-data.js");
 const ARCHIVE_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-archive.js");
 const ARCHIVE_DAYS = 7; // 归档只保留最近 7 天的每日精选
 const ITEMS_PER_BOARD = 8;
-const MIN_ITEMS_AFTER_FILTER = 4; // 关键词过滤后不足此数时用未过滤条目补齐
+const MIN_DOMESTIC_ITEMS = 4;
 const SUMMARY_MAX_LEN = 180;
 const TIMEOUT_MS = 15000;
 
@@ -45,9 +45,13 @@ const RELATED_KEYWORDS = [
 ];
 // 负向词：命中即排除（股市行情 / 人事变动 / 纯资本新闻，非技术内容）
 const NEGATIVE_KEYWORDS = [
-  "收涨", "收跌", "涨停", "跌停", "股价", "市值", "财报", "营收", "净利润",
-  "离职", "裁员", "任命", "港股", "美股", "a股", "注册资本",
-  "earnings", "revenue", "layoff", "stock market", "share price",
+  "股票", "股市", "股价", "市值", "涨停", "跌停", "收涨", "收跌",
+  "财报", "营收", "净利润", "融资", "募资", "估值", "上市",
+  "收购", "并购", "裁员", "离职", "任命", "港股", "美股", "a股", "注册资本",
+  "stock market", "stock price", "share price", "market cap", "shares rose",
+  "earnings", "revenue", "funding round", "venture capital", "valuation",
+  "initial public offering", "acquires", "acquisition", "merger",
+  "layoff", "appoints", "appointed", "resigns",
 ];
 const SCORE_THRESHOLD = 3; // 纯外围词入选线；命中核心词时得分 >= 2 即可
 const MAX_AGE_DAYS = 14; // 只保留最近 14 天的内容，保证"最新"
@@ -220,6 +224,16 @@ function topicScore(item) {
   return { score, hasCore };
 }
 
+function classifyTopic(item) {
+  const result = topicScore(item);
+  if (result.score < 0) return "blocked";
+  if (result.score >= SCORE_THRESHOLD || (result.score >= 2 && result.hasCore)) {
+    return "strict";
+  }
+  if (result.score >= 1) return "relaxed";
+  return "irrelevant";
+}
+
 function normalizeTitle(t) {
   return t.toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, "");
 }
@@ -248,6 +262,57 @@ function isDuplicateTitle(normTitle, accepted) {
   return false;
 }
 
+function selectBoardItems(items, lang, now = Date.now()) {
+  // 按日期倒序、去重（按链接）
+  const seen = new Set();
+  const sorted = items
+    .sort((a, b) => b._ts - a._ts)
+    .filter((it) => {
+      if (seen.has(it.link)) return false;
+      seen.add(it.link);
+      return true;
+    });
+  // 时间窗：只保留最近 MAX_AGE_DAYS 天的内容（无日期的条目保留）
+  const maxAgeMs = MAX_AGE_DAYS * 24 * 3600 * 1000;
+  const fresh = sorted.filter((it) => it._ts === 0 || now - it._ts <= maxAgeMs);
+  const scored = fresh.map((entry) => ({ entry, kind: classifyTopic(entry) }));
+  const strict = scored
+    .filter((candidate) => candidate.kind === "strict")
+    .sort((a, b) => b.entry._ts - a.entry._ts);
+  const relaxed = scored
+    .filter((candidate) => candidate.kind === "relaxed")
+    .sort((a, b) => b.entry._ts - a.entry._ts);
+  console.log(
+    "  [FILTER] " + sorted.length + " -> " + strict.length +
+      " strict, " + relaxed.length + " relaxed items"
+  );
+  const acceptedTitles = [];
+  const picked = [];
+  function appendUnique(candidates, limit) {
+    for (const { entry } of candidates) {
+      const norm = normalizeTitle(entry.title);
+      if (!norm || isDuplicateTitle(norm, acceptedTitles)) continue;
+      acceptedTitles.push(norm);
+      picked.push(entry);
+      if (picked.length >= limit) break;
+    }
+  }
+
+  appendUnique(strict, ITEMS_PER_BOARD);
+  if (lang === "zh" && picked.length < MIN_DOMESTIC_ITEMS) {
+    appendUnique(relaxed, MIN_DOMESTIC_ITEMS);
+  }
+
+  return picked.map(({ title, link, source, date, summary }) => ({
+    title,
+    link,
+    source,
+    date,
+    summary,
+    lang,
+  }));
+}
+
 /* ---------- 主流程 ---------- */
 async function collectBoard(feeds, lang) {
   const results = await Promise.allSettled(
@@ -262,54 +327,7 @@ async function collectBoard(feeds, lang) {
       console.log("  [FAIL] " + feeds[i].name + ": " + r.reason.message);
     }
   });
-  // 按日期倒序、去重（按链接）
-  const seen = new Set();
-  const sorted = items
-    .sort((a, b) => b._ts - a._ts)
-    .filter((it) => {
-      if (seen.has(it.link)) return false;
-      seen.add(it.link);
-      return true;
-    });
-  // 时间窗：只保留最近 MAX_AGE_DAYS 天的内容（无日期的条目保留）
-  const now = Date.now();
-  const maxAgeMs = MAX_AGE_DAYS * 24 * 3600 * 1000;
-  const fresh = sorted.filter((it) => it._ts === 0 || now - it._ts <= maxAgeMs);
-  // 计分过滤：排除负向内容；入选线 = 得分 >= 3，或得分 >= 2 且命中核心词
-  const isQualified = (x) =>
-    x.score >= SCORE_THRESHOLD || (x.score >= 2 && x.hasCore);
-  const allScored = fresh.map((it) => ({ it, ...topicScore(it) }));
-  const qualified = allScored.filter(isQualified);
-  console.log(
-    "  [FILTER] " + sorted.length + " -> " + qualified.length + " items after topic filter"
-  );
-  // 兜底：入选过少时，从次优条目（非负向）中补齐，避免板块长期为空
-  let pool = qualified;
-  if (pool.length < MIN_ITEMS_AFTER_FILTER) {
-    const rest = allScored.filter((x) => x.score >= 0 && !isQualified(x));
-    pool = pool.concat(rest);
-  }
-  // 按时间倒序（最新在前）
-  pool.sort((a, b) => b.it._ts - a.it._ts);
-  // 标题近似去重（同一新闻的不同来源/标题变体只留一条）
-  const acceptedTitles = [];
-  const picked = [];
-  for (const { it } of pool) {
-    const norm = normalizeTitle(it.title);
-    if (!norm) continue;
-    if (isDuplicateTitle(norm, acceptedTitles)) continue;
-    acceptedTitles.push(norm);
-    picked.push(it);
-    if (picked.length >= ITEMS_PER_BOARD) break;
-  }
-  return picked.map(({ title, link, source, date, summary }) => ({
-    title,
-    link,
-    source,
-    date,
-    summary,
-    lang,
-  }));
+  return selectBoardItems(items, lang);
 }
 
 /* ---------- 7 天精选归档 ---------- */
@@ -402,5 +420,7 @@ if (require.main === module) {
 
 module.exports = {
   main,
-  parseFeed
+  parseFeed,
+  classifyTopic,
+  selectBoardItems,
 };
