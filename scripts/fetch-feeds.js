@@ -21,7 +21,7 @@ const TIMEOUT_MS = 15000;
 // 核心词：几乎只出现在嵌入式/边缘 AI 语境的专属词
 const CORE_KEYWORDS = [
   "stm32", "esp32", "mcu", "microcontroller", "embedded", "rtos", "freertos",
-  "zephyr", "risc-v", "fpga", "cortex", "firmware", "tinyml", "edge ai",
+  "zephyr", "risc-v", "fpga", "arm cortex", "firmware", "tinyml", "edge ai",
   "edge computing", "iot", "internet of things", "sbc", "raspberry pi",
   "arduino", "yocto", "buildroot", "device driver", "linux kernel",
   "bootloader", "jetson", "on-device",
@@ -46,7 +46,7 @@ const RELATED_KEYWORDS = [
 const NEGATIVE_KEYWORDS = [
   "股票", "股市", "股价", "市值", "涨停", "跌停", "收盘", "收跌",
   "财报", "营收", "净利润", "融资", "募资", "估值", "上市",
-  "收购", "并购", "裁员", "离职", "任命",
+  "收购", "并购", "裁员", "离职", "任命", "证券", "券商", "研报",
   "stock market", "stock price", "share price", "market cap", "shares rose",
   "earnings", "revenue", "funding round", "venture capital", "valuation",
   "initial public offering",
@@ -203,26 +203,34 @@ function parseFeed(xml, sourceName) {
 }
 
 /* ---------- 领域相关性过滤（计分 + 负向词 + 标题近似去重） ---------- */
+function includesKeyword(text, keyword) {
+  const normalized = keyword.toLowerCase();
+  if (!/^[\x00-\x7f]+$/.test(normalized)) return text.includes(normalized);
+
+  const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("(^|[^a-z0-9])" + escaped + "(?=$|[^a-z0-9])").test(text);
+}
+
 function topicScore(item) {
   const title = (item.title || "").toLowerCase();
   const text = title + " " + (item.summary || "").toLowerCase();
   // 负向词一票否决
   for (const kw of NEGATIVE_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) return { score: -1, hasCore: false };
+    if (includesKeyword(text, kw)) return { score: -1, hasCore: false };
   }
   let score = 0;
   let hasCore = false;
   let hasRelatedInTitle = false;
   for (const kw of CORE_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) {
+    if (includesKeyword(text, kw)) {
       score += 2;
       hasCore = true;
     }
   }
   for (const kw of RELATED_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) {
+    if (includesKeyword(text, kw)) {
       score += 1;
-      if (title.includes(kw.toLowerCase())) hasRelatedInTitle = true;
+      if (includesKeyword(title, kw)) hasRelatedInTitle = true;
     }
   }
   return { score, hasCore, hasRelatedInTitle };

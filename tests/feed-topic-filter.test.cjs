@@ -10,6 +10,9 @@ test('admits embedded and edge AI engineering content', () => {
     { title: 'Deploying quantized TinyML inference on an MCU' },
     { title: 'New Jetson edge AI developer kit adds an NPU' },
     { title: 'NPU inference quantization for vision camera deployment' },
+    { title: 'ARM Cortex-M33 exception handling tutorial' },
+    { title: 'ARM Cortex-A78 exception handling tutorial' },
+    { title: 'IMU sensor camera calibration guide' },
   ];
 
   for (const item of accepted) assert.equal(isTopicRelevant(item), true, item.title);
@@ -50,6 +53,46 @@ test('rejects generic enterprise content with related signals only in its summar
     }),
     false
   );
+});
+
+test('rejects a human echolocation study that only mentions the Cerebral Cortex journal', () => {
+  assert.equal(
+    isTopicRelevant({
+      title: '人类能在十周内学会回声定位',
+      summary: '研究人员在《Cerebral Cortex》期刊上发表了一项后续研究。',
+    }),
+    false
+  );
+});
+
+test('rejects brokerage robot coverage with imu only inside Optimus', () => {
+  assert.equal(
+    isTopicRelevant({
+      title: '中信证券：看好特斯拉机器人的量产和应用前景',
+      summary: '特斯拉兼具领先的AI大模型技术，看好机器人的量产。特斯拉Optimus即将进入生产阶段。',
+    }),
+    false
+  );
+});
+
+test('does not match a short ASCII keyword inside a larger word', () => {
+  assert.equal(
+    isTopicRelevant({
+      title: 'Robot production outlook for Optimus',
+      summary: 'Large model 大模型 platform',
+    }),
+    false
+  );
+});
+
+test('rejects Chinese brokerage and research contexts even with embedded keywords', () => {
+  const rejected = [
+    { title: '中信证券：STM32 MCU device driver outlook' },
+    { title: '券商看好 STM32 MCU device driver market' },
+    { title: '研报：STM32 MCU device driver adoption' },
+  ];
+
+  for (const item of rejected) assert.equal(isTopicRelevant(item), false, item.title);
 });
 
 test('admits OpenHarmony embedded work with a real embedded signal', () => {
