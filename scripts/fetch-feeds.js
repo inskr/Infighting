@@ -45,9 +45,13 @@ const RELATED_KEYWORDS = [
 ];
 // 负向词：命中即排除（股市行情 / 人事变动 / 纯资本新闻，非技术内容）
 const NEGATIVE_KEYWORDS = [
-  "收涨", "收跌", "涨停", "跌停", "股价", "市值", "财报", "营收", "净利润",
-  "离职", "裁员", "任命", "港股", "美股", "a股", "注册资本",
-  "earnings", "revenue", "layoff", "stock market", "share price",
+  "股票", "股市", "股价", "市值", "涨停", "跌停", "收盘", "收跌",
+  "财报", "营收", "净利润", "融资", "募资", "估值", "上市",
+  "收购", "并购", "裁员", "离职", "任命",
+  "stock market", "stock price", "share price", "market cap", "shares rose",
+  "earnings", "revenue", "funding round", "venture capital", "valuation",
+  "initial public offering",
+  "acquires", "acquisition", "merger", "layoff", "appoints", "appointed", "resigns",
 ];
 const SCORE_THRESHOLD = 3; // 纯外围词入选线；命中核心词时得分 >= 2 即可
 const MAX_AGE_DAYS = 14; // 只保留最近 14 天的内容，保证"最新"
@@ -218,6 +222,11 @@ function topicScore(item) {
     if (text.includes(kw.toLowerCase())) score += 1;
   }
   return { score, hasCore };
+}
+
+function isTopicRelevant(item) {
+  const result = topicScore(item);
+  return result.score >= SCORE_THRESHOLD || (result.score >= 2 && result.hasCore);
 }
 
 function normalizeTitle(t) {
@@ -402,5 +411,6 @@ if (require.main === module) {
 
 module.exports = {
   main,
-  parseFeed
+  parseFeed,
+  isTopicRelevant,
 };
