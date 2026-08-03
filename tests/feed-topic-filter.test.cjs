@@ -3,6 +3,8 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
+  assertPublishableBoards,
+  collectBoard,
   isDomesticTechnicalContent,
   isTopicRelevant,
   mergeArchive,
@@ -343,6 +345,12 @@ test('archive merge removes domestic news but preserves international releases',
     source: 'Fixture', date: '2026-08-02',
     summary: 'The new product was formally announced.', lang: 'zh',
   };
+  const selectedDomesticFallback = {
+    ...domesticRelease,
+    title: 'New sensor announced',
+    link: 'https://example.com/zh-selected-fallback',
+    selectionTier: 'relaxed',
+  };
   const internationalRelease = {
     title: 'New Jetson edge AI developer kit adds an NPU',
     link: 'https://example.com/en-release',
@@ -350,13 +358,19 @@ test('archive merge removes domestic news but preserves international releases',
   };
   const archive = { days: [{
     date: '2026-08-02',
-    boards: { zh: [domesticPractice, domesticRelease], en: [internationalRelease] },
+    boards: {
+      zh: [domesticPractice, domesticRelease, selectedDomesticFallback],
+      en: [internationalRelease],
+    },
   }] };
 
   const merged = mergeArchive(archive, { zh: [], en: [] }, '2026-08-03T12:00:00.000Z');
   const previous = merged.days.find((day) => day.date === '2026-08-02');
 
-  assert.deepEqual(previous.boards.zh.map((item) => item.title), [domesticPractice.title]);
+  assert.deepEqual(previous.boards.zh.map((item) => item.title), [
+    domesticPractice.title,
+    selectedDomesticFallback.title,
+  ]);
   assert.deepEqual(previous.boards.en.map((item) => item.title), [internationalRelease.title]);
 });
 
@@ -411,27 +425,115 @@ test('sanitizes archived boards while merging today within the seven-day window'
   ]);
 });
 
-test('domestic selection does not pad with related release announcements', () => {
+test('domestic selection uses related releases only to reach four items', () => {
   const now = Date.parse('2026-08-03T00:00:00Z');
   const items = [
     {
       title: 'STM32 FreeRTOS low-power configuration tutorial',
       summary: 'Includes code, compiler configuration, and power test results.',
-      link: 'https://example.com/practice', source: 'Fixture',
+      link: 'https://example.com/practice-1', source: 'Fixture',
       date: '2026-08-03', _ts: now,
     },
     {
-      title: 'RuleGo v0.37.0 release: industrial protocols and edge computing upgrades',
-      summary: 'The new version was formally released today.',
-      link: 'https://example.com/release', source: 'Fixture',
+      title: 'ESP32 Wi-Fi driver source analysis guide',
+      summary: 'Includes source code, configuration, and debugging steps.',
+      link: 'https://example.com/practice-2', source: 'Fixture',
       date: '2026-08-03', _ts: now - 1000,
+    },
+    {
+      title: 'New sensor announced',
+      summary: 'The new product was formally announced today.',
+      link: 'https://example.com/release-1', source: 'Fixture',
+      date: '2026-08-03', _ts: now - 2000,
+    },
+    {
+      title: 'Bluetooth module announcement',
+      summary: 'A new camera module was launched today.',
+      link: 'https://example.com/release-2', source: 'Fixture',
+      date: '2026-08-03', _ts: now - 3000,
+    },
+    {
+      title: 'Industrial automation update',
+      summary: 'The product was released today.',
+      link: 'https://example.com/release-3', source: 'Fixture',
+      date: '2026-08-03', _ts: now - 4000,
+    },
+    {
+      title: 'Edge AI startup raises 10 million in a new round',
+      summary: '', link: 'https://example.com/finance', source: 'Fixture',
+      date: '2026-08-03', _ts: now - 500,
     },
   ];
 
   assert.deepEqual(
     selectBoardItems(items, 'zh', now).map((item) => item.title),
-    ['STM32 FreeRTOS low-power configuration tutorial']
+    [
+      'STM32 FreeRTOS low-power configuration tutorial',
+      'ESP32 Wi-Fi driver source analysis guide',
+      'New sensor announced',
+      'Bluetooth module announcement',
+    ]
   );
+});
+
+test('domestic selection does not add relaxed items after four strict items', () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const strictTitles = [
+    'STM32 interrupt configuration tutorial',
+    'ESP32 driver source code analysis guide',
+    'Zephyr device tree debugging practice',
+    'FreeRTOS queue implementation walkthrough',
+  ];
+  const items = strictTitles.map((title, index) => ({
+    title,
+    summary: 'Includes code, configuration, and debugging steps.',
+    link: `https://example.com/strict-${index}`,
+    source: 'Fixture', date: '2026-08-03', _ts: now - index * 1000,
+  }));
+  items.push({
+    title: 'New STM32 edge AI developer board release',
+    summary: '', link: 'https://example.com/relaxed', source: 'Fixture',
+    date: '2026-08-03', _ts: now + 1000,
+  });
+
+  assert.deepEqual(
+    selectBoardItems(items, 'zh', now).map((item) => item.title),
+    strictTitles
+  );
+});
+
+test('publication gate rejects fewer than four final domestic items', () => {
+  assert.throws(
+    () => assertPublishableBoards({ en: [], zh: [{}, {}, {}] }),
+    /Domestic daily picks require at least 4 items; got 3/
+  );
+  assert.doesNotThrow(() =>
+    assertPublishableBoards({ en: [], zh: [{}, {}, {}, {}] })
+  );
+});
+
+test('one failed domestic source does not discard successful sources', async () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const xml = `
+    <rss><channel><item>
+      <title>STM32 FreeRTOS firmware development tutorial</title>
+      <link>https://example.com/story</link>
+      <pubDate>Mon, 03 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Includes source code, configuration, and debugging steps.</description>
+    </item></channel></rss>`;
+  const fetcher = async (url) => {
+    if (url.endsWith('/failed')) throw new Error('fixture failure');
+    return xml;
+  };
+
+  const selected = await collectBoard([
+    { name: 'Failed', url: 'https://example.com/failed' },
+    { name: 'Working', url: 'https://example.com/working' },
+  ], 'zh', fetcher, now);
+
+  assert.deepEqual(selected.map((item) => item.title), [
+    'STM32 FreeRTOS firmware development tutorial',
+  ]);
 });
 
 test('international selection keeps the existing product-release policy', () => {
