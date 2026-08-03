@@ -28,6 +28,7 @@ const CORE_KEYWORDS = [
   "嵌入式", "单片机", "边缘计算", "边缘ai", "边缘 ai", "端侧", "物联网",
   "微控制器", "实时操作系统", "固件", "开发板", "裸机", "烧录", "智能硬件",
 ];
+const TECHNICAL_ACQUISITION_PATTERN = /\b(?:data|image|signal)\s+acquisition\b/g;
 // 外围词：相关但也会出现在泛科技新闻中，需与其他词共现
 const RELATED_KEYWORDS = [
   "soc", "npu", "gpu", "tpu", "silicon", "semiconductor", "chiplet", "sensor",
@@ -37,6 +38,7 @@ const RELATED_KEYWORDS = [
   "wearable", "bms", "battery", "power management", "inference",
   "quantization", "tensorrt", "onnx", "openvino", "tflite", "neural", "llm",
   "camera", "vision", "gateway", "ai accelerator",
+  "data acquisition", "image acquisition", "signal acquisition",
   "芯片", "半导体", "传感器", "模组", "推理", "模型部署", "大模型", "机器人",
   "无人机", "电机", "工业控制", "自动化", "汽车电子", "车规", "电源", "电池",
   "射频", "5g", "蓝牙", "视觉", "摄像头", "激光雷达", "毫米波", "存储",
@@ -58,12 +60,14 @@ const NEGATIVE_KEYWORDS = [
 const NEGATIVE_PATTERNS = [
   /\b(?:raises?|raised|raising|closes?|closed)\b.{0,80}\b(?:funding|financing|capital|investment|seed|series\s+[a-z0-9]+|round|\d+(?:\.\d+)?\s*(?:million|billion)|[$€£¥]\s*\d+)\b/,
   /\b(?:funding|financing|seed|series\s+[a-z0-9]+|investment)\b.{0,80}\b(?:round|raises?|raised|raising|closes?|closed)\b/,
-  /\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b.{0,80}\b(?:acquire|acquires|acquired|acquiring|acquisition)\b/,
-  /\b(?:acquire|acquires|acquired|acquiring|acquisition)\b.{0,80}\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b/,
   /\b(?:layoffs?|lays?\s+off|laid\s+off)\b/,
   /\b(?:names?|named|appoints?|appointed)\b.{0,60}\b(?:ceo|cfo|cto|chief\s+executive(?:\s+officer)?|chief\s+(?:financial|technology|operating)\s+officer|president|chair(?:man|woman|person)?)\b/,
   /\b(?:ceo|cfo|cto|chief\s+executive(?:\s+officer)?|chief\s+(?:financial|technology|operating)\s+officer|president|chair(?:man|woman|person)?)\b.{0,60}\b(?:appointment|appointed|named)\b/,
   /\b(?:plans?|planning|applies?|applying|files?|filing)\s+(?:to|for)\s+(?:list|listing|an?\s+ipo)\b/,
+];
+const ACQUISITION_TRANSACTION_PATTERNS = [
+  /\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b.{0,80}\b(?:acquire|acquires|acquired|acquiring|acquisition)\b/,
+  /\b(?:acquire|acquires|acquired|acquiring|acquisition)\b.{0,80}\b(?:company|startup|vendor|firm|business|manufacturer|corporation)\b/,
 ];
 const SCORE_THRESHOLD = 3; // 纯外围词入选线；命中核心词时得分 >= 2 即可
 const MAX_AGE_DAYS = 14; // 只保留最近 14 天的内容，保证"最新"
@@ -227,12 +231,16 @@ function includesKeyword(text, keyword) {
 function topicScore(item) {
   const title = (item.title || "").toLowerCase();
   const text = title + " " + (item.summary || "").toLowerCase();
+  const acquisitionContext = text.replace(TECHNICAL_ACQUISITION_PATTERN, "");
   // 负向词一票否决
   for (const kw of NEGATIVE_KEYWORDS) {
     if (includesKeyword(text, kw)) return { score: -1, hasCore: false };
   }
   for (const pattern of NEGATIVE_PATTERNS) {
     if (pattern.test(text)) return { score: -1, hasCore: false };
+  }
+  for (const pattern of ACQUISITION_TRANSACTION_PATTERNS) {
+    if (pattern.test(acquisitionContext)) return { score: -1, hasCore: false };
   }
   let score = 0;
   let hasCore = false;

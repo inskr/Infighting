@@ -82,6 +82,27 @@ test('does not confuse technical uses of corporate morphology with corporate new
   }
 });
 
+test('distinguishes technical acquisition compounds from corporate transactions', () => {
+  const cases = [
+    { title: 'Vendor guide to STM32 data acquisition using DMA', want: true },
+    {
+      title: 'Semiconductor company demonstrates STM32 data acquisition with an external ADC',
+      want: true,
+    },
+    { title: 'Edge camera image acquisition pipeline on an ARM Cortex-M MCU', want: true },
+    { title: 'Signal acquisition and filtering with an IMU sensor', want: true },
+    { title: 'Company plans to acquire embedded systems vendor', want: false },
+    { title: 'Edge AI company announces acquisition of embedded vendor', want: false },
+    { title: 'Embedded vendor acquisition closes this quarter', want: false },
+    { title: 'Company completes acquisition of MCU startup', want: false },
+  ];
+
+  assert.deepEqual(
+    cases.map(({ title }) => ({ title, relevant: isTopicRelevant({ title }) })),
+    cases.map(({ title, want }) => ({ title, relevant: want }))
+  );
+});
+
 test('rejects generic technology news without enough domain relevance', () => {
   assert.equal(
     isTopicRelevant({ title: 'Cloud platform launches a new developer dashboard' }),
