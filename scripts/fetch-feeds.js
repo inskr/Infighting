@@ -69,10 +69,16 @@ const DOMESTIC_INELIGIBLE_SIGNALS = [
   '\u6c99\u9f99', '\u6d3b\u52a8', '\u8bba\u575b', '\u5927\u4f1a', '\u5cf0\u4f1a', '\u5c55\u4f1a',
   '\u934f\ue100\u5f83', '\u5a0c\u6b13\u7df3\u5a32\u8bf2',
 ];
-const DOMESTIC_COMMENTARY_SIGNALS = [
-  '瑙傜偣', '璇勮', '瑙ｈ', '鎬濊€?',
-  '\u89c2\u70b9', '\u8bc4\u8bba', '\u89e3\u8bfb', '\u601d\u8003',
+const DOMESTIC_HARD_COMMENTARY_SIGNALS = [
+  '瑙傜偣', '璇勮', '鎬濊€?',
+  '\u89c2\u70b9', '\u8bc4\u8bba', '\u770b\u6cd5', '\u601d\u8003',
   '\u6b91\u7459\uff46\u703d',
+];
+const DOMESTIC_SOURCE_ANALYSIS_SIGNALS = [
+  '瑙ｈ', '瑙ｆ瀽', '\u89e3\u8bfb', '\u89e3\u6790',
+];
+const DOMESTIC_SOURCE_CODE_SIGNALS = [
+  '婧愮爜', 'source code', '\u6e90\u7801',
 ];
 const NEGATIVE_KEYWORDS = [
   "股票", "股市", "股价", "市值", "涨停", "跌停", "收盘", "收跌",
@@ -306,9 +312,10 @@ function isDomesticTechnicalContent(item) {
   const summary = (item.summary || '').toLowerCase();
   const text = title + ' ' + summary;
   if (includesAnySignal(text, DOMESTIC_INELIGIBLE_SIGNALS)) return false;
+  if (includesAnySignal(text, DOMESTIC_HARD_COMMENTARY_SIGNALS)) return false;
   if (
-    includesAnySignal(text, DOMESTIC_COMMENTARY_SIGNALS) &&
-    !includesAnySignal(text, DOMESTIC_ENGINEERING_EVIDENCE)
+    includesAnySignal(text, DOMESTIC_SOURCE_ANALYSIS_SIGNALS) &&
+    !includesAnySignal(text, DOMESTIC_SOURCE_CODE_SIGNALS)
   ) return false;
   const titleHasPractice = includesAnySignal(title, DOMESTIC_PRACTICE_SIGNALS);
   const hasPractice = titleHasPractice || includesAnySignal(summary, DOMESTIC_PRACTICE_SIGNALS);

@@ -44,6 +44,12 @@ test('domestic admission keeps source-code analysis with 解读', () => {
   assert.equal(isDomesticTechnicalContent(item), true, item.title);
 });
 
+test('domestic admission rejects general commentary with engineering words', () => {
+  const item = { title: 'STM32 source code 开发观点' };
+
+  assert.equal(isDomesticTechnicalContent(item), false, item.title);
+});
+
 test('domestic admission rejects releases products and industry news', () => {
   const rejected = [
     { title: 'RuleGo v0.37.0 鍙戝竷锛氬叏闈㈡敮鎸佸伐涓氬崗璁笌杈圭紭璁＄畻' },
