@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { isTopicRelevant, selectBoardItems } = require('../scripts/fetch-feeds');
+const { isTopicRelevant, mergeArchive, selectBoardItems } = require('../scripts/fetch-feeds');
 
 test('admits embedded and edge AI engineering content', () => {
   const accepted = [
@@ -57,6 +57,57 @@ test('admits OpenHarmony embedded work with a real embedded signal', () => {
     isTopicRelevant({ title: 'OpenHarmony MCU device driver development tutorial' }),
     true
   );
+});
+
+test('sanitizes archived boards while merging today within the seven-day window', () => {
+  const validArchived = {
+    title: 'STM32 RTOS driver tutorial',
+    link: 'https://example.com/stm32',
+    source: 'Fixture',
+    date: '2026-08-02',
+    summary: '',
+    lang: 'en',
+  };
+  const staleFinance = {
+    title: 'Hang Seng index rises after trading opens',
+    link: 'https://example.com/hsi',
+    source: 'Fixture',
+    date: '2026-08-02',
+    summary: '',
+    lang: 'en',
+  };
+  const archive = {
+    days: [
+      { date: '2026-08-03', boards: { en: [staleFinance] } },
+      { date: '2026-08-02', boards: { en: [validArchived, staleFinance] } },
+      { date: '2026-07-28', boards: { en: [validArchived] } },
+      { date: '2026-07-27', boards: { en: [validArchived] } },
+    ],
+  };
+  const todayBoards = {
+    en: [{
+      title: 'Edge AI deployment on an MCU',
+      link: 'https://example.com/edge-ai',
+      source: 'Fixture',
+      date: '2026-08-03',
+      summary: '',
+      lang: 'en',
+    }],
+  };
+
+  const merged = mergeArchive(archive, todayBoards, '2026-08-03T12:00:00.000Z');
+
+  assert.deepEqual(merged.days.map((day) => day.date), [
+    '2026-08-03',
+    '2026-08-02',
+    '2026-07-28',
+  ]);
+  assert.deepEqual(merged.days[0].boards.en.map((item) => item.title), [
+    'Edge AI deployment on an MCU',
+  ]);
+  assert.deepEqual(merged.days[1].boards.en.map((item) => item.title), [
+    'STM32 RTOS driver tutorial',
+  ]);
 });
 
 test('does not pad a board with unrelated items when few technical items qualify', () => {
