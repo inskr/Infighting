@@ -65,11 +65,14 @@ const DOMESTIC_NEWS_SIGNALS = [
 const DOMESTIC_INELIGIBLE_SIGNALS = [
   '鍚堜綔', '鎴樼暐', '璁″垝', '鍏徃鍔ㄦ€?', '浼佷笟鍔ㄦ€?',
   '娌欓緳', '媧诲姩', '璁哄潧', '澶т細', '宄颁細', '灞曚細',
-  '瑙傜偣', '璇勮', '瑙ｈ', '鎬濊€?',
   '\u516c\u53f8', '\u4f01\u4e1a', '\u5408\u4f5c', '\u6218\u7565', '\u8ba1\u5212',
   '\u6c99\u9f99', '\u6d3b\u52a8', '\u8bba\u575b', '\u5927\u4f1a', '\u5cf0\u4f1a', '\u5c55\u4f1a',
+  '\u934f\ue100\u5f83', '\u5a0c\u6b13\u7df3\u5a32\u8bf2',
+];
+const DOMESTIC_COMMENTARY_SIGNALS = [
+  '瑙傜偣', '璇勮', '瑙ｈ', '鎬濊€?',
   '\u89c2\u70b9', '\u8bc4\u8bba', '\u89e3\u8bfb', '\u601d\u8003',
-  '\u934f\ue100\u5f83', '\u5a0c\u6b13\u7df3\u5a32\u8bf2', '\u6b91\u7459\uff46\u703d',
+  '\u6b91\u7459\uff46\u703d',
 ];
 const NEGATIVE_KEYWORDS = [
   "股票", "股市", "股价", "市值", "涨停", "跌停", "收盘", "收跌",
@@ -303,6 +306,10 @@ function isDomesticTechnicalContent(item) {
   const summary = (item.summary || '').toLowerCase();
   const text = title + ' ' + summary;
   if (includesAnySignal(text, DOMESTIC_INELIGIBLE_SIGNALS)) return false;
+  if (
+    includesAnySignal(text, DOMESTIC_COMMENTARY_SIGNALS) &&
+    !includesAnySignal(text, DOMESTIC_ENGINEERING_EVIDENCE)
+  ) return false;
   const titleHasPractice = includesAnySignal(title, DOMESTIC_PRACTICE_SIGNALS);
   const hasPractice = titleHasPractice || includesAnySignal(summary, DOMESTIC_PRACTICE_SIGNALS);
   if (!hasPractice) return false;

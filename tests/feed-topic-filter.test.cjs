@@ -36,6 +36,14 @@ test('domestic admission keeps tutorials source analysis and engineering practic
   }
 });
 
+test('domestic admission keeps source-code analysis with 解读', () => {
+  const item = {
+    title: 'STM32 source code \u9a71\u52a8\u6e90\u7801\u89e3\u8bfb\u4e0e\u4e2d\u65ad\u5904\u7406\u89e3\u6790',
+  };
+
+  assert.equal(isDomesticTechnicalContent(item), true, item.title);
+});
+
 test('domestic admission rejects releases products and industry news', () => {
   const rejected = [
     { title: 'RuleGo v0.37.0 鍙戝竷锛氬叏闈㈡敮鎸佸伐涓氬崗璁笌杈圭紭璁＄畻' },
