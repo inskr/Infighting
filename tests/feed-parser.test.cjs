@@ -29,3 +29,22 @@ test('feed parser drops unsafe link protocols before generated data is written',
   assert.equal(items[0].title, 'Safe story');
   assert.equal(items[0].link, 'https://example.com/story');
 });
+
+test('feed parser decodes decimal and hexadecimal numeric entities before truncation', () => {
+  const encodedSummary = `${'a'.repeat(178)}&#x2019;b`;
+  const xml = `
+    <rss><channel>
+      <item>
+        <title>NanoPi &#8211; Builder&#x2019;s Guide</title>
+        <link>https://example.com/entities</link>
+        <description>${encodedSummary}</description>
+        <pubDate>Wed, 29 Jul 2026 00:00:00 GMT</pubDate>
+      </item>
+    </channel></rss>`;
+
+  const items = parseFeed(xml, 'Fixture');
+  assert.equal(items.length, 1);
+  assert.equal(items[0].title, 'NanoPi – Builder’s Guide');
+  assert.equal(items[0].summary, `${'a'.repeat(178)}’b`);
+  assert.equal(items[0].summary.length, 180);
+});
