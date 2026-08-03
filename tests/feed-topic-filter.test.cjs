@@ -2,7 +2,12 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { isTopicRelevant, mergeArchive, selectBoardItems } = require('../scripts/fetch-feeds');
+const {
+  isDomesticTechnicalContent,
+  isTopicRelevant,
+  mergeArchive,
+  selectBoardItems,
+} = require('../scripts/fetch-feeds');
 
 test('admits embedded and edge AI engineering content', () => {
   const accepted = [
@@ -16,6 +21,57 @@ test('admits embedded and edge AI engineering content', () => {
   ];
 
   for (const item of accepted) assert.equal(isTopicRelevant(item), true, item.title);
+});
+
+test('domestic admission keeps tutorials source analysis and engineering practice', () => {
+  const accepted = [
+    { title: 'STM32 FreeRTOS 浠诲姟璋冨害鏁欑▼锛氫粠鍒涘缓浠诲姟鍒颁紭鍏堢骇閰嶇疆' },
+    { title: 'ESP32 Wi-Fi 椹卞姩婧愮爜瑙ｆ瀽涓庝簨浠跺惊鐜疄鐜?' },
+    { title: '杈圭紭 AI 妯″瀷鍦?Jetson 涓婄殑閲忓寲閮ㄧ讲瀹炴垬' },
+    { title: '鍩轰簬 Zephyr 鐨勪紶鎰熷櫒椹卞姩绉绘涓庤皟璇曡俯鍧戣褰?' },
+  ];
+
+  for (const item of accepted) {
+    assert.equal(isDomesticTechnicalContent(item), true, item.title);
+  }
+});
+
+test('domestic admission rejects releases products and industry news', () => {
+  const rejected = [
+    { title: 'RuleGo v0.37.0 鍙戝竷锛氬叏闈㈡敮鎸佸伐涓氬崗璁笌杈圭紭璁＄畻' },
+    { title: '鏂版 STM32 杈圭紭 AI 寮€鍙戞澘姝ｅ紡涓婂競' },
+    { title: '鍥戒骇 MCU 鍘傚晢浜浉宓屽叆寮忔妧鏈嘲浼?' },
+    { title: '2026 杈圭紭璁＄畻浜т笟瓒嬪娍鎶ュ憡鍙戝竷' },
+    { title: '澶氬湴鍑哄彴鐗╄仈缃戜骇涓氭壎鎸佹斂绛?' },
+  ];
+
+  for (const item of rejected) {
+    assert.equal(isDomesticTechnicalContent(item), false, item.title);
+  }
+});
+
+test('domestic mixed release content requires title intent and summary evidence', () => {
+  const cases = [
+    {
+      title: 'Zephyr 4.0 鍙戝竷鍚庣殑 STM32 椹卞姩杩佺Щ瀹炴垬',
+      summary: '鏈枃缁欏嚭璁惧鏍戜慨鏀广€佺紪璇戦厤缃€佺儳褰曟楠ゅ拰璋冭瘯缁撴灉銆?',
+      want: true,
+    },
+    {
+      title: 'Zephyr 4.0 姝ｅ紡鍙戝竷锛屾柊澧?STM32 椹卞姩鏀寔',
+      summary: '鏂扮増鏈敼杩涗簡宓屽叆寮忚澶囨敮鎸併€?',
+      want: false,
+    },
+    {
+      title: 'Zephyr 4.0 姝ｅ紡鍙戝竷锛屾柊澧?STM32 椹卞姩鏀寔',
+      summary: '闄勮澶囨爲淇敼銆佺紪璇戦厤缃拰鐑у綍姝ラ銆?',
+      want: false,
+    },
+  ];
+
+  for (const { want, ...item } of cases) {
+    assert.equal(isDomesticTechnicalContent(item), want, item.title);
+  }
 });
 
 test('rejects capital and corporate news even when it mentions edge AI', () => {

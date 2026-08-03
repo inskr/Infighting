@@ -45,6 +45,23 @@ const RELATED_KEYWORDS = [
   "算力", "开源硬件", "pcb", "示波器", "仿真", "plc",
 ];
 // 负向词：命中即排除（股市行情 / 人事变动 / 纯资本新闻，非技术内容）
+const DOMESTIC_PRACTICE_SIGNALS = [
+  '鏁欑▼', '鎸囧崡', '瀹炴垬', '瀹炶返', '婧愮爜', '瑙ｆ瀽', '鍘熺悊', '鍏ラ棬', '杩涢樁',
+  '浠庨浂', '瀹炵幇', '寮€鍙?', '绉绘', '閮ㄧ讲', '璋冭瘯', '浼樺寲', '娴嬭瘯', '鎺掗殰',
+  '韪╁潙', '閰嶇疆', '鏋勫缓', '澶嶇洏', 'tutorial', 'guide', 'walkthrough',
+  'hands-on', 'source code', 'deep dive', 'porting', 'deployment', 'debugging',
+];
+const DOMESTIC_ENGINEERING_EVIDENCE = [
+  '浠ｇ爜', '姝ラ', '璁惧鏍?', '椹卞姩', '缂栬瘧', '鐑у綍', '閰嶇疆', '鎺ュ彛', '鍗忚',
+  '鏃ュ織', '娴嬭瘯', '璋冭瘯', '杩佺Щ', '閮ㄧ讲', '瀹炵幇', '婧愮爜', 'code', 'build',
+  'flash', 'driver', 'configuration', 'benchmark', 'debug', 'deploy',
+];
+const DOMESTIC_NEWS_SIGNALS = [
+  '鍙戝竷', '鎺ㄥ嚭', '浜浉', '鏂板搧', '姝ｅ紡涓婄嚎', '涓婂競', '宄颁細', '灞曚細',
+  '琛屼笟鎶ュ憡', '浜т笟鎶ュ憡', '瓒嬪娍鎶ュ憡', '鐧界毊涔?', '鏀跨瓥', '甯傚満娲诲姩',
+  '浜т笟鍔ㄦ€?', '閲嶅ぇ绐佺牬', '鎴愬姛鐮斿埗', '棣栨', '鑾峰',
+  'release', 'launch', 'announces', 'announcement', 'report', 'white paper',
+];
 const NEGATIVE_KEYWORDS = [
   "股票", "股市", "股价", "市值", "涨停", "跌停", "收盘", "收跌",
   "港股", "美股", "a股", "注册资本",
@@ -266,6 +283,26 @@ function isTopicRelevant(item) {
   return result.score >= SCORE_THRESHOLD && result.hasRelatedInTitle;
 }
 
+function includesAnySignal(text, signals) {
+  return signals.some((signal) => includesKeyword(text, signal));
+}
+
+function isDomesticTechnicalContent(item) {
+  if (!isTopicRelevant(item)) return false;
+
+  const title = (item.title || '').toLowerCase();
+  const summary = (item.summary || '').toLowerCase();
+  const text = title + ' ' + summary;
+  const titleHasPractice = includesAnySignal(title, DOMESTIC_PRACTICE_SIGNALS);
+  const hasPractice = titleHasPractice || includesAnySignal(summary, DOMESTIC_PRACTICE_SIGNALS);
+  if (!hasPractice) return false;
+
+  const hasNewsSignal = includesAnySignal(text, DOMESTIC_NEWS_SIGNALS);
+  if (!hasNewsSignal) return true;
+
+  return titleHasPractice && includesAnySignal(summary, DOMESTIC_ENGINEERING_EVIDENCE);
+}
+
 function normalizeTitle(t) {
   return t.toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, "");
 }
@@ -460,6 +497,7 @@ if (require.main === module) {
 module.exports = {
   main,
   parseFeed,
+  isDomesticTechnicalContent,
   isTopicRelevant,
   mergeArchive,
   selectBoardItems,
