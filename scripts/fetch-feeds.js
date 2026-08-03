@@ -79,6 +79,8 @@ const BOARDS = {
       { name: "掘金", url: "https://juejin.cn/rss" },
       { name: "InfoQ 中文", url: "https://www.infoq.cn/feed" },
       { name: "开源中国", url: "https://www.oschina.net/news/rss" },
+      { name: "IT之家", url: "https://www.ithome.com/rss/" },
+      { name: "SegmentFault", url: "https://segmentfault.com/feeds" },
     ],
   },
 };
@@ -314,9 +316,9 @@ function selectBoardItems(items, lang, now = Date.now()) {
 }
 
 /* ---------- 主流程 ---------- */
-async function collectBoard(feeds, lang) {
+async function collectBoard(feeds, lang, fetcher = fetchText, now = Date.now()) {
   const results = await Promise.allSettled(
-    feeds.map((f) => fetchText(f.url, 2).then((xml) => parseFeed(xml, f.name)))
+    feeds.map((f) => fetcher(f.url, 2).then((xml) => parseFeed(xml, f.name)))
   );
   const items = [];
   results.forEach((r, i) => {
@@ -327,7 +329,17 @@ async function collectBoard(feeds, lang) {
       console.log("  [FAIL] " + feeds[i].name + ": " + r.reason.message);
     }
   });
-  return selectBoardItems(items, lang);
+  return selectBoardItems(items, lang, now);
+}
+
+function assertPublishableBoards(boards) {
+  const domesticCount = Array.isArray(boards.zh) ? boards.zh.length : 0;
+  if (domesticCount < MIN_DOMESTIC_ITEMS) {
+    throw new Error(
+      "Domestic daily picks require at least " + MIN_DOMESTIC_ITEMS +
+        " items; got " + domesticCount + ". Existing generated data was preserved."
+    );
+  }
 }
 
 /* ---------- 7 天精选归档 ---------- */
@@ -390,6 +402,7 @@ async function main() {
   if (total === 0) {
     throw new Error("No feed items were fetched; existing generated data was preserved.");
   }
+  assertPublishableBoards(boards);
 
   const payload = {
     updatedAt: new Date().toISOString(),
@@ -421,6 +434,8 @@ if (require.main === module) {
 module.exports = {
   main,
   parseFeed,
+  assertPublishableBoards,
   classifyTopic,
+  collectBoard,
   selectBoardItems,
 };

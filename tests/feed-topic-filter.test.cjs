@@ -3,7 +3,9 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
+  assertPublishableBoards,
   classifyTopic,
+  collectBoard,
   selectBoardItems,
 } = require('../scripts/fetch-feeds');
 
@@ -69,5 +71,37 @@ test('international selection never uses relaxed fallback', () => {
 
   assert.deepEqual(selected.map((entry) => entry.title), [
     'Zephyr RTOS device driver tutorial',
+  ]);
+});
+
+test('publication gate rejects fewer than four final domestic items', () => {
+  assert.throws(
+    () => assertPublishableBoards({ en: [], zh: [{}, {}, {}] }),
+    /Domestic daily picks require at least 4 items; got 3/
+  );
+  assert.doesNotThrow(() =>
+    assertPublishableBoards({ en: [], zh: [{}, {}, {}, {}] })
+  );
+});
+
+test('one failed domestic source does not discard successful sources', async () => {
+  const xml = `
+    <rss><channel><item>
+      <title>STM32 FreeRTOS 固件开发教程</title>
+      <link>https://example.com/story</link>
+      <pubDate>Mon, 03 Aug 2026 00:00:00 GMT</pubDate>
+    </item></channel></rss>`;
+  const fetcher = async (url) => {
+    if (url.endsWith('/failed')) throw new Error('fixture failure');
+    return xml;
+  };
+
+  const selected = await collectBoard([
+    { name: 'Failed', url: 'https://example.com/failed' },
+    { name: 'Working', url: 'https://example.com/working' },
+  ], 'zh', fetcher, NOW);
+
+  assert.deepEqual(selected.map((entry) => entry.title), [
+    'STM32 FreeRTOS 固件开发教程',
   ]);
 });
