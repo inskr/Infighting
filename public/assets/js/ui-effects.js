@@ -39,6 +39,7 @@
     }
 
     function handlePointerMove(event) {
+      if (event.pointerType === "touch") return;
       if (!event.target || typeof event.target.closest !== "function") return;
       var surface = event.target.closest(".glass-surface");
       if (!surface || typeof surface.getBoundingClientRect !== "function") return;

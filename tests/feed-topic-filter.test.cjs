@@ -32,6 +32,19 @@ test('requires engineering context for broad technology topics', () => {
   assert.equal(classifyTopic(item('城市周末活动指南', 0, 'irrelevant')), 'irrelevant');
 });
 
+test('matches ASCII keywords only at alphanumeric boundaries', () => {
+  assert.equal(classifyTopic(item('Airtable workspace update', 0, 'airtable')), 'irrelevant');
+  assert.equal(classifyTopic(item('Tableau desktop release', 0, 'tableau')), 'irrelevant');
+  assert.equal(
+    classifyTopic(item('Bipolar transistor firmware optimization', 0, 'bipolar')),
+    'strict'
+  );
+  assert.equal(
+    classifyTopic(item('Evaluation of embedded firmware performance', 0, 'evaluation')),
+    'strict'
+  );
+});
+
 test('finance and corporate news stays blocked even when it mentions AI or chips', () => {
   const blockedTitles = [
     'AI 芯片公司发布季度财报',
@@ -40,10 +53,51 @@ test('finance and corporate news stays blocked even when it mentions AI or chips
     '芯片独角兽启动 IPO',
     '大模型企业估值突破百亿',
     'GPU 厂商季度业绩与净利润公布',
+    'AI 芯片行情与证券研报发布',
+    '机器人公司获投天使轮',
   ];
   blockedTitles.forEach((title, index) => {
     assert.equal(classifyTopic(item(title, 0, `blocked-${index}`)), 'blocked', title);
   });
+});
+
+test('product announcements and LLM policy news are not strict technical picks', () => {
+  const falsePositives = [
+    item(
+      '现代起亚推动芯片供应本土化：首款韩产车用 MCU LX Semicon LX61101 量产',
+      0,
+      'mcu-mass-production'
+    ),
+    item(
+      '甲骨文对 OpenJDK 项目禁止 AI 生成代码',
+      0,
+      'openjdk-policy',
+      'JDK 开源版本 OpenJDK 项目中，开发者可以使用 LLM 进行代码调试和审查。'
+    ),
+    item(
+      'Rust 项目团队宣布 LLM 政策：不禁止，但你要承认哪些代码不是你写的',
+      0,
+      'rust-policy',
+      'Rust 语言项目通过 LLM 使用政策，覆盖主流开源项目的代码贡献。'
+    ),
+  ];
+
+  falsePositives.forEach((entry) => {
+    assert.notEqual(classifyTopic(entry), 'strict', entry.title);
+  });
+  assert.equal(classifyTopic(item('STM32 FreeRTOS 固件开发教程', 0, 'firmware')), 'strict');
+  assert.equal(classifyTopic(item('HeteroFlow GPU 推理服务部署与 API 调试', 0, 'inference')), 'strict');
+});
+
+test('observability and troubleshooting tooling remains a strict engineering topic', () => {
+  const observabilityTool = item(
+    'DataBuff v0.1.7 发布 · 平台自监控与自排障',
+    0,
+    'databuff',
+    '面向云原生与微服务的 OpenTelemetry APM，采用 OTLP 接入并提供 Trace 与多 Agent 排障。'
+  );
+
+  assert.equal(classifyTopic(observabilityTool), 'strict');
 });
 
 test('service shutdowns, supply checks, and vehicle previews are not strict technical picks', () => {
@@ -51,10 +105,18 @@ test('service shutdowns, supply checks, and vehicle previews are not strict tech
     '零一万物大模型开放平台停止 API 调用及充值服务',
     '苹果测试长鑫内存芯片供应',
     '搭载三电机的全新纯电 SUV 预告图公布，采用全新驱动架构',
+    '潮起潮落，你我仍在 | 2026 腾讯云粤港澳大湾区架构师峰会',
   ];
   falsePositives.forEach((title, index) => {
     assert.notEqual(classifyTopic(item(title, 0, `false-positive-${index}`)), 'strict', title);
   });
+  const summit = item(
+    '潮起潮落，你我仍在 | 2026 腾讯云粤港澳大湾区架构师峰会',
+    0,
+    'summit',
+    'AI、大模型、Agent 与 AI Coding 技术栈快速变化，这是一场不太一样的峰会。'
+  );
+  assert.notEqual(classifyTopic(summit), 'strict', summit.title);
 });
 
 test('domestic selection never fills its minimum with generic technology releases', () => {
@@ -188,6 +250,24 @@ test('fills domestic minimum only with revalidated unique previous technical ite
   assert.equal(merged[2].source, 'Previous Tech');
   assert.equal(merged[2].date, '2026-07-31');
   assert.ok(merged.every((entry) => entry.lang === 'zh'));
+});
+
+test('deduplicates identical and near-identical short fallback titles', () => {
+  const previous = [
+    { ...item('固件教程', 1000, 'short-one'), date: '2026-07-31' },
+    { ...item('固件教程', 2000, 'short-two'), date: '2026-07-30' },
+    { ...item('固件教程上', 3000, 'short-near'), date: '2026-07-29' },
+    { ...item('固件调试', 4000, 'short-unrelated-one'), date: '2026-07-28' },
+    { ...item('驱动程序实战', 5000, 'short-unrelated-two'), date: '2026-07-27' },
+  ];
+
+  const merged = mergeDomesticWithPrevious([], previous, 3);
+
+  assert.deepEqual(merged.map((entry) => entry.title), [
+    '固件教程',
+    '固件调试',
+    '驱动程序实战',
+  ]);
 });
 
 test('does not insert previous items when current domestic set already exceeds the minimum', () => {

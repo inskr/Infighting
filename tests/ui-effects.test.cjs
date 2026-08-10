@@ -54,6 +54,41 @@ test('pointer movement updates CSS coordinates on the real glass surface target'
   assert.equal(values['--pointer-y'], '25%');
 });
 
+test('touch pointer movement does not update spotlight coordinates', () => {
+  const listeners = {};
+  const values = {};
+  const surface = {
+    getBoundingClientRect() {
+      return { left: 0, top: 0, width: 100, height: 100 };
+    },
+    style: {
+      setProperty(name, value) {
+        values[name] = value;
+      },
+    },
+  };
+  const root = {
+    matchMedia() {
+      return { matches: false };
+    },
+    document: {
+      addEventListener(name, handler) {
+        listeners[name] = handler;
+      },
+    },
+  };
+  assert.equal(Effects.createSpotlightController(root).bind(), true);
+
+  listeners.pointermove({
+    pointerType: 'touch',
+    clientX: 50,
+    clientY: 50,
+    target: { closest() { return surface; } },
+  });
+
+  assert.deepEqual(values, {});
+});
+
 test('coarse pointers and reduced-motion users do not bind spotlight tracking', () => {
   let listeners = 0;
   const root = {

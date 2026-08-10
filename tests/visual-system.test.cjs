@@ -1,9 +1,39 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { createApp } = require('../src/app');
+
+const stylesheet = fs.readFileSync(
+  path.join(__dirname, '..', 'public', 'assets', 'css', 'style.css'),
+  'utf8'
+);
+
+function allRuleDeclarations(source, selector) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return [...source.matchAll(new RegExp(`${escaped}\\s*\\{([^{}]*)\\}`, 'g'))]
+    .map((match) => match[1]);
+}
+
+function ruleDeclarations(source, selector) {
+  const declarations = allRuleDeclarations(source, selector);
+  return declarations.length ? declarations[declarations.length - 1] : '';
+}
+
+function atRuleBlock(source, marker) {
+  const start = source.indexOf(marker);
+  if (start < 0) return '';
+  const open = source.indexOf('{', start);
+  let depth = 0;
+  for (let index = open; index < source.length; index += 1) {
+    if (source[index] === '{') depth += 1;
+    if (source[index] === '}') depth -= 1;
+    if (depth === 0) return source.slice(open + 1, index);
+  }
+  return '';
+}
 
 function createStaticServer() {
   const statsStore = {
@@ -63,4 +93,38 @@ test('published homepage serves the supplied image through an accessible Hero', 
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+});
+
+test('hero keeps opaque dark layers when backdrop filters are unavailable', () => {
+  const fallbackStart = stylesheet.indexOf('@supports not');
+  const fallbackEnd = stylesheet.indexOf('/* ================= Responsive', fallbackStart);
+  const fallback = stylesheet.slice(fallbackStart, fallbackEnd);
+  const heroBase = allRuleDeclarations(stylesheet, '.hero').join('\n');
+  const heroFallback = ruleDeclarations(fallback, '.hero');
+  const panelFallback = ruleDeclarations(fallback, '.hero-panel');
+
+  assert.match(heroBase, /background:\s*linear-gradient/i);
+  assert.match(heroFallback, /background:\s*(?:linear-gradient|#[0-2][0-9a-f]{5})/i);
+  assert.match(panelFallback, /background:\s*(?:linear-gradient|#[0-2][0-9a-f]{5})/i);
+  assert.doesNotMatch(heroFallback + panelFallback, /var\(--surface(?:-strong)?\)/);
+});
+
+test('spotlight and card hover effects are scoped to fine hover pointers', () => {
+  const fineHover = atRuleBlock(stylesheet, '@media (hover: hover) and (pointer: fine)');
+  const coarsePointer = atRuleBlock(stylesheet, '@media (hover: none), (pointer: coarse)');
+
+  assert.match(fineHover, /\.glass-surface:hover::before\s*\{[^{}]*opacity:\s*1/s);
+  assert.match(fineHover, /\.board:hover,[\s\S]*?transform:\s*translateY\(-3px\)/);
+  assert.match(coarsePointer, /\.glass-surface:hover::before\s*\{[^{}]*opacity:\s*0/s);
+  assert.match(coarsePointer, /\.board:hover,[\s\S]*?transform:\s*none/);
+});
+
+test('light page intro and dark hero use distinct eyebrow contrast tokens', () => {
+  const rootTokens = ruleDeclarations(stylesheet, ':root');
+  const pageIntroEyebrow = ruleDeclarations(stylesheet, '.page-intro .eyebrow');
+  const heroEyebrow = ruleDeclarations(stylesheet, '.hero-panel .eyebrow');
+
+  assert.match(rootTokens, /--hero-accent:\s*#67e8f9/i);
+  assert.match(pageIntroEyebrow, /color:\s*var\(--accent-strong\)/);
+  assert.match(heroEyebrow, /color:\s*var\(--hero-accent\)/);
 });

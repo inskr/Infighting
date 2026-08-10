@@ -19,18 +19,20 @@ const TIMEOUT_MS = 15000;
 
 // 领域相关性计分：金融商业词先否决；核心词直接严格入选；
 // 宽泛科技词必须与开发、实现、部署或性能等工程语境共同出现才严格入选。
-// 核心词：几乎只出现在嵌入式/边缘 AI 语境的专属词
+// 核心词：明确描述工程实现、部署或底层软件工作的词。
 const CORE_KEYWORDS = [
-  "stm32", "esp32", "mcu", "microcontroller", "embedded", "rtos", "freertos",
-  "zephyr", "risc-v", "fpga", "cortex", "firmware", "tinyml", "edge ai",
-  "edge computing", "iot", "internet of things", "sbc", "raspberry pi",
-  "arduino", "yocto", "buildroot", "device driver", "linux kernel",
-  "bootloader", "jetson", "on-device",
-  "嵌入式", "单片机", "边缘计算", "边缘ai", "边缘 ai", "端侧", "物联网",
-  "微控制器", "实时操作系统", "固件", "开发板", "裸机", "烧录", "智能硬件",
+  "rtos", "freertos", "firmware", "device driver", "linux kernel", "bootloader",
+  "deployment", "implementation", "source code", "porting", "toolchain",
+  "opentelemetry", "otlp", "apm",
+  "实时操作系统", "固件", "裸机", "烧录", "驱动开发", "驱动程序", "设备驱动",
+  "模型部署", "性能优化", "推理优化", "源码实现", "移植实战", "编译教程", "可观测", "排障",
 ];
-// 外围词：相关但也会出现在泛科技新闻中，需与其他词共现
+// 外围词：领域、芯片、产品或平台名称，必须与工程行为共同出现才严格入选。
 const RELATED_KEYWORDS = [
+  "stm32", "esp32", "mcu", "microcontroller", "embedded", "zephyr", "risc-v",
+  "fpga", "cortex", "tinyml", "edge ai", "edge computing", "iot",
+  "internet of things", "sbc", "raspberry pi", "arduino", "yocto", "buildroot",
+  "jetson", "on-device",
   "soc", "npu", "gpu", "tpu", "silicon", "semiconductor", "chiplet", "sensor",
   "lidar", "radar", "imu", "mqtt", "lora", "zigbee", "bluetooth", "ble",
   "wifi", "5g", "nb-iot", "can bus", "modbus", "robot", "robotics", "drone",
@@ -38,6 +40,8 @@ const RELATED_KEYWORDS = [
   "wearable", "bms", "battery", "power management", "inference",
   "quantization", "tensorrt", "onnx", "openvino", "tflite", "neural", "llm",
   "camera", "vision", "gateway", "ai accelerator",
+  "嵌入式", "单片机", "边缘计算", "边缘ai", "边缘 ai", "端侧", "物联网",
+  "微控制器", "开发板", "智能硬件",
   "芯片", "半导体", "传感器", "模组", "推理", "模型部署", "大模型", "机器人",
   "无人机", "电机", "工业控制", "自动化", "汽车电子", "车规", "电源", "电池",
   "射频", "5g", "蓝牙", "视觉", "摄像头", "激光雷达", "毫米波", "存储",
@@ -45,7 +49,8 @@ const RELATED_KEYWORDS = [
 ];
 // 工程词：宽泛科技主题只有与开发、实现、部署或性能工作共同出现时才严格入选。
 const ENGINEERING_KEYWORDS = [
-  "开发", "编程", "源码", "开源", "教程", "实战", "架构", "协议", "驱动开发",
+  "应用开发", "软件开发", "固件开发", "组件开发", "开发实践", "开发教程", "开发实战",
+  "开发工具", "二次开发", "编程", "源码", "教程", "实战", "架构", "协议", "驱动开发",
   "驱动程序", "设备驱动", "调试", "性能优化", "部署", "组件", "接口", "移植", "编译", "算法",
   "api", "sdk", "benchmark", "implementation", "tutorial", "developer", "programming",
   "source code", "architecture", "protocol", "debug", "optimization", "deployment",
@@ -53,11 +58,11 @@ const ENGINEERING_KEYWORDS = [
 ];
 // 负向词：命中即排除（股市行情 / 人事变动 / 纯资本新闻，非技术内容）
 const NEGATIVE_KEYWORDS = [
-  "股票", "股市", "股价", "市值", "涨停", "跌停", "收涨", "收跌",
+  "股票", "股市", "股价", "市值", "涨停", "跌停", "收涨", "收跌", "行情", "证券", "研报",
   "财报", "营收", "净利润", "利润", "亏损", "同比", "季度业绩", "融资", "募资",
-  "估值", "上市", "ipo", "投资者", "领投", "战略投资",
+  "估值", "上市", "ipo", "投资者", "领投", "战略投资", "获投", "天使轮",
   "充值", "停止服务", "停止提供", "停止运营", "服务下线",
-  "预告图", "新车", "车型", "马力", "售价",
+  "预告图", "新车", "车型", "马力", "售价", "峰会",
   "收购", "并购", "裁员", "离职", "任命", "港股", "美股", "a股", "注册资本",
   "stock market", "stock price", "share price", "market cap", "shares rose",
   "earnings", "revenue", "profit", "quarterly results", "funding round", "venture capital", "valuation",
@@ -216,11 +221,19 @@ function parseFeed(xml, sourceName) {
 }
 
 /* ---------- 领域相关性过滤（计分 + 负向词 + 标题近似去重） ---------- */
+function matchesKeyword(text, keyword) {
+  const normalized = keyword.toLowerCase();
+  if (/[^\x00-\x7f]/.test(normalized)) return text.includes(normalized);
+  const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("(?:^|[^a-z0-9])" + escaped + "(?=$|[^a-z0-9])").test(text);
+}
+
 function topicScore(item) {
   const text = (item.title + " " + (item.summary || "")).toLowerCase();
+  const title = item.title.toLowerCase();
   // 负向词一票否决
   for (const kw of NEGATIVE_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) {
+    if (matchesKeyword(text, kw)) {
       return { score: -1, hasCore: false, hasRelated: false, hasEngineering: false };
     }
   }
@@ -228,31 +241,38 @@ function topicScore(item) {
   let hasCore = false;
   let hasRelated = false;
   let hasEngineering = false;
+  let hasTitleSignal = false;
   for (const kw of CORE_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) {
+    if (matchesKeyword(text, kw)) {
       score += 3;
       hasCore = true;
+      if (matchesKeyword(title, kw)) hasTitleSignal = true;
     }
   }
   for (const kw of RELATED_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) {
+    if (matchesKeyword(text, kw)) {
       score += 1;
       hasRelated = true;
+      if (matchesKeyword(title, kw)) hasTitleSignal = true;
     }
   }
   for (const kw of ENGINEERING_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) {
+    if (matchesKeyword(text, kw)) {
       score += 1;
       hasEngineering = true;
+      if (matchesKeyword(title, kw)) hasTitleSignal = true;
     }
   }
-  return { score, hasCore, hasRelated, hasEngineering };
+  return { score, hasCore, hasRelated, hasEngineering, hasTitleSignal };
 }
 
 function classifyTopic(item) {
   const result = topicScore(item);
   if (result.score < 0) return "blocked";
-  if (result.hasCore || (result.hasRelated && result.hasEngineering)) return "strict";
+  if (
+    result.hasCore ||
+    (result.hasRelated && result.hasEngineering && result.hasTitleSignal)
+  ) return "strict";
   if (result.hasRelated || result.hasEngineering) return "relaxed";
   return "irrelevant";
 }
@@ -280,7 +300,11 @@ function commonSubLen(a, b) {
 
 function isDuplicateTitle(normTitle, accepted) {
   for (const other of accepted) {
-    if (commonSubLen(normTitle, other) >= 12) return true;
+    if (normTitle === other) return true;
+    const shorterLength = Math.min(normTitle.length, other.length);
+    if (shorterLength < 4) continue;
+    const threshold = Math.max(4, Math.ceil(shorterLength * 0.8));
+    if (commonSubLen(normTitle, other) >= threshold) return true;
   }
   return false;
 }
