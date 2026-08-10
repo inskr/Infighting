@@ -6,26 +6,49 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
   <title>Infighting · 嵌入式与边缘计算开发博客</title>
   <meta name="description" content="专注嵌入式系统与边缘计算的个人技术博客：STM32、ESP32、Linux 驱动、边缘 AI 部署实战笔记。">
+  <script src="assets/js/theme.js"></script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
   <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="index.html">
-        <span class="logo">&gt;_</span>
-        Infighting
-        <small>嵌入式 × 边缘计算</small>
+    <div class="nav-shell glass-surface">
+      <a class="brand" href="index.html" aria-label="Infighting 首页">
+        <span class="logo" aria-hidden="true">&gt;_</span>
+        <span class="brand-copy">Infighting<small>嵌入式 × 边缘计算</small></span>
       </a>
-      <nav class="site-nav">
-        <a href="index.html" data-nav="home">首页</a>
-        <a href="tags.html" data-nav="tags">标签</a>
-        <a href="archive.html" data-nav="archive">精选归档</a>
-        <a href="about.html" data-nav="about">关于</a>
-      </nav>
+      <div class="nav-actions">
+        <nav class="site-nav" aria-label="主导航">
+          <a href="index.html" data-nav="home">首页</a>
+          <a href="tags.html" data-nav="tags">标签</a>
+          <a href="archive.html" data-nav="archive">精选归档</a>
+          <a href="about.html" data-nav="about">关于</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换到浅色主题" aria-pressed="false">
+          <span class="theme-icon theme-icon-sun" aria-hidden="true">☼</span>
+          <span class="theme-icon theme-icon-moon" aria-hidden="true">☾</span>
+        </button>
+      </div>
     </div>
   </header>
 
   <main class="container">
+    <section class="hero glass-surface" aria-labelledby="hero-title">
+      <img class="hero-image" src="assets/images/hero-ink.png" alt="蓝黑色流体光影抽象封面">
+      <div class="hero-scrim" aria-hidden="true"></div>
+      <div class="hero-panel">
+        <span class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Embedded systems · Edge AI</span>
+        <h1 id="hero-title">在硬件与智能的边界，构建真正运行的系统。</h1>
+        <p>记录从 MCU、实时系统到端侧推理部署的工程实践，也筛选值得关注的技术动态。</p>
+        <div class="hero-tags" aria-label="核心技术方向">
+          <span>STM32</span><span>Embedded Linux</span><span>Edge AI</span>
+        </div>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#daily-section">浏览每日精选</a>
+          <a class="button button-ghost" href="#posts-title">阅读技术文章</a>
+        </div>
+      </div>
+    </section>
+
     <section class="daily-section" id="daily-section">
       <div class="section-head">
         <h2 class="section-title">每日精选</h2>

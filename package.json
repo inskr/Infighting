@@ -5,7 +5,7 @@
     "build": "node scripts/build-posts.js",
     "feeds": "node scripts/fetch-feeds.js",
     "start": "node server.js",
-    "test": "node --test tests/api-concurrency.test.cjs tests/api-security.test.cjs tests/feed-parser.test.cjs tests/feed-topic-filter.test.cjs tests/security-exposure.test.cjs tests/stats-backend.test.cjs tests/theme.test.cjs tests/url-policy.test.cjs && node tests/stats-format.test.cjs && node tests/likes-storage.test.cjs && node tests/stats-fallback.test.cjs"
+    "test": "node --test tests/api-concurrency.test.cjs tests/api-security.test.cjs tests/feed-parser.test.cjs tests/feed-topic-filter.test.cjs tests/security-exposure.test.cjs tests/stats-backend.test.cjs tests/theme.test.cjs tests/url-policy.test.cjs tests/visual-system.test.cjs && node tests/stats-format.test.cjs && node tests/likes-storage.test.cjs && node tests/stats-fallback.test.cjs"
   },
   "dependencies": { "express": "^4.19.2", "better-sqlite3": "^11.0.0" }
 }
