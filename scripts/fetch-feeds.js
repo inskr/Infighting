@@ -41,7 +41,7 @@ const RELATED_KEYWORDS = [
   "芯片", "半导体", "传感器", "模组", "推理", "模型部署", "大模型", "机器人",
   "无人机", "电机", "工业控制", "自动化", "汽车电子", "车规", "电源", "电池",
   "射频", "5g", "蓝牙", "视觉", "摄像头", "激光雷达", "毫米波", "存储",
-  "算力", "开源硬件", "pcb", "示波器", "仿真", "plc", "鸿蒙", "harmonyos",
+  "算力", "开源硬件", "pcb", "示波器", "仿真", "plc", "工业协议", "鸿蒙", "harmonyos",
 ];
 // 工程词：宽泛科技主题只有与开发、实现、部署或性能工作共同出现时才严格入选。
 const ENGINEERING_KEYWORDS = [
@@ -358,6 +358,57 @@ function assertPublishableBoards(boards) {
   }
 }
 
+/* ---------- 上一期国内精选补位 ---------- */
+function parseGeneratedFeeds(raw) {
+  if (typeof raw !== "string") return null;
+  const match = raw.match(/window\.FEEDS\s*=\s*([\s\S]*?);\s*$/);
+  if (!match) return null;
+  try {
+    const payload = JSON.parse(match[1]);
+    if (!payload || !payload.boards || typeof payload.boards !== "object") return null;
+    return payload;
+  } catch (error) {
+    return null;
+  }
+}
+
+function readPreviousFeeds() {
+  try {
+    return parseGeneratedFeeds(fs.readFileSync(OUT_FILE, "utf8"));
+  } catch (error) {
+    return null;
+  }
+}
+
+function mergeDomesticWithPrevious(current, previous, minimum = MIN_DOMESTIC_ITEMS) {
+  const merged = (Array.isArray(current) ? current : []).map((entry) => ({
+    ...entry,
+    lang: "zh",
+  }));
+  if (merged.length >= minimum) return merged;
+
+  const acceptedLinks = new Set(merged.map((entry) => entry.link).filter(Boolean));
+  const acceptedTitles = merged
+    .map((entry) => normalizeTitle(entry.title || ""))
+    .filter(Boolean);
+
+  for (const entry of Array.isArray(previous) ? previous : []) {
+    if (merged.length >= minimum) break;
+    if (!entry || classifyTopic(entry) !== "strict") continue;
+
+    const safeLink = UrlPolicy.safeExternalUrl(entry.link);
+    const normalizedTitle = normalizeTitle(entry.title || "");
+    if (!safeLink || !normalizedTitle || acceptedLinks.has(safeLink)) continue;
+    if (isDuplicateTitle(normalizedTitle, acceptedTitles)) continue;
+
+    merged.push({ ...entry, link: safeLink, lang: "zh" });
+    acceptedLinks.add(safeLink);
+    acceptedTitles.push(normalizedTitle);
+  }
+
+  return merged;
+}
+
 /* ---------- 7 天精选归档 ---------- */
 // 归档结构：window.FEED_ARCHIVE = { updatedAt, days: [{ date, boards }] }
 // 每天抓取后把当天精选合并进归档（同日覆盖），只保留最近 ARCHIVE_DAYS 天。
@@ -407,18 +458,36 @@ function updateArchive(boards, updatedAt) {
 
 async function main() {
   console.log("Fetching daily feeds...");
+  const previous = readPreviousFeeds();
   const boards = {};
-  let total = 0;
+  let freshTotal = 0;
   for (const key of Object.keys(BOARDS)) {
     console.log("Board: " + BOARDS[key].label + " (" + BOARDS[key].lang + ")");
     boards[key] = await collectBoard(BOARDS[key].feeds, BOARDS[key].lang);
-    total += boards[key].length;
+    freshTotal += boards[key].length;
   }
 
-  if (total === 0) {
+  if (freshTotal === 0) {
     throw new Error("No feed items were fetched; existing generated data was preserved.");
   }
+
+  const previousDomestic =
+    previous && previous.boards && Array.isArray(previous.boards.zh)
+      ? previous.boards.zh
+      : [];
+  const freshDomesticCount = boards.zh.length;
+  boards.zh = mergeDomesticWithPrevious(
+    boards.zh,
+    previousDomestic,
+    MIN_DOMESTIC_ITEMS
+  );
+  const fallbackCount = boards.zh.length - freshDomesticCount;
+  if (fallbackCount > 0) {
+    console.log("  [FALLBACK] Reused " + fallbackCount + " verified domestic item(s)");
+  }
   assertPublishableBoards(boards);
+
+  const total = Object.values(boards).reduce((sum, items) => sum + items.length, 0);
 
   const payload = {
     updatedAt: new Date().toISOString(),
@@ -453,5 +522,7 @@ module.exports = {
   assertPublishableBoards,
   classifyTopic,
   collectBoard,
+  mergeDomesticWithPrevious,
+  parseGeneratedFeeds,
   selectBoardItems,
 };

@@ -6,6 +6,8 @@ const {
   assertPublishableBoards,
   classifyTopic,
   collectBoard,
+  mergeDomesticWithPrevious,
+  parseGeneratedFeeds,
   selectBoardItems,
 } = require('../scripts/fetch-feeds');
 
@@ -95,6 +97,100 @@ test('publication gate rejects fewer than four final domestic items', () => {
   assert.doesNotThrow(() =>
     assertPublishableBoards({ en: [], zh: [{}, {}, {}, {}] })
   );
+});
+
+test('parses only the generated window.FEEDS assignment shape', () => {
+  const payload = {
+    updatedAt: '2026-08-03T00:00:00.000Z',
+    boards: { en: [], zh: [{ title: 'STM32 固件开发实战' }] },
+  };
+  const raw = `// generated\nwindow.FEEDS = ${JSON.stringify(payload)};\n`;
+  assert.deepEqual(parseGeneratedFeeds(raw), payload);
+  assert.equal(parseGeneratedFeeds('window.FEEDS = not-json;'), null);
+  assert.equal(parseGeneratedFeeds('window.OTHER = {};'), null);
+});
+
+test('fills domestic minimum only with revalidated unique previous technical items', () => {
+  const current = [
+    item('STM32 FreeRTOS 固件开发教程', 5000, 'strict-1'),
+    item('边缘 AI 模型部署到 MCU', 6000, 'strict-2'),
+  ];
+  const previous = [
+    {
+      title: 'AI 芯片公司完成新一轮融资',
+      summary: '',
+      link: 'https://example.com/finance',
+      source: 'Previous',
+      date: '2026-07-31',
+      lang: 'zh',
+    },
+    {
+      title: '鸿蒙 ArkUI 组件性能优化与开发实践',
+      summary: '面向端侧应用的组件性能分析。',
+      link: 'https://example.com/previous-arkui',
+      source: 'Previous Tech',
+      date: '2026-07-31',
+      lang: 'zh',
+    },
+    {
+      title: '鸿蒙 ArkUI 组件性能优化与开发实践（二）',
+      summary: '',
+      link: 'https://example.com/previous-arkui-duplicate',
+      source: 'Duplicate',
+      date: '2026-07-30',
+      lang: 'zh',
+    },
+    {
+      title: 'STM32 FreeRTOS 固件开发教程进阶',
+      summary: '',
+      link: current[0].link,
+      source: 'Duplicate Link',
+      date: '2026-07-30',
+      lang: 'zh',
+    },
+    {
+      title: 'RuleGo 工业协议驱动开发实战',
+      summary: '覆盖设备接入、协议解析和调试。',
+      link: 'https://example.com/previous-rulego',
+      source: 'Previous Tech',
+      date: '2026-07-29',
+      lang: 'zh',
+    },
+    {
+      title: '物联网固件开发教程',
+      summary: '',
+      link: 'javascript:alert(1)',
+      source: 'Unsafe',
+      date: '2026-07-28',
+      lang: 'zh',
+    },
+  ];
+
+  const merged = mergeDomesticWithPrevious(current, previous, 4);
+
+  assert.deepEqual(merged.map((entry) => entry.title), [
+    'STM32 FreeRTOS 固件开发教程',
+    '边缘 AI 模型部署到 MCU',
+    '鸿蒙 ArkUI 组件性能优化与开发实践',
+    'RuleGo 工业协议驱动开发实战',
+  ]);
+  assert.equal(merged[2].source, 'Previous Tech');
+  assert.equal(merged[2].date, '2026-07-31');
+  assert.ok(merged.every((entry) => entry.lang === 'zh'));
+});
+
+test('does not insert previous items when current domestic set already exceeds the minimum', () => {
+  const current = [
+    item('STM32 固件开发教程', 1000, 'current-1'),
+    item('ESP32 固件调试实战', 2000, 'current-2'),
+    item('Zephyr 设备驱动开发', 3000, 'current-3'),
+    item('TinyML 模型部署优化', 4000, 'current-4'),
+    item('RISC-V 裸机编程', 5000, 'current-5'),
+  ];
+  const merged = mergeDomesticWithPrevious(current, [
+    item('鸿蒙 ArkUI 组件开发实践', 6000, 'previous'),
+  ], 4);
+  assert.deepEqual(merged.map((entry) => entry.title), current.map((entry) => entry.title));
 });
 
 test('one failed domestic source does not discard successful sources', async () => {
