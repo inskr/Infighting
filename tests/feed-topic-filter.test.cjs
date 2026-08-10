@@ -46,6 +46,17 @@ test('finance and corporate news stays blocked even when it mentions AI or chips
   });
 });
 
+test('service shutdowns, supply checks, and vehicle previews are not strict technical picks', () => {
+  const falsePositives = [
+    '零一万物大模型开放平台停止 API 调用及充值服务',
+    '苹果测试长鑫内存芯片供应',
+    '搭载三电机的全新纯电 SUV 预告图公布，采用全新驱动架构',
+  ];
+  falsePositives.forEach((title, index) => {
+    assert.notEqual(classifyTopic(item(title, 0, `false-positive-${index}`)), 'strict', title);
+  });
+});
+
 test('domestic selection never fills its minimum with generic technology releases', () => {
   const selected = selectBoardItems([
     item('STM32 FreeRTOS 固件开发教程', 5000, 'strict-1'),

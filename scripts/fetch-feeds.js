@@ -45,8 +45,8 @@ const RELATED_KEYWORDS = [
 ];
 // 工程词：宽泛科技主题只有与开发、实现、部署或性能工作共同出现时才严格入选。
 const ENGINEERING_KEYWORDS = [
-  "开发", "编程", "源码", "开源", "教程", "实战", "架构", "协议", "驱动",
-  "调试", "性能优化", "部署", "组件", "接口", "移植", "编译", "测试", "算法",
+  "开发", "编程", "源码", "开源", "教程", "实战", "架构", "协议", "驱动开发",
+  "驱动程序", "设备驱动", "调试", "性能优化", "部署", "组件", "接口", "移植", "编译", "算法",
   "api", "sdk", "benchmark", "implementation", "tutorial", "developer", "programming",
   "source code", "architecture", "protocol", "debug", "optimization", "deployment",
   "component", "porting", "compile", "toolchain",
@@ -56,6 +56,8 @@ const NEGATIVE_KEYWORDS = [
   "股票", "股市", "股价", "市值", "涨停", "跌停", "收涨", "收跌",
   "财报", "营收", "净利润", "利润", "亏损", "同比", "季度业绩", "融资", "募资",
   "估值", "上市", "ipo", "投资者", "领投", "战略投资",
+  "充值", "停止服务", "停止提供", "停止运营", "服务下线",
+  "预告图", "新车", "车型", "马力", "售价",
   "收购", "并购", "裁员", "离职", "任命", "港股", "美股", "a股", "注册资本",
   "stock market", "stock price", "share price", "market cap", "shares rose",
   "earnings", "revenue", "profit", "quarterly results", "funding round", "venture capital", "valuation",
