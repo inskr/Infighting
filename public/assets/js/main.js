@@ -93,7 +93,7 @@
 
   function postCardHtml(p) {
     return (
-      '<article class="post-card">' +
+      '<article class="post-card glass-surface">' +
       "<h2><a href=\"post.html?id=" +
       encodeURIComponent(p.id) +
       '">' +
@@ -127,7 +127,7 @@
   function initReveal() {
     if (!("IntersectionObserver" in window)) return;
     var targets = document.querySelectorAll(
-      ".post-card, .about-card, .article, .board, .tag-cloud"
+      ".hero, .page-intro, .post-card, .about-card, .article, .board, .tag-cloud, .archive-day"
     );
     targets.forEach(function (el, i) {
       el.classList.add("reveal");
@@ -144,7 +144,14 @@
       },
       { threshold: 0 }
     );
+    var documentElement = document.documentElement;
+    var viewportHeight =
+      window.innerHeight || (documentElement && documentElement.clientHeight) || 800;
     targets.forEach(function (el) {
+      if (el.getBoundingClientRect().top <= viewportHeight * 1.08) {
+        el.classList.add("visible");
+        return;
+      }
       observer.observe(el);
     });
   }
@@ -294,17 +301,17 @@
       .map(function (day) {
         var boards = day.boards || {};
         return (
-          '<div class="archive-day">' +
+          '<div class="archive-day glass-surface">' +
           '<h3 class="archive-date">' +
           escapeHtml(day.date) +
           "</h3>" +
           '<div class="daily-boards">' +
-          '<div class="board board-en">' +
+          '<div class="board board-en glass-surface">' +
           '<h4 class="board-title"><span class="board-dot"></span>国外 <span class="lang-tag">国外</span></h4>' +
           boardHtml(boards.en, "en") +
           "</div>" +
           '<div class="board-divider" role="separator"></div>' +
-          '<div class="board board-zh">' +
+          '<div class="board board-zh glass-surface">' +
           '<h4 class="board-title"><span class="board-dot"></span>国内 <span class="lang-tag">国内</span></h4>' +
           boardHtml(boards.zh, "zh") +
           "</div>" +
@@ -379,7 +386,7 @@
 
     if (index === -1) {
       container.innerHTML =
-        '<div class="article"><h1>文章不存在</h1><p><a href="index.html">返回首页</a></p></div>';
+        '<div class="article glass-surface"><h1>文章不存在</h1><p><a href="index.html">返回首页</a></p></div>';
       return;
     }
 
@@ -389,7 +396,7 @@
 
     var html =
       '<a class="back-link" href="index.html">&larr; 返回文章列表</a>' +
-      '<article class="article">' +
+      '<article class="article glass-surface">' +
       '<header class="article-header">' +
       "<h1>" +
       escapeHtml(post.title) +

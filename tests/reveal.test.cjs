@@ -10,6 +10,9 @@ test('a very tall article becomes visible when it intersects the viewport', () =
   const classes = new Set();
   const article = {
     height: 50000,
+    getBoundingClientRect() {
+      return { top: 700 };
+    },
     classList: {
       add(name) {
         classes.add(name);
@@ -45,6 +48,7 @@ test('a very tall article becomes visible when it intersects the viewport', () =
   }
 
   const document = {
+    documentElement: { clientHeight: 600 },
     getElementById() {
       return null;
     },
@@ -52,7 +56,7 @@ test('a very tall article becomes visible when it intersects the viewport', () =
       return null;
     },
     querySelectorAll(selector) {
-      if (selector === '.post-card, .about-card, .article, .board, .tag-cloud') {
+      if (selector.includes('.article')) {
         return [article];
       }
       return [];

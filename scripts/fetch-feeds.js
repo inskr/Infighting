@@ -43,25 +43,32 @@ const RELATED_KEYWORDS = [
   "芯片", "半导体", "传感器", "模组", "推理", "模型部署", "大模型", "机器人",
   "无人机", "电机", "工业控制", "自动化", "汽车电子", "车规", "电源", "电池",
   "射频", "5g", "蓝牙", "视觉", "摄像头", "激光雷达", "毫米波", "存储",
-  "算力", "开源硬件", "pcb", "示波器", "仿真", "plc",
+  "算力", "开源硬件", "pcb", "示波器", "仿真", "plc", "工业协议", "鸿蒙", "harmonyos",
 ];
 // 负向词：命中即排除（股市行情 / 人事变动 / 纯资本新闻，非技术内容）
 const DOMESTIC_PRACTICE_SIGNALS = [
   '教程', '指南', '实战', '实践', '源码', '解析', '原理', '入门', '进阶',
-  '从零', '实现', '开发', '移植', '部署', '调试', '优化', '测试', '排障',
+  '从零', '实现', '开发', '移植', '部署', '调试', '调优', '调度', '优化', '测试', '排障',
   '踩坑', '配置', '构建', '复盘', 'tutorial', 'guide', 'walkthrough',
   'hands-on', 'source code', 'deep dive', 'porting', 'deployment', 'debugging',
 ];
 const DOMESTIC_ENGINEERING_EVIDENCE = [
   '代码', '步骤', '设备树', '驱动', '编译', '烧录', '配置', '接口', '协议',
-  '日志', '测试', '调试', '迁移', '部署', '实现', '源码', 'code', 'build',
+  '日志', '测试', '调试', '迁移', '部署', '实现', '源码', '优化', '评估',
+  '可观测', '接入', '拓扑', '指标', '索引', '检索', '集群', '巡检', '性能',
+  '扩缩容', '热加载', '恢复', '存储', 'code', 'build', 'api', 'trace', 'mapping',
   'flash', 'driver', 'configuration', 'benchmark', 'debug', 'deploy',
 ];
 const DOMESTIC_NEWS_SIGNALS = [
   '发布', '推出', '亮相', '新品', '正式上线', '上市', '峰会', '展会',
   '行业报告', '产业报告', '趋势报告', '白皮书', '政策', '市场活动',
-  '产业动态', '重大突破', '成功研制', '首次', '获奖',
+  '产业动态', '重大突破', '成功研制', '首次', '获奖', '宣布', '量产', '服务降级',
   'release', 'launch', 'announces', 'announcement', 'report', 'white paper',
+];
+const DOMESTIC_SOFTWARE_TOPIC_SIGNALS = [
+  'agent', 'skill', 'rag', 'milvus', 'opentelemetry', 'otlp', 'apm',
+  'observability', '可观测', '向量数据库', '集群运维', '推理服务',
+  '异构算力', '调度平台',
 ];
 const DOMESTIC_INELIGIBLE_SIGNALS = [
   '合作', '公司动态', '企业动态', '公司新闻', '企业新闻',
@@ -84,16 +91,19 @@ const DOMESTIC_SOURCE_CODE_SIGNALS = [
   '源码', 'source code',
 ];
 const NEGATIVE_KEYWORDS = [
-  "股票", "股市", "股价", "市值", "涨停", "跌停", "收盘", "收跌",
+  "股票", "股市", "股价", "市值", "涨停", "跌停", "收盘", "收涨", "收跌", "行情",
   "港股", "美股", "a股", "注册资本",
-  "财报", "营收", "净利润", "融资", "募资", "估值",
+  "财报", "营收", "净利润", "利润", "亏损", "同比", "季度业绩", "融资", "募资", "估值",
   "申请上市", "拟上市", "计划上市", "筹备上市", "上市申请", "上市计划",
   "上市公司", "挂牌上市",
+  "投资者", "领投", "战略投资", "获投", "天使轮",
+  "充值", "停止服务", "停止提供", "停止运营", "服务下线",
+  "预告图", "新车", "车型", "马力", "售价",
   "收购", "并购", "裁员", "离职", "任命", "证券", "券商", "研报",
   "stock market", "stock price", "share price", "market cap", "shares rose",
-  "earnings", "revenue", "funding round", "venture capital", "valuation",
+  "earnings", "revenue", "profit", "quarterly results", "funding round", "venture capital", "valuation",
   "initial public offering", "ipo", "listed company", "publicly listed",
-  "merger", "resigns",
+  "merger", "layoff", "appoints", "appointed", "resigns",
 ];
 const NEGATIVE_PATTERNS = [
   /\b(?:raises?|raised|raising|closes?|closed)\b.{0,80}\b(?:funding|financing|capital|investment|seed|series\s+[a-z0-9]+|round|\d+(?:\.\d+)?\s*(?:million|billion)|[$€£¥]\s*\d+)\b/,
@@ -330,11 +340,16 @@ function includesAnySignal(text, signals) {
 }
 
 function isDomesticTechnicalContent(item) {
-  if (!isTopicRelevant(item)) return false;
-
   const title = (item.title || '').toLowerCase();
   const summary = (item.summary || '').toLowerCase();
   const text = title + ' ' + summary;
+  const topic = topicScore(item);
+  if (topic.score < 0) return false;
+  if (
+    !isTopicRelevant(item) &&
+    !includesAnySignal(text, DOMESTIC_SOFTWARE_TOPIC_SIGNALS)
+  ) return false;
+
   const titleHasPractice = includesAnySignal(title, DOMESTIC_PRACTICE_SIGNALS);
   const hasPractice = titleHasPractice || includesAnySignal(summary, DOMESTIC_PRACTICE_SIGNALS);
   const summaryHasEngineeringEvidence = includesAnySignal(
@@ -371,6 +386,14 @@ function isBoardItemRelevant(item, lang) {
     : isTopicRelevant(item);
 }
 
+function classifyTopic(item) {
+  const score = topicScore(item);
+  if (score.score < 0) return 'blocked';
+  if (isDomesticTechnicalContent(item)) return 'strict';
+  if (isTopicFallbackRelevant(item)) return 'relaxed';
+  return 'irrelevant';
+}
+
 function normalizeTitle(t) {
   return t.toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, "");
 }
@@ -394,7 +417,11 @@ function commonSubLen(a, b) {
 
 function isDuplicateTitle(normTitle, accepted) {
   for (const other of accepted) {
-    if (commonSubLen(normTitle, other) >= 12) return true;
+    if (normTitle === other) return true;
+    const shorterLength = Math.min(normTitle.length, other.length);
+    if (shorterLength < 4) continue;
+    const threshold = Math.max(4, Math.ceil(shorterLength * 0.8));
+    if (commonSubLen(normTitle, other) >= threshold) return true;
   }
   return false;
 }
@@ -417,13 +444,9 @@ function selectBoardItems(items, lang, now = Date.now()) {
   const strict = fresh
     .filter((item) => isBoardItemRelevant(item, lang))
     .sort((a, b) => b._ts - a._ts);
-  const relaxed = lang === 'zh'
-    ? fresh
-      .filter((item) =>
-        !isDomesticTechnicalContent(item) && isTopicFallbackRelevant(item)
-      )
-      .sort((a, b) => b._ts - a._ts)
-    : [];
+  const relaxed = fresh
+    .filter((item) => !isBoardItemRelevant(item, lang) && isTopicFallbackRelevant(item))
+    .sort((a, b) => b._ts - a._ts);
   console.log(
     "  [FILTER] " + sorted.length + " -> " + strict.length +
       " strict, " + relaxed.length + " relaxed items"
@@ -431,32 +454,25 @@ function selectBoardItems(items, lang, now = Date.now()) {
   // 标题近似去重（同一新闻的不同来源/标题变体只留一条）
   const acceptedTitles = [];
   const picked = [];
-  function appendUnique(candidates, limit, selectionTier) {
+  function appendUnique(candidates, limit) {
     for (const item of candidates) {
       const norm = normalizeTitle(item.title);
       if (!norm || isDuplicateTitle(norm, acceptedTitles)) continue;
       acceptedTitles.push(norm);
-      picked.push({ item, selectionTier });
+      picked.push(item);
       if (picked.length >= limit) break;
     }
   }
 
-  appendUnique(strict, ITEMS_PER_BOARD, 'strict');
-  if (lang === 'zh' && picked.length < MIN_DOMESTIC_ITEMS) {
-    appendUnique(relaxed, MIN_DOMESTIC_ITEMS, 'relaxed');
-  }
-  return picked.map(({ item, selectionTier }) => {
-    const { title, link, source, date, summary } = item;
-    return {
-      title,
-      link,
-      source,
-      date,
-      summary,
-      lang,
-      ...(selectionTier === 'relaxed' ? { selectionTier } : {}),
-    };
-  });
+  appendUnique(strict, ITEMS_PER_BOARD);
+  return picked.map(({ title, link, source, date, summary }) => ({
+    title,
+    link,
+    source,
+    date,
+    summary,
+    lang,
+  }));
 }
 
 async function collectBoard(feeds, lang, fetcher = fetchText, now = Date.now()) {
@@ -485,6 +501,57 @@ function assertPublishableBoards(boards) {
   }
 }
 
+/* ---------- 上一期国内精选补位 ---------- */
+function parseGeneratedFeeds(raw) {
+  if (typeof raw !== 'string') return null;
+  const match = raw.match(/window\.FEEDS\s*=\s*([\s\S]*?);\s*$/);
+  if (!match) return null;
+  try {
+    const payload = JSON.parse(match[1]);
+    if (!payload || !payload.boards || typeof payload.boards !== 'object') return null;
+    return payload;
+  } catch (error) {
+    return null;
+  }
+}
+
+function readPreviousFeeds() {
+  try {
+    return parseGeneratedFeeds(fs.readFileSync(OUT_FILE, 'utf8'));
+  } catch (error) {
+    return null;
+  }
+}
+
+function mergeDomesticWithPrevious(current, previous, minimum = MIN_DOMESTIC_ITEMS) {
+  const merged = (Array.isArray(current) ? current : []).map((entry) => ({
+    ...entry,
+    lang: 'zh',
+  }));
+  if (merged.length >= minimum) return merged;
+
+  const acceptedLinks = new Set(merged.map((entry) => entry.link).filter(Boolean));
+  const acceptedTitles = merged
+    .map((entry) => normalizeTitle(entry.title || ''))
+    .filter(Boolean);
+
+  for (const entry of Array.isArray(previous) ? previous : []) {
+    if (merged.length >= minimum) break;
+    if (!entry || !isDomesticTechnicalContent(entry)) continue;
+
+    const safeLink = UrlPolicy.safeExternalUrl(entry.link);
+    const normalizedTitle = normalizeTitle(entry.title || '');
+    if (!safeLink || !normalizedTitle || acceptedLinks.has(safeLink)) continue;
+    if (isDuplicateTitle(normalizedTitle, acceptedTitles)) continue;
+
+    merged.push({ ...entry, link: safeLink, lang: 'zh' });
+    acceptedLinks.add(safeLink);
+    acceptedTitles.push(normalizedTitle);
+  }
+
+  return merged;
+}
+
 /* ---------- 7 天精选归档 ---------- */
 // 归档结构：window.FEED_ARCHIVE = { updatedAt, days: [{ date, boards }] }
 // 每天抓取后把当天精选合并进归档（同日覆盖），只保留最近 ARCHIVE_DAYS 天。
@@ -507,12 +574,7 @@ function sanitizeArchiveBoards(boards) {
     Object.entries(boards || {}).map(([key, items]) => [
       key,
       Array.isArray(items)
-        ? items.filter((item) =>
-          isBoardItemRelevant(item, key) ||
-          (key === 'zh' &&
-            item.selectionTier === 'relaxed' &&
-            isTopicFallbackRelevant(item))
-        )
+        ? items.filter((item) => isBoardItemRelevant(item, key))
         : [],
     ])
   );
@@ -558,18 +620,36 @@ function updateArchive(boards, updatedAt) {
 
 async function main() {
   console.log("Fetching daily feeds...");
+  const previous = readPreviousFeeds();
   const boards = {};
-  let total = 0;
+  let freshTotal = 0;
   for (const key of Object.keys(BOARDS)) {
     console.log("Board: " + BOARDS[key].label + " (" + BOARDS[key].lang + ")");
     boards[key] = await collectBoard(BOARDS[key].feeds, BOARDS[key].lang);
-    total += boards[key].length;
+    freshTotal += boards[key].length;
   }
 
-  if (total === 0) {
+  if (freshTotal === 0) {
     throw new Error("No feed items were fetched; existing generated data was preserved.");
   }
+
+  const previousDomestic =
+    previous && previous.boards && Array.isArray(previous.boards.zh)
+      ? previous.boards.zh
+      : [];
+  const freshDomesticCount = boards.zh.length;
+  boards.zh = mergeDomesticWithPrevious(
+    boards.zh,
+    previousDomestic,
+    MIN_DOMESTIC_ITEMS
+  );
+  const fallbackCount = boards.zh.length - freshDomesticCount;
+  if (fallbackCount > 0) {
+    console.log("  [FALLBACK] Reused " + fallbackCount + " verified domestic item(s)");
+  }
   assertPublishableBoards(boards);
+
+  const total = Object.values(boards).reduce((sum, items) => sum + items.length, 0);
 
   const payload = {
     updatedAt: new Date().toISOString(),
@@ -602,10 +682,13 @@ module.exports = {
   main,
   parseFeed,
   assertPublishableBoards,
+  classifyTopic,
   collectBoard,
   isDomesticTechnicalContent,
   isTopicFallbackRelevant,
   isTopicRelevant,
+  mergeDomesticWithPrevious,
   mergeArchive,
+  parseGeneratedFeeds,
   selectBoardItems,
 };

@@ -4,12 +4,26 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
   assertPublishableBoards,
+  classifyTopic,
   collectBoard,
   isDomesticTechnicalContent,
   isTopicRelevant,
+  mergeDomesticWithPrevious,
   mergeArchive,
+  parseGeneratedFeeds,
   selectBoardItems,
 } = require('../scripts/fetch-feeds');
+
+function feedItem(title, age, slug) {
+  return {
+    title,
+    summary: '',
+    link: `https://example.com/${slug}`,
+    source: 'Fixture',
+    date: '2026-08-03',
+    _ts: Date.parse('2026-08-03T00:00:00Z') - age,
+  };
+}
 
 test('admits embedded and edge AI engineering content', () => {
   const accepted = [
@@ -332,7 +346,7 @@ test('admits OpenHarmony embedded work with a real embedded signal', () => {
   );
 });
 
-test('archive merge removes domestic news but preserves international releases', () => {
+test('archive merge removes domestic news and legacy relaxed fallbacks', () => {
   const domesticPractice = {
     title: 'ESP32 driver source code analysis and debugging tutorial',
     link: 'https://example.com/zh-practice',
@@ -369,7 +383,6 @@ test('archive merge removes domestic news but preserves international releases',
 
   assert.deepEqual(previous.boards.zh.map((item) => item.title), [
     domesticPractice.title,
-    selectedDomesticFallback.title,
   ]);
   assert.deepEqual(previous.boards.en.map((item) => item.title), [internationalRelease.title]);
 });
@@ -425,7 +438,7 @@ test('sanitizes archived boards while merging today within the seven-day window'
   ]);
 });
 
-test('domestic selection uses related releases only to reach four items', () => {
+test('domestic selection never pads strict picks with related releases', () => {
   const now = Date.parse('2026-08-03T00:00:00Z');
   const items = [
     {
@@ -470,8 +483,6 @@ test('domestic selection uses related releases only to reach four items', () => 
     [
       'STM32 FreeRTOS low-power configuration tutorial',
       'ESP32 Wi-Fi driver source analysis guide',
-      'New sensor announced',
-      'Bluetooth module announcement',
     ]
   );
 });
@@ -762,4 +773,164 @@ test('does not mutate its caller-owned item array', () => {
   selectBoardItems(items, 'en', now);
 
   assert.deepEqual(items, original);
+});
+
+test('matches ASCII keywords only at alphanumeric boundaries', () => {
+  assert.equal(classifyTopic({ title: 'Airtable workspace update', summary: '' }), 'irrelevant');
+  assert.equal(classifyTopic({ title: 'Tableau dashboard update', summary: '' }), 'irrelevant');
+  assert.equal(
+    classifyTopic({ title: 'Bipolar sensor firmware evaluation tutorial', summary: '' }),
+    'strict'
+  );
+});
+
+test('current corporate and LLM policy stories are not strict domestic picks', () => {
+  const rejected = [
+    {
+      title: '现代起亚推动芯片供应本土化：首款韩产车用 MCU 量产',
+      summary: '供应链与量产产业新闻。',
+    },
+    {
+      title: '甲骨文对 OpenJDK 项目禁止 AI 生成代码',
+      summary: '项目贡献政策与 pull request 规则更新。',
+    },
+    {
+      title: 'Rust 项目团队宣布 LLM 政策：不禁止，但需披露代码来源',
+      summary: '开源社区贡献政策新闻。',
+    },
+  ];
+
+  for (const entry of rejected) assert.notEqual(classifyTopic(entry), 'strict', entry.title);
+});
+
+test('domestic technical gate admits concrete software engineering workflows', () => {
+  const accepted = [
+    {
+      title: '从创建到发布：一套基于 AgentLoop 的 AI Agent Skill 持续调优工程链路',
+      summary: '本文介绍一套基于阿里云 Agent 观测与优化平台 AgentLoop 的 Skill 评估与优化最佳实践，覆盖从 Skill 创建、可观测接入、离线评估、Bad Case 分析到迭代优化的完整闭环，',
+    },
+    {
+      title: 'DataBuff v0.1.7 发布 · 平台自监控与自排障',
+      summary: 'DataBuff 是一款面向云原生与微服务场景的开源 AI Native OpenTelemetry APM，采用 OTLP 标准接入、Apache Doris 统一存储，Web 端提供拓扑 / Trace / 指标与多 Agent 排障。',
+    },
+    {
+      title: 'Milvus向量数据库实战：从零搭建AI日记助手的RAG完整链路',
+      summary: '从AI日记助手拆解Milvus向量数据库的RAG链路：Embedding向量化、Collection创建、IVF_FLAT索引、语义检索到LLM生成回答。',
+    },
+    {
+      title: 'HeteroFlow 异构算力调度平台于 2026 年 8 月 8 日推理服务正式发布',
+      summary: '用一套 OpenAI 兼容 API，统一调度 9 种厂商 GPU 与 5 种推理引擎，原生支持多租户、扩缩容和热加载。',
+    },
+    {
+      title: 'Easysearch 2.3.1 发布：强化集群运维能力，优化写入性能与稳定性体验',
+      summary: '新增巡检信息采集能力，增强集群服务管理约束，优化文档写入与 mapping 解析性能，并修复 S3 兼容存储和 CCR 恢复问题。',
+    },
+  ];
+
+  for (const item of accepted) {
+    assert.equal(isDomesticTechnicalContent(item), true, item.title);
+  }
+});
+
+test('domestic technical gate rejects manufacturing news with incidental implementation wording', () => {
+  const item = {
+    title: '现代起亚推动芯片供应本土化：首款韩产车用 MCU LX Semicon LX61101 量产',
+    summary: '韩国系统半导体设计企业 LX Semicon 当地时间今日宣布已实现车用 MCU 芯片 LX61101 的量产。',
+  };
+
+  assert.equal(isDomesticTechnicalContent(item), false, item.title);
+});
+
+test('domestic technical gate rejects service incidents with incidental engineering terms', () => {
+  const item = {
+    title: 'GitHub 再次爆发大规模服务降级',
+    summary: 'GitHub Actions 完全不可用超过 5 小时，coding agent 受影响，随后从调度层故障中恢复。',
+  };
+
+  assert.equal(isDomesticTechnicalContent(item), false, item.title);
+});
+
+test('parses only the generated window.FEEDS assignment shape', () => {
+  const payload = {
+    updatedAt: '2026-08-03T00:00:00.000Z',
+    boards: { en: [], zh: [{ title: 'STM32 固件开发实战' }] },
+  };
+  const raw = `// generated\nwindow.FEEDS = ${JSON.stringify(payload)};\n`;
+
+  assert.deepEqual(parseGeneratedFeeds(raw), payload);
+  assert.equal(parseGeneratedFeeds('window.FEEDS = not-json;'), null);
+  assert.equal(parseGeneratedFeeds('window.OTHER = {};'), null);
+});
+
+test('fills the domestic minimum only with revalidated previous technical items', () => {
+  const current = [
+    feedItem('STM32 FreeRTOS 固件开发教程', 1000, 'current-one'),
+    feedItem('边缘 AI 模型部署实战', 2000, 'current-two'),
+  ];
+  const previous = [
+    {
+      ...feedItem('AI 芯片公司完成新一轮融资', 3000, 'finance'),
+      source: 'Previous Finance', date: '2026-07-31', lang: 'zh',
+    },
+    {
+      ...feedItem('鸿蒙 ArkUI 组件性能优化与开发实践', 4000, 'arkui'),
+      summary: '边缘计算端侧应用的组件性能调试实践。',
+      source: 'Previous Tech', date: '2026-07-31', lang: 'zh',
+    },
+    {
+      ...feedItem('鸿蒙 ArkUI 组件性能优化与开发实践（二）', 5000, 'arkui-duplicate'),
+      summary: '边缘计算端侧应用的组件性能调试实践。',
+      source: 'Duplicate', date: '2026-07-30', lang: 'zh',
+    },
+    {
+      ...feedItem('RuleGo 工业协议固件驱动开发实战', 6000, 'rulego'),
+      source: 'Previous Tech', date: '2026-07-29', lang: 'zh',
+    },
+  ];
+
+  const merged = mergeDomesticWithPrevious(current, previous, 4);
+
+  assert.deepEqual(merged.map((entry) => entry.title), [
+    'STM32 FreeRTOS 固件开发教程',
+    '边缘 AI 模型部署实战',
+    '鸿蒙 ArkUI 组件性能优化与开发实践',
+    'RuleGo 工业协议固件驱动开发实战',
+  ]);
+  assert.equal(merged[2].source, 'Previous Tech');
+  assert.equal(merged[2].date, '2026-07-31');
+  assert.ok(merged.every((entry) => entry.lang === 'zh'));
+});
+
+test('deduplicates identical and near-identical short previous titles', () => {
+  const previous = [
+    { ...feedItem('固件教程', 1000, 'short-one'), date: '2026-07-31' },
+    { ...feedItem('固件教程', 2000, 'short-two'), date: '2026-07-30' },
+    { ...feedItem('固件教程上', 3000, 'short-near'), date: '2026-07-29' },
+    { ...feedItem('固件调试', 4000, 'short-debug'), date: '2026-07-28' },
+    { ...feedItem('STM32 驱动实战', 5000, 'short-driver'), date: '2026-07-27' },
+  ];
+
+  const merged = mergeDomesticWithPrevious([], previous, 3);
+
+  assert.deepEqual(merged.map((entry) => entry.title), [
+    '固件教程',
+    '固件调试',
+    'STM32 驱动实战',
+  ]);
+});
+
+test('does not insert previous items when the current domestic set meets the minimum', () => {
+  const current = [
+    feedItem('STM32 固件开发教程', 1000, 'enough-one'),
+    feedItem('ESP32 固件调试实战', 2000, 'enough-two'),
+    feedItem('Zephyr 设备驱动开发教程', 3000, 'enough-three'),
+    feedItem('TinyML 模型部署优化实践', 4000, 'enough-four'),
+    feedItem('RISC-V 裸机编程实战', 5000, 'enough-five'),
+  ];
+
+  const merged = mergeDomesticWithPrevious(current, [
+    feedItem('鸿蒙 ArkUI 组件开发实践', 6000, 'previous'),
+  ], 4);
+
+  assert.deepEqual(merged.map((entry) => entry.title), current.map((entry) => entry.title));
 });
