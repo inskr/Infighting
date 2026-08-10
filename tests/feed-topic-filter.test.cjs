@@ -22,14 +22,29 @@ function item(title, offset, slug, summary = '') {
   };
 }
 
-test('classifies strict, relaxed, blocked, and irrelevant feed items', () => {
+test('requires engineering context for broad technology topics', () => {
   assert.equal(classifyTopic(item('STM32 FreeRTOS 固件开发教程', 0, 'strict')), 'strict');
-  assert.equal(classifyTopic(item('新型传感器发布', 0, 'relaxed')), 'relaxed');
-  assert.equal(classifyTopic(item('芯片公司完成新一轮融资', 0, 'blocked')), 'blocked');
+  assert.equal(classifyTopic(item('鸿蒙 ArkUI 组件性能优化与开发实践', 0, 'engineering')), 'strict');
+  assert.equal(classifyTopic(item('新型传感器发布', 0, 'generic')), 'relaxed');
+  assert.equal(classifyTopic(item('AI 芯片公司完成 20 亿元融资', 0, 'finance')), 'blocked');
   assert.equal(classifyTopic(item('城市周末活动指南', 0, 'irrelevant')), 'irrelevant');
 });
 
-test('domestic selection uses relaxed technical items only to reach four', () => {
+test('finance and corporate news stays blocked even when it mentions AI or chips', () => {
+  const blockedTitles = [
+    'AI 芯片公司发布季度财报',
+    '半导体企业营收同比增长 30%',
+    '机器人公司获战略投资',
+    '芯片独角兽启动 IPO',
+    '大模型企业估值突破百亿',
+    'GPU 厂商季度业绩与净利润公布',
+  ];
+  blockedTitles.forEach((title, index) => {
+    assert.equal(classifyTopic(item(title, 0, `blocked-${index}`)), 'blocked', title);
+  });
+});
+
+test('domestic selection never fills its minimum with generic technology releases', () => {
   const selected = selectBoardItems([
     item('STM32 FreeRTOS 固件开发教程', 5000, 'strict-1'),
     item('边缘 AI 模型部署到 MCU', 6000, 'strict-2'),
@@ -44,8 +59,6 @@ test('domestic selection uses relaxed technical items only to reach four', () =>
   assert.deepEqual(selected.map((entry) => entry.title), [
     'STM32 FreeRTOS 固件开发教程',
     '边缘 AI 模型部署到 MCU',
-    '新型传感器产品应用技术方案正式发布',
-    '蓝牙新品发布',
   ]);
   assert.ok(selected.every((entry) => entry.lang === 'zh'));
 });

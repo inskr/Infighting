@@ -17,8 +17,8 @@ const MIN_DOMESTIC_ITEMS = 4;
 const SUMMARY_MAX_LEN = 180;
 const TIMEOUT_MS = 15000;
 
-// 领域相关性计分：核心词每个 2 分，外围词每个 1 分，总分 >= 2 才入选，
-// 确保精选与嵌入式硬件 / 边缘计算 / 边缘 AI 模型部署 / 物联网应用紧密相关。
+// 领域相关性计分：金融商业词先否决；核心词直接严格入选；
+// 宽泛科技词必须与开发、实现、部署或性能等工程语境共同出现才严格入选。
 // 核心词：几乎只出现在嵌入式/边缘 AI 语境的专属词
 const CORE_KEYWORDS = [
   "stm32", "esp32", "mcu", "microcontroller", "embedded", "rtos", "freertos",
@@ -27,7 +27,7 @@ const CORE_KEYWORDS = [
   "arduino", "yocto", "buildroot", "device driver", "linux kernel",
   "bootloader", "jetson", "on-device",
   "嵌入式", "单片机", "边缘计算", "边缘ai", "边缘 ai", "端侧", "物联网",
-  "微控制器", "实时操作系统", "固件", "开发板", "裸机", "烧录", "鸿蒙", "智能硬件",
+  "微控制器", "实时操作系统", "固件", "开发板", "裸机", "烧录", "智能硬件",
 ];
 // 外围词：相关但也会出现在泛科技新闻中，需与其他词共现
 const RELATED_KEYWORDS = [
@@ -41,19 +41,27 @@ const RELATED_KEYWORDS = [
   "芯片", "半导体", "传感器", "模组", "推理", "模型部署", "大模型", "机器人",
   "无人机", "电机", "工业控制", "自动化", "汽车电子", "车规", "电源", "电池",
   "射频", "5g", "蓝牙", "视觉", "摄像头", "激光雷达", "毫米波", "存储",
-  "算力", "开源硬件", "pcb", "示波器", "仿真", "plc",
+  "算力", "开源硬件", "pcb", "示波器", "仿真", "plc", "鸿蒙", "harmonyos",
+];
+// 工程词：宽泛科技主题只有与开发、实现、部署或性能工作共同出现时才严格入选。
+const ENGINEERING_KEYWORDS = [
+  "开发", "编程", "源码", "开源", "教程", "实战", "架构", "协议", "驱动",
+  "调试", "性能优化", "部署", "组件", "接口", "移植", "编译", "测试", "算法",
+  "api", "sdk", "benchmark", "implementation", "tutorial", "developer", "programming",
+  "source code", "architecture", "protocol", "debug", "optimization", "deployment",
+  "component", "porting", "compile", "toolchain",
 ];
 // 负向词：命中即排除（股市行情 / 人事变动 / 纯资本新闻，非技术内容）
 const NEGATIVE_KEYWORDS = [
   "股票", "股市", "股价", "市值", "涨停", "跌停", "收涨", "收跌",
-  "财报", "营收", "净利润", "融资", "募资", "估值", "上市",
+  "财报", "营收", "净利润", "利润", "亏损", "同比", "季度业绩", "融资", "募资",
+  "估值", "上市", "ipo", "投资者", "领投", "战略投资",
   "收购", "并购", "裁员", "离职", "任命", "港股", "美股", "a股", "注册资本",
   "stock market", "stock price", "share price", "market cap", "shares rose",
-  "earnings", "revenue", "funding round", "venture capital", "valuation",
+  "earnings", "revenue", "profit", "quarterly results", "funding round", "venture capital", "valuation",
   "initial public offering", "acquires", "acquisition", "merger",
   "layoff", "appoints", "appointed", "resigns",
 ];
-const SCORE_THRESHOLD = 3; // 纯外围词入选线；命中核心词时得分 >= 2 即可
 const MAX_AGE_DAYS = 14; // 只保留最近 14 天的内容，保证"最新"
 
 // 语言分区与信息源配置（name 会显示在页面上）
@@ -210,29 +218,40 @@ function topicScore(item) {
   const text = (item.title + " " + (item.summary || "")).toLowerCase();
   // 负向词一票否决
   for (const kw of NEGATIVE_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) return { score: -1, hasCore: false };
+    if (text.includes(kw.toLowerCase())) {
+      return { score: -1, hasCore: false, hasRelated: false, hasEngineering: false };
+    }
   }
   let score = 0;
   let hasCore = false;
+  let hasRelated = false;
+  let hasEngineering = false;
   for (const kw of CORE_KEYWORDS) {
     if (text.includes(kw.toLowerCase())) {
-      score += 2;
+      score += 3;
       hasCore = true;
     }
   }
   for (const kw of RELATED_KEYWORDS) {
-    if (text.includes(kw.toLowerCase())) score += 1;
+    if (text.includes(kw.toLowerCase())) {
+      score += 1;
+      hasRelated = true;
+    }
   }
-  return { score, hasCore };
+  for (const kw of ENGINEERING_KEYWORDS) {
+    if (text.includes(kw.toLowerCase())) {
+      score += 1;
+      hasEngineering = true;
+    }
+  }
+  return { score, hasCore, hasRelated, hasEngineering };
 }
 
 function classifyTopic(item) {
   const result = topicScore(item);
   if (result.score < 0) return "blocked";
-  if (result.score >= SCORE_THRESHOLD || (result.score >= 2 && result.hasCore)) {
-    return "strict";
-  }
-  if (result.score >= 1) return "relaxed";
+  if (result.hasCore || (result.hasRelated && result.hasEngineering)) return "strict";
+  if (result.hasRelated || result.hasEngineering) return "relaxed";
   return "irrelevant";
 }
 
@@ -301,9 +320,6 @@ function selectBoardItems(items, lang, now = Date.now()) {
   }
 
   appendUnique(strict, ITEMS_PER_BOARD);
-  if (lang === "zh" && picked.length < MIN_DOMESTIC_ITEMS) {
-    appendUnique(relaxed, MIN_DOMESTIC_ITEMS);
-  }
 
   return picked.map(({ title, link, source, date, summary }) => ({
     title,
