@@ -142,9 +142,11 @@
           }
         });
       },
-      { threshold: 0.08 }
+      { threshold: 0 }
     );
-    var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800;
+    var documentElement = document.documentElement;
+    var viewportHeight =
+      window.innerHeight || (documentElement && documentElement.clientHeight) || 800;
     targets.forEach(function (el) {
       if (el.getBoundingClientRect().top <= viewportHeight * 1.08) {
         el.classList.add("visible");
