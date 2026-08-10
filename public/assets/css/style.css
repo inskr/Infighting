@@ -66,6 +66,8 @@ html {
 body {
   min-height: 100vh;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
     "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--text);
@@ -317,6 +319,7 @@ a:focus-visible {
 /* ================= Main layout ================= */
 .container {
   width: min(1120px, 100%);
+  flex: 1 0 auto;
   margin: 0 auto;
   padding: 34px 20px 78px;
 }
@@ -1099,7 +1102,7 @@ body { animation: pageFadeIn 360ms ease; }
   .site-header { padding: 8px 8px 0; }
   .nav-shell {
     min-height: auto;
-    padding: 8px;
+    padding: 8px 60px 8px 8px;
     align-items: flex-start;
     border-radius: 15px;
   }
@@ -1108,13 +1111,23 @@ body { animation: pageFadeIn 360ms ease; }
   .brand-copy { display: none; }
   .nav-actions { min-width: 0; gap: 5px; }
   .site-nav {
-    max-width: calc(100vw - 112px);
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    flex: 1 1 auto;
     overflow-x: auto;
     scrollbar-width: none;
   }
+  .nav-actions { flex: 1 1 auto; }
   .site-nav::-webkit-scrollbar { display: none; }
   .site-nav a { min-width: max-content; padding: 8px 10px; font-size: 12px; }
   .theme-toggle { width: 44px; height: 44px; flex-basis: 44px; }
+  .theme-toggle {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    z-index: 3;
+  }
   .container { padding: 22px 12px 56px; }
   .hero {
     min-height: 610px;
