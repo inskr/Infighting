@@ -283,14 +283,14 @@ a:focus-visible {
 
 .theme-toggle {
   position: relative;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 13px;
+  border: 1px solid transparent;
+  border-radius: 11px;
   color: var(--ink);
-  background: var(--surface-soft);
+  background: transparent;
   cursor: pointer;
   transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
@@ -381,15 +381,30 @@ a:focus-visible {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.045);
 }
 
-.hero-image {
+.hero-media {
   position: absolute;
   inset: 0;
   z-index: 0;
   width: 100%;
   height: 100%;
+  display: block;
+  overflow: hidden;
+}
+
+.hero-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: 64% center;
   filter: saturate(0.92) contrast(1.06);
+  animation: heroCinematicDrift 9s alternate ease-in-out infinite;
+}
+
+@keyframes heroCinematicDrift {
+  from { transform: scale(1.02) translateX(-0.4%); }
+  to { transform: scale(1.08) translateX(1.6%); }
 }
 
 .hero-scrim {
@@ -562,6 +577,19 @@ a:focus-visible {
 
 @media (hover: none), (pointer: coarse) {
   .glass-surface:hover::before { opacity: 0; }
+
+  .glass-surface,
+  .post-card,
+  .board,
+  .article,
+  .about-card,
+  .archive-day {
+    box-shadow: none;
+    backdrop-filter: blur(8px) saturate(115%);
+    -webkit-backdrop-filter: blur(8px) saturate(115%);
+  }
+
+  .brand .logo { box-shadow: none; }
 
   .board:hover,
   .post-card:hover,
@@ -1072,6 +1100,10 @@ a.tag:hover {
   letter-spacing: 0.025em;
 }
 
+.site-footer a { color: inherit; }
+.site-footer a:hover,
+.site-footer a:focus-visible { color: var(--accent-strong); }
+
 @keyframes pageFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -1128,41 +1160,52 @@ body { animation: pageFadeIn 360ms ease; }
   .site-header { padding: 8px 8px 0; }
   .nav-shell {
     min-height: auto;
-    padding: 8px 60px 8px 8px;
-    align-items: flex-start;
+    padding: 8px;
+    align-items: center;
     border-radius: 15px;
   }
   .brand { padding: 2px; }
   .brand .logo { width: 36px; height: 36px; }
   .brand-copy { display: none; }
-  .nav-actions { min-width: 0; gap: 5px; }
+  .nav-actions { min-width: 0; flex: 1 1 auto; gap: 5px; }
   .site-nav {
-    width: auto;
+    width: 0;
     max-width: none;
     min-width: 0;
     flex: 1 1 auto;
     overflow-x: auto;
     scrollbar-width: none;
   }
-  .nav-actions { flex: 1 1 auto; }
   .site-nav::-webkit-scrollbar { display: none; }
   .site-nav a { min-width: max-content; padding: 8px 10px; font-size: 12px; }
-  .theme-toggle { width: 44px; height: 44px; flex-basis: 44px; }
-  .theme-toggle {
-    position: absolute;
-    top: 8px;
-    right: 16px;
-    z-index: 3;
+
+  .glass-surface,
+  .post-card,
+  .board,
+  .article,
+  .about-card,
+  .archive-day {
+    box-shadow: none;
+    backdrop-filter: blur(8px) saturate(115%);
+    -webkit-backdrop-filter: blur(8px) saturate(115%);
   }
+
+  .brand .logo { box-shadow: none; }
   .container { padding: 22px 12px 56px; }
   .hero {
     min-height: 610px;
     margin-bottom: 36px;
     border-radius: 22px;
   }
-  .hero-image {
+  .hero-media {
     height: 48%;
+  }
+  .hero-image {
     object-position: 68% center;
+  }
+  @keyframes heroCinematicDrift {
+    from { transform: scale(1.01) translateX(-0.2%); }
+    to { transform: scale(1.04) translateX(0.8%); }
   }
   .hero-scrim {
     background:
@@ -1208,6 +1251,7 @@ body { animation: pageFadeIn 360ms ease; }
     transition-duration: 0.01ms !important;
   }
   body { animation: none; }
+  .hero-image { animation: none !important; transform: none !important; }
   .reveal { opacity: 1; transform: none; }
   .glass-surface::before { display: none; }
   .board:hover,

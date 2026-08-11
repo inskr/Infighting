@@ -33,7 +33,11 @@
 
   <main class="container">
     <section class="hero glass-surface" aria-labelledby="hero-title">
-      <img class="hero-image" src="assets/images/hero-ink.png" alt="蓝黑色流体光影抽象封面">
+      <picture class="hero-media">
+        <source type="image/avif" srcset="assets/images/hero-ink-640.avif 640w, assets/images/hero-ink-1280.avif 1280w, assets/images/hero-ink-1920.avif 1920w" sizes="(max-width: 680px) 100vw, (max-width: 1280px) calc(100vw - 40px), 1120px">
+        <source type="image/webp" srcset="assets/images/hero-ink-640.webp 640w, assets/images/hero-ink-1280.webp 1280w, assets/images/hero-ink-1920.webp 1920w" sizes="(max-width: 680px) 100vw, (max-width: 1280px) calc(100vw - 40px), 1120px">
+        <img class="hero-image" src="assets/images/hero-ink-1920.png" width="1920" height="1080" decoding="async" fetchpriority="high" alt="蓝黑色流体光影抽象封面">
+      </picture>
       <div class="hero-scrim" aria-hidden="true"></div>
       <div class="hero-panel">
         <span class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Embedded systems · Edge AI</span>
@@ -76,15 +80,15 @@
   </main>
 
   <footer class="site-footer">
-    © <span id="year"></span> Infighting | 嵌入式与边缘计算开发笔记
+    © <span id="year"></span> Infighting | 嵌入式与边缘计算开发笔记 · 特别鸣谢：<a href="https://www.ysjf.com/index" target="_blank" rel="noopener noreferrer">影视飓风</a>
   </footer>
 
-  <script src="assets/js/feed-data.js"></script>
-  <script src="assets/js/posts-data.js"></script>
-  <script src="assets/js/stats.js"></script>
-  <script src="assets/js/likes-storage.js"></script>
-  <script src="assets/js/url-policy.js"></script>
-  <script src="assets/js/main.js"></script>
-  <script src="assets/js/ui-effects.js"></script>
+  <script defer src="assets/js/feed-data.js"></script>
+  <script defer src="assets/js/posts-index.js"></script>
+  <script defer src="assets/js/stats.js"></script>
+  <script defer src="assets/js/likes-storage.js"></script>
+  <script defer src="assets/js/url-policy.js"></script>
+  <script defer src="assets/js/main.js"></script>
+  <script defer src="assets/js/ui-effects.js"></script>
 </body>
 </html>

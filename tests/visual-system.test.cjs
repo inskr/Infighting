@@ -74,6 +74,50 @@ test('published pages bootstrap theme before CSS and expose the shared navigatio
   }
 });
 
+test('published pages load only their page-specific resources and share the acknowledgement', async () => {
+  const { server, baseUrl } = await createStaticServer();
+  try {
+    const pageNames = ['index.html', 'tags.html', 'archive.html', 'post.html', 'about.html'];
+    const pages = await Promise.all(pageNames.map(async (page) => {
+      const response = await fetch(`${baseUrl}/${page}`);
+      assert.equal(response.status, 200, page);
+      return response.text();
+    }));
+    const [home, tags, archive, post, about] = pages;
+
+    assert.match(home, /<picture class="hero-media">/);
+    assert.match(home, /type="image\/avif"/);
+    assert.match(home, /fetchpriority="high"/);
+    assert.doesNotMatch(home, /posts-data\.js/);
+    assert.match(home, /assets\/js\/posts-index\.js/);
+    assert.match(tags, /assets\/js\/posts-index\.js/);
+    assert.match(post, /assets\/js\/posts-index\.js/);
+    assert.match(post, /assets\/js\/post-loader\.js/);
+    assert.match(post, /assets\/js\/post-view\.js/);
+    assert.ok(post.indexOf('assets/js/post-loader.js') < post.indexOf('assets/js/post-view.js'));
+    assert.ok(post.indexOf('assets/js/post-view.js') < post.indexOf('assets/js/main.js'));
+    assert.doesNotMatch(about, /posts-index\.js/);
+    assert.doesNotMatch(archive, /posts-index\.js/);
+
+    for (const html of pages) {
+      assert.doesNotMatch(html, /posts-data\.js/);
+      assert.match(html, /href="https:\/\/www\.ysjf\.com\/index"/);
+      assert.match(html, /target="_blank" rel="noopener noreferrer"/);
+      const scripts = [...html.matchAll(/<script\b([^>]*)\bsrc="([^"]+)"([^>]*)><\/script>/g)];
+      for (const [, before, src, after] of scripts) {
+        const attributes = `${before}${after}`;
+        if (src === 'assets/js/theme.js') {
+          assert.doesNotMatch(attributes, /\bdefer\b/, src);
+        } else {
+          assert.match(attributes, /\bdefer\b/, `${src} on published page`);
+        }
+      }
+    }
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test('published homepage serves the supplied image through an accessible Hero', async () => {
   const { server, baseUrl } = await createStaticServer();
   try {
@@ -81,12 +125,16 @@ test('published homepage serves the supplied image through an accessible Hero', 
     assert.equal(response.status, 200);
     const html = await response.text();
     assert.match(html, /class="hero glass-surface"/);
-    assert.match(html, /src="assets\/images\/hero-ink\.png"/);
+    assert.match(html, /<picture class="hero-media">/);
+    assert.match(html, /srcset="assets\/images\/hero-ink-640\.avif 640w, assets\/images\/hero-ink-1280\.avif 1280w, assets\/images\/hero-ink-1920\.avif 1920w"/);
+    assert.match(html, /srcset="assets\/images\/hero-ink-640\.webp 640w, assets\/images\/hero-ink-1280\.webp 1280w, assets\/images\/hero-ink-1920\.webp 1920w"/);
+    assert.match(html, /src="assets\/images\/hero-ink-1920\.png"/);
+    assert.match(html, /width="1920" height="1080" decoding="async" fetchpriority="high"/);
     assert.match(html, /alt="蓝黑色流体光影抽象封面"/);
     assert.match(html, /href="#daily-section"/);
     assert.match(html, /href="#posts-title"/);
 
-    const image = await fetch(`${baseUrl}/assets/images/hero-ink.png`);
+    const image = await fetch(`${baseUrl}/assets/images/hero-ink-1920.png`);
     assert.equal(image.status, 200);
     assert.equal(image.headers.get('content-type'), 'image/png');
     assert.ok((await image.arrayBuffer()).byteLength > 100_000);
