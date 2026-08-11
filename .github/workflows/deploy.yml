@@ -37,9 +37,12 @@ jobs:
         with:
           node-version: "22"
 
-      # 无第三方依赖，脚本仅用 Node 内置模块
-      - name: Build posts data
-        run: node scripts/build-posts.js
+      # Install dependencies before running the reproducible content and image builds.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site assets
+        run: npm run build
 
       - name: Fetch daily feeds
         run: node scripts/fetch-feeds.js

@@ -2,10 +2,18 @@
   "name": "infighting",
   "private": true,
   "scripts": {
-    "build": "node scripts/build-posts.js",
+    "build": "npm run build:posts && npm run build:images",
+    "build:posts": "node scripts/build-posts.js",
+    "build:images": "node scripts/build-images.js",
     "feeds": "node scripts/fetch-feeds.js",
     "start": "node server.js",
     "test": "node --test tests/api-concurrency.test.cjs tests/api-security.test.cjs tests/feed-parser.test.cjs tests/feed-topic-filter.test.cjs tests/reveal.test.cjs tests/security-exposure.test.cjs tests/stats-backend.test.cjs tests/theme.test.cjs tests/ui-effects.test.cjs tests/url-policy.test.cjs tests/visual-system.test.cjs && node tests/stats-format.test.cjs && node tests/likes-storage.test.cjs && node tests/stats-fallback.test.cjs"
   },
-  "dependencies": { "express": "^4.19.2", "better-sqlite3": "^11.0.0" }
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.3"
+  }
 }
