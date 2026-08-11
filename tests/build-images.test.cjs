@@ -33,11 +33,71 @@ test('writes bounded responsive hero variants', async () => {
       widths: [640, 1280, 1920],
     });
 
-    assert.equal(outputs.length, 7);
+    const expectedOutputs = [
+      {
+        filename: 'hero-ink-640.avif',
+        declaredWidth: 640,
+        declaredFormat: 'avif',
+        metadataWidth: 640,
+        metadataFormat: 'heif',
+      },
+      {
+        filename: 'hero-ink-640.webp',
+        declaredWidth: 640,
+        declaredFormat: 'webp',
+        metadataWidth: 640,
+        metadataFormat: 'webp',
+      },
+      {
+        filename: 'hero-ink-1280.avif',
+        declaredWidth: 1280,
+        declaredFormat: 'avif',
+        metadataWidth: 1280,
+        metadataFormat: 'heif',
+      },
+      {
+        filename: 'hero-ink-1280.webp',
+        declaredWidth: 1280,
+        declaredFormat: 'webp',
+        metadataWidth: 1280,
+        metadataFormat: 'webp',
+      },
+      {
+        filename: 'hero-ink-1920.avif',
+        declaredWidth: 1920,
+        declaredFormat: 'avif',
+        metadataWidth: 1920,
+        metadataFormat: 'heif',
+      },
+      {
+        filename: 'hero-ink-1920.webp',
+        declaredWidth: 1920,
+        declaredFormat: 'webp',
+        metadataWidth: 1920,
+        metadataFormat: 'webp',
+      },
+      {
+        filename: 'hero-ink-1920.png',
+        declaredWidth: 1920,
+        declaredFormat: 'png',
+        metadataWidth: 1920,
+        metadataFormat: 'png',
+      },
+    ];
+
+    const actualOutputs = [];
     for (const output of outputs) {
       const metadata = await sharp(output.path).metadata();
-      assert.ok(metadata.width <= 1920);
+      actualOutputs.push({
+        filename: path.basename(output.path),
+        declaredWidth: output.width,
+        declaredFormat: output.format,
+        metadataWidth: metadata.width,
+        metadataFormat: metadata.format,
+      });
     }
+
+    assert.deepEqual(actualOutputs, expectedOutputs);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
