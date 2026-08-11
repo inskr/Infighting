@@ -374,23 +374,34 @@
   }
 
   /* ---------- 文章详情页 ---------- */
-  function renderPost() {
+  async function renderPost() {
     var container = document.getElementById("article");
     if (!container) return;
 
     var id = getParam("id");
     var all = window.POSTS || [];
-    var index = all.findIndex(function (p) {
-      return p.id === id;
-    });
+    container.innerHTML =
+      '<div class="article glass-surface"><p>文章加载中…</p></div>';
 
-    if (index === -1) {
-      container.innerHTML =
-        '<div class="article glass-surface"><h1>文章不存在</h1><p><a href="index.html">返回首页</a></p></div>';
+    var isValidId = window.PostLoader.isValidPostId(id);
+    var indexedPost = isValidId && all.find(function (post) {
+      return post && post.id === id;
+    });
+    if (!indexedPost) {
+      container.innerHTML = window.PostView.errorCardHtml({
+        code: isValidId ? "NOT_FOUND" : "INVALID_ID",
+      });
       return;
     }
 
-    var post = all[index];
+    var post;
+    try {
+      post = await window.PostLoader.loadPost(window, id);
+    } catch (error) {
+      container.innerHTML = window.PostView.errorCardHtml(error);
+      return;
+    }
+
     document.title = post.title + " · Infighting";
     setActiveNav(post.type === "page" ? "" : "home");
 
@@ -447,6 +458,8 @@
     }
 
     container.innerHTML = html;
+
+    window.PostView.decorateArticleImages(container);
 
     // 进入详情页：上报浏览（+1）并回填最新浏览数
     if (window.Stats && id) {
@@ -610,7 +623,7 @@
     initLikeDelegation();
 
     // 列表 / 标签页渲染前先批量拉取统计，使卡片初始即显示真实计数
-    if (window.Stats) {
+    if (window.Stats && !document.getElementById("article")) {
       try {
         await window.Stats.fetchAllStats();
       } catch (e) {
@@ -619,7 +632,9 @@
     }
 
     renderList();
-    renderPost();
+    if (document.getElementById("article")) {
+      await renderPost();
+    }
     renderTags();
     renderArchive();
     initAbout();

@@ -12,10 +12,11 @@
 
 工作流依次执行：
 
-1. `node scripts/build-posts.js`
-2. `node scripts/fetch-feeds.js`
-3. 回写 `public/assets/js/feed-data.js` 和 `feed-archive.js`
-4. 只上传 `public/` 到 GitHub Pages
+1. `npm ci` 安装锁定版本的构建依赖。
+2. `npm run build` 生成 `posts-index.js`、单篇文章 JSON 和 Hero 响应式图片。
+3. `node scripts/fetch-feeds.js` 更新每日精选与归档。
+4. 回写 `public/assets/js/feed-data.js` 和 `feed-archive.js`。
+5. 只上传 `public/` 到 GitHub Pages。
 
 首次部署时，在仓库的 **Settings → Pages** 中选择 **GitHub Actions**。工作流需要 `contents: write` 回写资讯数据，并需要 `pages: write`、`id-token: write` 发布 Pages。
 
@@ -74,7 +75,7 @@ npm start
 1. 在 `posts/` 新建 Markdown 文件。
 2. 运行 `npm run build`。
 3. 运行 `npm test`。
-4. 提交文章源文件和生成后的 `public/assets/js/posts-data.js`。
+4. 提交文章源文件、生成后的 `public/assets/js/posts-index.js` 和 `public/assets/posts/*.json`。`npm run build` 也会校验并重建 Hero 响应式资源。
 
 ### 更新资讯
 

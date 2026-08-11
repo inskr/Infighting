@@ -36,6 +36,9 @@ test('statistics API validates catalog IDs, limits mutations, and sets security 
   const invalid = await fetch(`${baseUrl}/api/content/%20/like`, { method: 'POST' });
   assert.equal(invalid.status, 400);
 
+  const reserved = await fetch(`${baseUrl}/api/content/CON/like`, { method: 'POST' });
+  assert.equal(reserved.status, 400);
+
   const unknown = await fetch(`${baseUrl}/api/content/not-published/like`, {
     method: 'POST'
   });
