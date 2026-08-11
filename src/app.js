@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { CONTENT_ID_PATTERN } = require('./content-id');
+const { CONTENT_ID_PATTERN, isPortableContentId } = require('./content-id');
 
 const SECURITY_POLICY = [
   "default-src 'self'",
@@ -33,7 +33,7 @@ function setStaticCacheHeaders(res, filePath) {
   }
 
   if (
-    /\/assets\/vendor\//.test(normalizedPath) ||
+    /\/vendor\//.test(normalizedPath) ||
     /\.(?:avif|css|gif|ico|jpe?g|js|png|svg|webp)$/.test(normalizedPath)
   ) {
     res.setHeader('Cache-Control', LONG_CACHE_CONTROL);
@@ -137,7 +137,7 @@ function createApp(options) {
 
   function validateContentId(req, res, next) {
     const id = req.params.id;
-    if (!CONTENT_ID_PATTERN.test(id)) {
+    if (!isPortableContentId(id)) {
       return jsonError(res, 400, 'invalid content id');
     }
     if (!contentIds.has(id)) {

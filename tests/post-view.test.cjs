@@ -29,6 +29,13 @@ test('renders a missing article distinctly with the shared return link', () => {
   assert.match(html, /返回文章列表/);
 });
 
+test('renders unknown errors as load failures rather than missing articles', () => {
+  const html = PostView.errorCardHtml(new Error('unexpected'));
+
+  assert.match(html, /文章加载失败/);
+  assert.doesNotMatch(html, /文章不存在/);
+});
+
 test('decorates every rendered article image for deferred decoding', () => {
   const images = [fakeImage(), fakeImage()];
 

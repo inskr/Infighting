@@ -15,7 +15,8 @@
   "use strict";
 
   function errorCardHtml(error) {
-    var title = error && error.code === "LOAD_FAILED" ? "文章加载失败" : "文章不存在";
+    var isMissing = error && (error.code === "INVALID_ID" || error.code === "NOT_FOUND");
+    var title = isMissing ? "文章不存在" : "文章加载失败";
     return (
       '<div class="article glass-surface"><h1>' +
       title +

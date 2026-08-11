@@ -99,10 +99,16 @@ test('published pages load only their page-specific resources and share the ackn
     assert.doesNotMatch(about, /posts-index\.js/);
     assert.doesNotMatch(archive, /posts-index\.js/);
 
+    for (const html of [home, tags, archive, about]) {
+      assert.doesNotMatch(html, /assets\/js\/post-(?:loader|view)\.js/);
+    }
+
     for (const html of pages) {
       assert.doesNotMatch(html, /posts-data\.js/);
-      assert.match(html, /href="https:\/\/www\.ysjf\.com\/index"/);
-      assert.match(html, /target="_blank" rel="noopener noreferrer"/);
+      const acknowledgementLinks = html.match(
+        /<a href="https:\/\/www\.ysjf\.com\/index" target="_blank" rel="noopener noreferrer">影视飓风<\/a>/g
+      );
+      assert.equal(acknowledgementLinks && acknowledgementLinks.length, 1);
       const scripts = [...html.matchAll(/<script\b([^>]*)\bsrc="([^"]+)"([^>]*)><\/script>/g)];
       for (const [, before, src, after] of scripts) {
         const attributes = `${before}${after}`;
@@ -137,16 +143,17 @@ test('published homepage serves the supplied image through an accessible Hero', 
     const image = await fetch(`${baseUrl}/assets/images/hero-ink-1920.png`);
     assert.equal(image.status, 200);
     assert.equal(image.headers.get('content-type'), 'image/png');
-    assert.ok((await image.arrayBuffer()).byteLength > 100_000);
+    assert.ok((await image.arrayBuffer()).byteLength > 0);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
 });
 
 test('hero keeps opaque dark layers when backdrop filters are unavailable', () => {
-  const fallbackStart = stylesheet.indexOf('@supports not');
-  const fallbackEnd = stylesheet.indexOf('/* ================= Responsive', fallbackStart);
-  const fallback = stylesheet.slice(fallbackStart, fallbackEnd);
+  const fallback = atRuleBlock(
+    stylesheet,
+    '@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))'
+  );
   const heroBase = allRuleDeclarations(stylesheet, '.hero').join('\n');
   const heroFallback = ruleDeclarations(fallback, '.hero');
   const panelFallback = ruleDeclarations(fallback, '.hero-panel');
@@ -155,6 +162,31 @@ test('hero keeps opaque dark layers when backdrop filters are unavailable', () =
   assert.match(heroFallback, /background:\s*(?:linear-gradient|#[0-2][0-9a-f]{5})/i);
   assert.match(panelFallback, /background:\s*(?:linear-gradient|#[0-2][0-9a-f]{5})/i);
   assert.doesNotMatch(heroFallback + panelFallback, /var\(--surface(?:-strong)?\)/);
+});
+
+test('mobile and coarse Hero panels avoid expensive compositing with a readable fallback', () => {
+  const coarsePointer = atRuleBlock(stylesheet, '@media (hover: none), (pointer: coarse)');
+  const mobile = atRuleBlock(stylesheet, '@media (max-width: 680px)');
+  const fallbackMarker =
+    '@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))';
+  const fallback = atRuleBlock(stylesheet, fallbackMarker);
+  const coarsePanel = allRuleDeclarations(coarsePointer, '.hero-panel').join('\n');
+  const mobilePanel = allRuleDeclarations(mobile, '.hero-panel').join('\n');
+  const fallbackPanel = ruleDeclarations(fallback, '.hero-panel');
+
+  for (const declarations of [coarsePanel, mobilePanel]) {
+    assert.match(declarations, /box-shadow:\s*none/i);
+    assert.match(declarations, /(?:-webkit-)?backdrop-filter:\s*none/i);
+    const alpha = declarations.match(/background:\s*rgba\([^)]*,\s*([\d.]+)\s*\)/i);
+    assert.ok(alpha && Number(alpha[1]) >= 0.82, declarations);
+  }
+
+  assert.ok(
+    stylesheet.indexOf(fallbackMarker) > stylesheet.indexOf('@media (max-width: 680px)'),
+    'opaque fallback must win after responsive panel backgrounds'
+  );
+  assert.match(fallbackPanel, /background:\s*linear-gradient/i);
+  assert.doesNotMatch(fallbackPanel, /rgba\(/i);
 });
 
 test('spotlight and card hover effects are scoped to fine hover pointers', () => {

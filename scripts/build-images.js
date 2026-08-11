@@ -21,6 +21,14 @@ async function writeVariant({ source, outputPath, width, format, options }) {
 
 async function buildHeroImages({ source, outputDir, widths }) {
   fs.mkdirSync(outputDir, { recursive: true });
+  for (const entry of fs.readdirSync(outputDir, { withFileTypes: true })) {
+    if (
+      (entry.isFile() || entry.isSymbolicLink()) &&
+      /^hero-ink(?:-\d+)?\.(?:avif|webp|png)$/i.test(entry.name)
+    ) {
+      fs.rmSync(path.join(outputDir, entry.name), { force: true });
+    }
+  }
 
   const outputs = [];
   for (const width of widths) {

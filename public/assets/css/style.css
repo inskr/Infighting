@@ -591,6 +591,13 @@ a:focus-visible {
 
   .brand .logo { box-shadow: none; }
 
+  .hero-panel {
+    background: rgba(4, 8, 17, 0.88);
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
   .board:hover,
   .post-card:hover,
   .about-card:hover {
@@ -1119,28 +1126,6 @@ body { animation: pageFadeIn 360ms ease; }
 
 .reveal.visible { opacity: 1; transform: none; }
 
-/* ================= Fallbacks ================= */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass-surface,
-  .post-card,
-  .board,
-  .article,
-  .about-card,
-  .archive-day,
-  .nav-shell,
-  .hero-panel {
-    background-color: var(--surface-strong);
-  }
-
-  .hero {
-    background: linear-gradient(135deg, #02040a 0%, #06111d 58%, #071827 100%);
-  }
-
-  .hero-panel {
-    background: linear-gradient(145deg, #040811, #071321);
-  }
-}
-
 /* ================= Responsive ================= */
 @media (max-width: 900px) {
   .site-header { padding-inline: 14px; }
@@ -1191,6 +1176,11 @@ body { animation: pageFadeIn 360ms ease; }
   }
 
   .brand .logo { box-shadow: none; }
+  .hero-panel {
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
   .container { padding: 22px 12px 56px; }
   .hero {
     min-height: 610px;
@@ -1216,7 +1206,7 @@ body { animation: pageFadeIn 360ms ease; }
     margin: 210px 14px 14px;
     padding: 24px 20px;
     border-radius: 18px;
-    background: rgba(4, 8, 17, 0.62);
+    background: rgba(4, 8, 17, 0.88);
   }
   .hero-panel h1 { max-width: 15ch; font-size: clamp(32px, 11vw, 45px); }
   .hero-panel > p { margin-top: 15px; font-size: 14px; }
@@ -1238,6 +1228,27 @@ body { animation: pageFadeIn 360ms ease; }
   .article-nav { grid-template-columns: 1fr; }
   .article-nav .next { text-align: left; }
   .archive-day .daily-boards { gap: 12px; }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-surface,
+  .post-card,
+  .board,
+  .article,
+  .about-card,
+  .archive-day,
+  .nav-shell,
+  .hero-panel {
+    background-color: var(--surface-strong);
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #02040a 0%, #06111d 58%, #071827 100%);
+  }
+
+  .hero-panel {
+    background: linear-gradient(145deg, #040811, #071321);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

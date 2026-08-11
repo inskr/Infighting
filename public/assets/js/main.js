@@ -383,6 +383,17 @@
     container.innerHTML =
       '<div class="article glass-surface"><p>文章加载中…</p></div>';
 
+    var isValidId = window.PostLoader.isValidPostId(id);
+    var indexedPost = isValidId && all.find(function (post) {
+      return post && post.id === id;
+    });
+    if (!indexedPost) {
+      container.innerHTML = window.PostView.errorCardHtml({
+        code: isValidId ? "NOT_FOUND" : "INVALID_ID",
+      });
+      return;
+    }
+
     var post;
     try {
       post = await window.PostLoader.loadPost(window, id);

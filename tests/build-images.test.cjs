@@ -16,6 +16,10 @@ test('writes bounded responsive hero variants', async () => {
   const outputDir = path.join(root, 'output');
 
   try {
+    fs.mkdirSync(outputDir, { recursive: true });
+    fs.writeFileSync(path.join(outputDir, 'hero-ink-320.webp'), 'stale', 'utf8');
+    fs.writeFileSync(path.join(outputDir, 'hero-ink.png'), 'legacy', 'utf8');
+    fs.writeFileSync(path.join(outputDir, 'keep-me.txt'), 'unrelated', 'utf8');
     await sharp({
       create: {
         width: 2000,
@@ -98,6 +102,47 @@ test('writes bounded responsive hero variants', async () => {
     }
 
     assert.deepEqual(actualOutputs, expectedOutputs);
+    assert.equal(fs.existsSync(path.join(outputDir, 'hero-ink-320.webp')), false);
+    assert.equal(fs.existsSync(path.join(outputDir, 'hero-ink.png')), false);
+    assert.equal(fs.existsSync(path.join(outputDir, 'keep-me.txt')), true);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('keeps actual Hero source outputs within generous byte budgets', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hero-budget-'));
+  const source = path.join(__dirname, '..', 'assets', 'images', 'hero-ink-source.png');
+  const outputDir = path.join(root, 'output');
+  const perFileByteCeilings = {
+    'hero-ink-640.avif': 200_000,
+    'hero-ink-640.webp': 200_000,
+    'hero-ink-1280.avif': 400_000,
+    'hero-ink-1280.webp': 400_000,
+    'hero-ink-1920.avif': 750_000,
+    'hero-ink-1920.webp': 750_000,
+    'hero-ink-1920.png': 1_500_000
+  };
+
+  try {
+    await buildHeroImages({
+      source,
+      outputDir,
+      widths: [640, 1280, 1920]
+    });
+
+    for (const [filename, ceiling] of Object.entries(perFileByteCeilings)) {
+      const bytes = fs.statSync(path.join(outputDir, filename)).size;
+      assert.ok(bytes <= ceiling, `${filename}: ${bytes} bytes exceeds ${ceiling}`);
+    }
+
+    const mobileBytes =
+      fs.statSync(path.join(outputDir, 'hero-ink-640.avif')).size +
+      fs.statSync(path.join(outputDir, 'hero-ink-640.webp')).size;
+    assert.ok(
+      mobileBytes <= 300_000,
+      `640px AVIF+WebP total: ${mobileBytes} bytes exceeds 300000`
+    );
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

@@ -2,7 +2,11 @@
 // Usage: node scripts/build-posts.js
 const fs = require("fs");
 const path = require("path");
-const { isValidContentId } = require("../src/content-id");
+const {
+  foldContentId,
+  isPortableContentId,
+  isValidContentId,
+} = require("../src/content-id");
 
 const ROOT_DIR = path.join(__dirname, "..");
 const POSTS_DIR = path.join(ROOT_DIR, "posts");
@@ -50,9 +54,14 @@ function readAndValidatePosts(postsDir) {
         content: content.trim(),
       };
     })
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+      if (a.id < b.id) return -1;
+      if (a.id > b.id) return 1;
+      return 0;
+    });
 
-  const seenIds = new Set();
+  const seenIds = new Map();
   for (const post of posts) {
     if (!isValidContentId(post.id)) {
       throw new Error(
@@ -61,10 +70,24 @@ function readAndValidatePosts(postsDir) {
           "'. Use 1-128 ASCII letters, numbers, underscores, or hyphens."
       );
     }
-    if (seenIds.has(post.id)) {
-      throw new Error("Duplicate post id: " + post.id);
+    if (!isPortableContentId(post.id)) {
+      throw new Error(
+        "Invalid post id '" +
+          post.id +
+          "'. IDs must be portable filenames and cannot use Windows-reserved basenames."
+      );
     }
-    seenIds.add(post.id);
+    const foldedId = foldContentId(post.id);
+    if (seenIds.has(foldedId)) {
+      const existingId = seenIds.get(foldedId);
+      if (existingId === post.id) {
+        throw new Error("Duplicate post id: " + post.id);
+      }
+      throw new Error(
+        "Duplicate post id after case folding: " + existingId + " conflicts with " + post.id
+      );
+    }
+    seenIds.set(foldedId, post.id);
   }
 
   return posts;

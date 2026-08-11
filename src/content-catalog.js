@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require('fs');
-const { isValidContentId } = require('./content-id');
+const { foldContentId, isPortableContentId } = require('./content-id');
 
 /**
  * Read the generated post index without evaluating JavaScript.
@@ -22,14 +22,23 @@ function loadContentIds(filename) {
   }
 
   const ids = new Set();
+  const foldedIds = new Map();
   for (const post of posts) {
     const id = post && post.id;
-    if (!isValidContentId(id)) {
+    if (!isPortableContentId(id)) {
       throw new Error(`Invalid content id in generated catalog: ${String(id)}`);
     }
-    if (ids.has(id)) {
-      throw new Error(`Duplicate content id in generated catalog: ${id}`);
+    const foldedId = foldContentId(id);
+    if (foldedIds.has(foldedId)) {
+      const existingId = foldedIds.get(foldedId);
+      if (existingId === id) {
+        throw new Error(`Duplicate content id in generated catalog: ${id}`);
+      }
+      throw new Error(
+        `Duplicate content id after case folding: ${existingId} conflicts with ${id}`
+      );
     }
+    foldedIds.set(foldedId, id);
     ids.add(id);
   }
   return ids;

@@ -18,11 +18,13 @@ Infighting 是一个面向嵌入式系统、边缘计算与边缘 AI 的个人�
 .
 ├─ public/                  # 唯一可发布目录
 │  ├─ *.html               # 首页、文章、标签、归档、关于页
-│  ├─ assets/              # 样式、前端模块、构建后的文章/资讯数据
+│  ├─ assets/              # 样式、前端模块、响应式图片与构建后的文章/资讯数据
 │  └─ vendor/              # 浏览器端 Markdown 与代码高亮库
+├─ assets/images/           # Hero 高分辨率源图（不直接发布）
 ├─ posts/                   # Markdown 文章源文件
 ├─ scripts/
-│  ├─ build-posts.js        # posts/*.md -> public/assets/js/posts-data.js
+│  ├─ build-posts.js        # 生成元数据索引与 public/assets/posts/*.json
+│  ├─ build-images.js       # 生成 Hero 的 AVIF/WebP/PNG 响应式资源
 │  └─ fetch-feeds.js        # RSS/Atom -> 每日精选与归档数据
 ├─ src/
 │  ├─ app.js                # HTTP 路由、安全策略、限流与静态托管
@@ -52,7 +54,7 @@ npm start
 常用命令：
 
 ```bash
-npm run build    # 重新生成文章数据
+npm run build    # 重新生成文章索引、单篇正文与 Hero 响应式图片
 npm run feeds    # 联网抓取每日精选并更新 7 天归档
 npm test         # 运行完整回归测试
 npm start        # 启动自托管站点与统计接口
@@ -91,7 +93,7 @@ summary: 使用 DMA 和空闲中断实现稳定的串口接收。
 在这里编写 Markdown 内容。
 ```
 
-文章 ID 必须唯一，并符合 `[A-Za-z0-9][A-Za-z0-9_-]{0,127}`。构建会拒绝非法或重复 ID，避免生成前端无法访问、后端无法统计的内容。
+文章 ID 必须符合 `[A-Za-z0-9][A-Za-z0-9_-]{0,127}`，同时不能使用 Windows 保留设备名（如 `CON`、`COM1`、`LPT1`）。ID 按 ASCII 大小写折叠后也必须唯一；构建会在写入文件前拒绝非法、保留或冲突的 ID，避免生成前端无法访问、后端无法统计的内容。
 
 完成后运行：
 
