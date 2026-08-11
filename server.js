@@ -14,7 +14,7 @@ function startServer(options = {}) {
   const statsStore = options.statsStore || createStatsStore({ filename: databaseFile });
   const contentIds =
     options.contentIds ||
-    loadContentIds(path.join(publicDir, 'assets', 'js', 'posts-data.js'));
+    loadContentIds(path.join(publicDir, 'assets', 'js', 'posts-index.js'));
 
   const app = createApp({
     statsStore,

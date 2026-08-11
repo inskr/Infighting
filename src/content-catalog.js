@@ -4,9 +4,9 @@ const fs = require('fs');
 const { isValidContentId } = require('./content-id');
 
 /**
- * Read the generated posts data without evaluating JavaScript.
+ * Read the generated post index without evaluating JavaScript.
  *
- * @param {string} filename generated public/assets/js/posts-data.js
+ * @param {string} filename generated public/assets/js/posts-index.js
  * @returns {Set<string>}
  */
 function loadContentIds(filename) {
