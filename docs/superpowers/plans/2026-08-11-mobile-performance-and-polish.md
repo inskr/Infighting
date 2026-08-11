@@ -28,6 +28,7 @@
 - `public/assets/js/posts-index.js`：自动生成的文章元数据。
 - `public/assets/posts/<id>.json`：自动生成的单篇文章数据。
 - `public/assets/js/post-loader.js`：校验 ID 并按需获取单篇文章，不负责 DOM 渲染。
+- `public/assets/js/post-view.js`：生成文章错误状态并为已渲染正文图片添加懒加载属性。
 - `public/assets/js/main.js`：消费索引与加载器，处理页面渲染、错误态和正文图片属性。
 - `public/assets/css/style.css`：手机导航、Hero 慢速运镜、移动端渲染简化与页脚链接样式。
 - `public/*.html`：响应式 Hero、页脚文案、按页面精简的 `defer` 脚本引用。
@@ -114,14 +115,16 @@ git commit -m "perf: split post index from article bodies"
 
 **Files:**
 - Create: `public/assets/js/post-loader.js`
+- Create: `public/assets/js/post-view.js`
 - Create: `tests/post-loader.test.cjs`
+- Create: `tests/post-view.test.cjs`
 - Modify: `public/assets/js/main.js`
-- Modify: `tests/reveal.test.cjs`
 
 **Interfaces:**
 - Consumes: `window.POSTS` metadata from Task 1.
 - Produces: `PostLoader.isValidPostId(id): boolean`.
 - Produces: `PostLoader.loadPost(root, id): Promise<object>`; rejects with errors whose `code` is `INVALID_ID`, `NOT_FOUND`, or `LOAD_FAILED`.
+- Produces: `PostView.errorCardHtml(error): string` and `PostView.decorateArticleImages(container): number`.
 
 - [ ] **Step 1: Write failing loader and rendering-contract tests**
 
@@ -139,37 +142,49 @@ test('rejects invalid IDs before fetching', async () => {
 });
 ```
 
-Extend `reveal.test.cjs` to assert `main.js` calls `PostLoader.loadPost`, emits the user-facing “文章加载失败” state, and adds `loading="lazy" decoding="async"` to rendered article images.
+Test the real view helpers rather than searching production source text:
+
+```js
+test('renders a readable load failure with a return link', () => {
+  const html = PostView.errorCardHtml({ code: 'LOAD_FAILED' });
+  assert.match(html, /文章加载失败/);
+  assert.match(html, /href="index\.html"/);
+});
+
+test('decorates every rendered article image for deferred decoding', () => {
+  const images = [fakeImage(), fakeImage()];
+  const count = PostView.decorateArticleImages({ querySelectorAll: () => images });
+  assert.equal(count, 2);
+  assert.deepEqual(images[0].attributes, { loading: 'lazy', decoding: 'async' });
+});
+```
 
 - [ ] **Step 2: Run focused tests and verify RED**
 
-Run: `node --test tests/post-loader.test.cjs tests/reveal.test.cjs`
+Run: `node --test tests/post-loader.test.cjs tests/post-view.test.cjs`
 
-Expected: FAIL because the loader does not exist and `renderPost` is synchronous.
+Expected: FAIL because the loader and view modules do not exist.
 
 - [ ] **Step 3: Implement the loader and asynchronous article flow**
 
-Use a UMD wrapper matching `theme.js` and `ui-effects.js`. The loader must validate before building the path and classify HTTP/parse failures. Change `renderPost` to return a promise, render a loading card, await `PostLoader.loadPost(window, id)`, and only after success run Markdown parsing, navigation, stats, highlighting, table wrapping, and:
+Use UMD wrappers matching `theme.js` and `ui-effects.js`. The loader must validate before building the path and classify HTTP/parse failures. `post-view.js` owns error-card HTML and image decoration. Change `renderPost` to return a promise, render a loading card, await `PostLoader.loadPost(window, id)`, and only after success run Markdown parsing, navigation, stats, highlighting, table wrapping, and:
 
 ```js
-container.querySelectorAll('.article-body img').forEach(function (image) {
-  image.setAttribute('loading', 'lazy');
-  image.setAttribute('decoding', 'async');
-});
+PostView.decorateArticleImages(container);
 ```
 
 For invalid/missing/load failures, render one shared error card with a “返回文章列表” link. Do not report a view when loading fails.
 
 - [ ] **Step 4: Verify GREEN**
 
-Run: `node --test tests/post-loader.test.cjs tests/reveal.test.cjs`
+Run: `node --test tests/post-loader.test.cjs tests/post-view.test.cjs tests/reveal.test.cjs`
 
 Expected: PASS with no unhandled promise rejection.
 
 - [ ] **Step 5: Commit on-demand loading**
 
 ```bash
-git add public/assets/js/post-loader.js public/assets/js/main.js tests/post-loader.test.cjs tests/reveal.test.cjs
+git add public/assets/js/post-loader.js public/assets/js/post-view.js public/assets/js/main.js tests/post-loader.test.cjs tests/post-view.test.cjs
 git commit -m "perf: load article bodies on demand"
 ```
 
@@ -271,23 +286,25 @@ for (const html of pages) {
 }
 ```
 
-Add CSS assertions that the mobile `.theme-toggle` has no `position:absolute`, Hero keyframes use `transform`, and the reduced-motion block sets `.hero-image { animation: none; }`.
+Do not add source-text assertions for CSS. The published-page tests cover the real HTML responses; Step 4 includes browser-level responsive and reduced-motion checks for the visual behavior.
 
 - [ ] **Step 2: Run visual tests and verify RED**
 
 Run: `node --test tests/visual-system.test.cjs tests/theme.test.cjs`
 
-Expected: FAIL on missing picture sources, old script references, footer link, mobile positioning, and Hero animation.
+Expected: FAIL on missing picture sources, old script references, footer link, and post view/loader scripts.
 
 - [ ] **Step 3: Update all page markup and script loading**
 
-Replace the Hero image with AVIF/WebP `srcset` values for 640/1280/1920 widths plus the 1920 PNG fallback. Add `width="1920" height="1080" decoding="async" fetchpriority="high"` to the fallback image. Keep `theme.js` before CSS without `defer`; add `defer` to all remaining scripts while preserving dependency order. Use `posts-index.js` only on index/tags/post and insert `post-loader.js` before `main.js` only on post.
+Replace the Hero image with AVIF/WebP `srcset` values for 640/1280/1920 widths plus the 1920 PNG fallback. Add `width="1920" height="1080" decoding="async" fetchpriority="high"` to the fallback image. Keep `theme.js` before CSS without `defer`; add `defer` to all remaining scripts while preserving dependency order. Use `posts-index.js` only on index/tags/post and insert `post-loader.js` and `post-view.js` before `main.js` only on post.
 
 Replace every footer with the approved acknowledgement link and exact security attributes.
 
 - [ ] **Step 4: Implement CSS motion and mobile simplification**
 
 Add `heroCinematicDrift` with only `transform`, use 9 seconds and `alternate ease-in-out infinite`; reduce the end transform under 680 px. Remove the mobile absolute theme positioning and `nav-shell` right padding. Keep the theme button at 44 px, use the same border radius/background family as `.site-nav a`, and let only `.site-nav` scroll. Under coarse pointers/mobile, reduce or remove backdrop blur and heavy shadows. In reduced motion, explicitly disable Hero animation.
+
+Start the local server and verify at 390 px that the theme control stays in normal flow without covering navigation. Emulate `prefers-reduced-motion: reduce` and confirm the Hero image transform remains static; then disable emulation and confirm the 9-second drift runs without changing layout geometry.
 
 - [ ] **Step 5: Verify GREEN and commit**
 
@@ -330,7 +347,7 @@ Expected: FAIL because static responses use Express defaults.
 
 - [ ] **Step 3: Implement extension/path-based cache headers**
 
-Pass `setHeaders: setStaticCacheHeaders` to `express.static`. Use `public, max-age=604800` for version-stable images/CSS/vendor assets, `public, max-age=3600, must-revalidate` for HTML, `posts-index.js`, feed data, and `assets/posts/*.json`; retain ETag. Do not change the earlier `/api` middleware.
+Pass `setHeaders: setStaticCacheHeaders` to `express.static`. Use `public, max-age=604800, must-revalidate` for images, CSS, vendor assets, and ordinary JavaScript; use `public, max-age=3600, must-revalidate` for HTML, `posts-index.js`, feed data, and `assets/posts/*.json`; retain ETag. Evaluate the short-cache data paths before the general `.js` rule. Do not change the earlier `/api` middleware.
 
 - [ ] **Step 4: Verify GREEN and include all new tests in `npm test`**
 
@@ -338,7 +355,7 @@ Run: `node --test tests/static-cache.test.cjs tests/api-security.test.cjs tests/
 
 Expected: PASS and API headers remain `no-store`.
 
-Update the `npm test` script to include `build-posts.test.cjs`, `build-images.test.cjs`, `post-loader.test.cjs`, and `static-cache.test.cjs` in the Node test-runner group.
+Update the `npm test` script to include `build-posts.test.cjs`, `build-images.test.cjs`, `post-loader.test.cjs`, `post-view.test.cjs`, and `static-cache.test.cjs` in the Node test-runner group.
 
 - [ ] **Step 5: Commit cache behavior**
 
