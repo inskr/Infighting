@@ -15,6 +15,31 @@ const SECURITY_POLICY = [
   "style-src 'self' 'unsafe-inline'"
 ].join('; ');
 
+const LONG_CACHE_CONTROL = 'public, max-age=604800, must-revalidate';
+const SHORT_CACHE_CONTROL = 'public, max-age=3600, must-revalidate';
+const SHORT_CACHE_SCRIPTS = new Set(['feed-archive.js', 'feed-data.js', 'posts-index.js']);
+
+function setStaticCacheHeaders(res, filePath) {
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  const fileName = normalizedPath.slice(normalizedPath.lastIndexOf('/') + 1);
+
+  if (
+    normalizedPath.endsWith('.html') ||
+    SHORT_CACHE_SCRIPTS.has(fileName) ||
+    /\/assets\/posts\/[^/]+\.json$/.test(normalizedPath)
+  ) {
+    res.setHeader('Cache-Control', SHORT_CACHE_CONTROL);
+    return;
+  }
+
+  if (
+    /\/assets\/vendor\//.test(normalizedPath) ||
+    /\.(?:avif|css|gif|ico|jpe?g|js|png|svg|webp)$/.test(normalizedPath)
+  ) {
+    res.setHeader('Cache-Control', LONG_CACHE_CONTROL);
+  }
+}
+
 function jsonError(res, status, message) {
   return res.status(status).json({ code: 1, data: null, message });
 }
@@ -176,7 +201,8 @@ function createApp(options) {
     express.static(options.publicDir, {
       dotfiles: 'deny',
       index: 'index.html',
-      redirect: false
+      redirect: false,
+      setHeaders: setStaticCacheHeaders
     })
   );
   app.use((req, res) => res.status(404).type('text').send('Not found'));
@@ -187,5 +213,6 @@ function createApp(options) {
 module.exports = {
   CONTENT_ID_PATTERN,
   createApp,
-  createMutationLimiter
+  createMutationLimiter,
+  setStaticCacheHeaders
 };
