@@ -4,10 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
-  <title>文章 · Infighting</title>
+  <title>关于 · Infighting</title>
   <script src="assets/js/theme.js"></script>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -32,20 +31,51 @@
   </header>
 
   <main class="container">
-    <div id="article"></div>
+    <section class="page-intro glass-surface">
+      <span class="eyebrow">About the builder</span>
+      <h1 class="page-title">关于我</h1>
+      <p class="page-desc">一名在硬件与软件边界上折腾的嵌入式开发者。</p>
+    </section>
+
+    <div class="about-grid">
+      <section class="about-card glass-surface">
+        <h2>博主简介</h2>
+        <p>
+          你好，我是太原理工大学本科生，现于西安电子科技大学读研究生。
+          我喜欢让代码在真实的硬件上跑起来：从一块 STM32 最小系统板，到能悬停的四轴无人机，
+          再到在 MCU 上部署神经网络做边缘视觉识别。这个博客用来沉淀我在嵌入式与边缘计算方向的实践笔记。
+        </p>
+      </section>
+
+      <section class="about-card glass-surface">
+        <h2>技术方向</h2>
+        <p style="margin-bottom:14px">
+          目前主要聚焦于 <strong>嵌入式系统开发</strong> 与 <strong>边缘计算</strong> 两个方向：
+          底层到驱动与裸机调度，上层到控制算法与边缘 AI 推理部署。
+        </p>
+        <div class="skill-list">
+          <span class="tag">STM32</span>
+          <span class="tag">ESP32</span>
+          <span class="tag">RK3588</span>
+          <span class="tag">C / Python</span>
+          <span class="tag">嵌入式 Linux 驱动</span>
+          <span class="tag">FreeRTOS / 裸机调度</span>
+          <span class="tag">PID 控制</span>
+          <span class="tag">卡尔曼滤波</span>
+          <span class="tag">四元数姿态解算</span>
+          <span class="tag">LVGL</span>
+          <span class="tag">边缘 AI 部署</span>
+          <span class="tag">PCB 设计</span>
+        </div>
+      </section>
+
+    </div>
   </main>
 
   <footer class="site-footer">
     © <span id="year"></span> Infighting | 嵌入式与边缘计算开发笔记 · 特别鸣谢：<a href="https://www.ysjf.com/index" target="_blank" rel="noopener noreferrer">影视飓风</a>
   </footer>
 
-  <script defer src="vendor/marked.min.js"></script>
-  <script defer src="vendor/highlight.min.js"></script>
-  <script defer src="assets/js/posts-index.js"></script>
-  <script defer src="assets/js/stats.js"></script>
-  <script defer src="assets/js/likes-storage.js"></script>
-  <script defer src="assets/js/post-loader.js"></script>
-  <script defer src="assets/js/post-view.js"></script>
   <script defer src="assets/js/main.js"></script>
   <script defer src="assets/js/ui-effects.js"></script>
 </body>

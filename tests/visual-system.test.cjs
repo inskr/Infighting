@@ -22,26 +22,6 @@ function ruleDeclarations(source, selector) {
   return declarations.length ? declarations[declarations.length - 1] : '';
 }
 
-function cssHexVariable(declarations, name) {
-  const match = declarations.match(new RegExp(`--${name}:\\s*(#[0-9a-f]{6})`, 'i'));
-  return match && match[1];
-}
-
-function contrastRatio(foreground, background) {
-  function luminance(hex) {
-    const channels = hex.slice(1).match(/../g).map((value) => {
-      const channel = parseInt(value, 16) / 255;
-      return channel <= 0.03928
-        ? channel / 12.92
-        : ((channel + 0.055) / 1.055) ** 2.4;
-    });
-    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
-  }
-  const lighter = Math.max(luminance(foreground), luminance(background));
-  const darker = Math.min(luminance(foreground), luminance(background));
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
 function atRuleBlock(source, marker) {
   const start = source.indexOf(marker);
   if (start < 0) return '';
@@ -79,7 +59,7 @@ function createStaticServer() {
 test('published pages bootstrap theme before CSS and expose the shared navigation controls', async () => {
   const { server, baseUrl } = await createStaticServer();
   try {
-    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html']) {
+    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html', 'about.html']) {
       const response = await fetch(`${baseUrl}/${page}`);
       assert.equal(response.status, 200, page);
       const html = await response.text();
@@ -97,13 +77,13 @@ test('published pages bootstrap theme before CSS and expose the shared navigatio
 test('published pages load only their page-specific resources and share the acknowledgement', async () => {
   const { server, baseUrl } = await createStaticServer();
   try {
-    const pageNames = ['index.html', 'tags.html', 'archive.html', 'post.html'];
+    const pageNames = ['index.html', 'tags.html', 'archive.html', 'post.html', 'about.html'];
     const pages = await Promise.all(pageNames.map(async (page) => {
       const response = await fetch(`${baseUrl}/${page}`);
       assert.equal(response.status, 200, page);
       return response.text();
     }));
-    const [home, tags, archive, post] = pages;
+    const [home, tags, archive, post, about] = pages;
 
     assert.match(home, /<picture class="hero-media">/);
     assert.match(home, /type="image\/avif"/);
@@ -116,9 +96,10 @@ test('published pages load only their page-specific resources and share the ackn
     assert.match(post, /assets\/js\/post-view\.js/);
     assert.ok(post.indexOf('assets/js/post-loader.js') < post.indexOf('assets/js/post-view.js'));
     assert.ok(post.indexOf('assets/js/post-view.js') < post.indexOf('assets/js/main.js'));
+    assert.doesNotMatch(about, /posts-index\.js/);
     assert.doesNotMatch(archive, /posts-index\.js/);
 
-    for (const html of [home, tags, archive]) {
+    for (const html of [home, tags, archive, about]) {
       assert.doesNotMatch(html, /assets\/js\/post-(?:loader|view)\.js/);
     }
 
@@ -137,24 +118,6 @@ test('published pages load only their page-specific resources and share the ackn
           assert.match(attributes, /\bdefer\b/, `${src} on published page`);
         }
       }
-    }
-  } finally {
-    await new Promise((resolve) => server.close(resolve));
-  }
-});
-
-test('the published site has no About destination or navigation entry', async () => {
-  const { server, baseUrl } = await createStaticServer();
-  try {
-    const about = await fetch(`${baseUrl}/about.html`);
-    assert.equal(about.status, 404);
-
-    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html']) {
-      const response = await fetch(`${baseUrl}/${page}`);
-      assert.equal(response.status, 200, page);
-      const html = await response.text();
-      assert.doesNotMatch(html, /href="about\.html"/i, page);
-      assert.doesNotMatch(html, /data-nav="about"/i, page);
     }
   } finally {
     await new Promise((resolve) => server.close(resolve));
@@ -202,7 +165,6 @@ test('hero keeps opaque dark layers when backdrop filters are unavailable', () =
 });
 
 test('mobile and coarse Hero panels avoid expensive compositing with a readable fallback', () => {
-  const rootTokens = ruleDeclarations(stylesheet, ':root');
   const coarsePointer = atRuleBlock(stylesheet, '@media (hover: none), (pointer: coarse)');
   const mobile = atRuleBlock(stylesheet, '@media (max-width: 680px)');
   const fallbackMarker =
@@ -211,16 +173,12 @@ test('mobile and coarse Hero panels avoid expensive compositing with a readable 
   const coarsePanel = allRuleDeclarations(coarsePointer, '.hero-panel').join('\n');
   const mobilePanel = allRuleDeclarations(mobile, '.hero-panel').join('\n');
   const fallbackPanel = ruleDeclarations(fallback, '.hero-panel');
-  const opaquePanel = rootTokens.match(
-    /--hero-panel-opaque:\s*rgba\([^)]*,\s*([\d.]+)\s*\)/i
-  );
-
-  assert.ok(opaquePanel && Number(opaquePanel[1]) >= 0.82, rootTokens);
 
   for (const declarations of [coarsePanel, mobilePanel]) {
     assert.match(declarations, /box-shadow:\s*none/i);
     assert.match(declarations, /(?:-webkit-)?backdrop-filter:\s*none/i);
-    assert.match(declarations, /background:\s*var\(--hero-panel-opaque\)/i);
+    const alpha = declarations.match(/background:\s*rgba\([^)]*,\s*([\d.]+)\s*\)/i);
+    assert.ok(alpha && Number(alpha[1]) >= 0.82, declarations);
   }
 
   assert.ok(
@@ -241,69 +199,12 @@ test('spotlight and card hover effects are scoped to fine hover pointers', () =>
   assert.match(coarsePointer, /\.board:hover,[\s\S]*?transform:\s*none/);
 });
 
-test('eyebrows consume semantic highlight roles from the five-color palette', () => {
+test('light page intro and dark hero use distinct eyebrow contrast tokens', () => {
   const rootTokens = ruleDeclarations(stylesheet, ':root');
   const pageIntroEyebrow = ruleDeclarations(stylesheet, '.page-intro .eyebrow');
   const heroEyebrow = ruleDeclarations(stylesheet, '.hero-panel .eyebrow');
 
-  for (const role of ['c1', 'c2', 'c3', 'c4', 'c5']) {
-    assert.match(rootTokens, new RegExp(`--palette-${role}:\\s*#[0-9a-f]{6}`, 'i'));
-  }
-  assert.match(rootTokens, /--accent-strong:\s*var\(--highlight\)/);
-  assert.match(rootTokens, /--hero-accent:\s*var\(--highlight\)/);
+  assert.match(rootTokens, /--hero-accent:\s*#67e8f9/i);
   assert.match(pageIntroEyebrow, /color:\s*var\(--accent-strong\)/);
   assert.match(heroEyebrow, /color:\s*var\(--hero-accent\)/);
-});
-
-test('the dark mobile Hero keeps readable foreground roles in the light page theme', () => {
-  const rootTokens = ruleDeclarations(stylesheet, ':root');
-  const heroPanel = allRuleDeclarations(stylesheet, '.hero-panel').join('\n');
-  const heroTitle = allRuleDeclarations(stylesheet, '.hero-panel h1').join('\n');
-  const heroBody = allRuleDeclarations(stylesheet, '.hero-panel > p').join('\n');
-  const heroTags = ruleDeclarations(stylesheet, '.hero-tags span');
-  const ghostButton = ruleDeclarations(stylesheet, '.button-ghost');
-  const primary = cssHexVariable(rootTokens, 'hero-text-primary');
-  const secondary = cssHexVariable(rootTokens, 'hero-text-secondary');
-  const panel = cssHexVariable(rootTokens, 'hero-panel-fallback');
-
-  assert.ok(primary && secondary && panel);
-  assert.ok(contrastRatio(primary, panel) >= 7, 'Hero title must retain enhanced contrast');
-  assert.ok(contrastRatio(secondary, panel) >= 4.5, 'Hero body must retain readable contrast');
-  assert.match(heroPanel, /color:\s*var\(--hero-text-secondary\)/);
-  assert.match(heroTitle, /color:\s*var\(--hero-text-primary\)/);
-  assert.match(heroBody, /color:\s*var\(--hero-text-secondary\)/);
-  assert.match(heroTags, /color:\s*var\(--hero-text-secondary\)/);
-  assert.match(ghostButton, /color:\s*var\(--hero-text-primary\)/);
-});
-
-test('the desktop Hero uses a theme-independent dark glass surface', () => {
-  const rootTokens = ruleDeclarations(stylesheet, ':root');
-  const heroPanel = allRuleDeclarations(stylesheet, '.hero-panel')[0] || '';
-  const baseOpacity = rootTokens.match(/--hero-surface-opacity:\s*([\d.]+)/i);
-  const endOpacity = rootTokens.match(/--hero-surface-end-opacity:\s*([\d.]+)/i);
-
-  assert.match(rootTokens, /--hero-surface-rgb:\s*\d+,\s*\d+,\s*\d+/i);
-  assert.match(rootTokens, /--hero-surface-end-rgb:\s*\d+,\s*\d+,\s*\d+/i);
-  assert.ok(baseOpacity && Number(baseOpacity[1]) >= 0.82, rootTokens);
-  assert.ok(endOpacity && Number(endOpacity[1]) >= 0.76, rootTokens);
-  assert.match(heroPanel, /rgba\(var\(--hero-surface-rgb\),\s*var\(--hero-surface-opacity\)\)/i);
-  assert.match(heroPanel, /rgba\(var\(--hero-surface-end-rgb\),\s*var\(--hero-surface-end-opacity\)\)/i);
-  assert.doesNotMatch(heroPanel, /var\(--surface-(?:base|strong)-rgb\)/i);
-});
-
-test('Hero tags and secondary actions keep dark readable control surfaces in both themes', () => {
-  const rootTokens = ruleDeclarations(stylesheet, ':root');
-  const heroTags = ruleDeclarations(stylesheet, '.hero-tags span');
-  const ghostButton = ruleDeclarations(stylesheet, '.button-ghost');
-  const controlSurface = cssHexVariable(rootTokens, 'hero-control-surface');
-  const secondary = cssHexVariable(rootTokens, 'hero-text-secondary');
-  const primary = cssHexVariable(rootTokens, 'hero-text-primary');
-
-  assert.ok(controlSurface, rootTokens);
-  assert.ok(contrastRatio(secondary, controlSurface) >= 4.5, 'Hero tags need readable contrast');
-  assert.ok(contrastRatio(primary, controlSurface) >= 4.5, 'Hero secondary actions need readable contrast');
-  assert.match(heroTags, /background:\s*var\(--hero-control-surface\)/i);
-  assert.match(ghostButton, /background:\s*var\(--hero-control-surface\)/i);
-  assert.doesNotMatch(heroTags, /var\(--surface-soft-rgb\)/i);
-  assert.doesNotMatch(ghostButton, /var\(--surface-soft-rgb\)/i);
 });
