@@ -18,6 +18,7 @@ const SECURITY_POLICY = [
 const LONG_CACHE_CONTROL = 'public, max-age=604800, must-revalidate';
 const SHORT_CACHE_CONTROL = 'public, max-age=3600, must-revalidate';
 const SHORT_CACHE_SCRIPTS = new Set(['feed-archive.js', 'feed-data.js', 'posts-index.js']);
+const SHORT_CACHE_DOCUMENTS = new Set(['rss.xml', 'sitemap.xml']);
 
 function setStaticCacheHeaders(res, filePath) {
   const normalizedPath = filePath.replace(/\\/g, '/');
@@ -25,6 +26,7 @@ function setStaticCacheHeaders(res, filePath) {
 
   if (
     normalizedPath.endsWith('.html') ||
+    SHORT_CACHE_DOCUMENTS.has(fileName) ||
     SHORT_CACHE_SCRIPTS.has(fileName) ||
     /\/assets\/posts\/[^/]+\.json$/.test(normalizedPath)
   ) {

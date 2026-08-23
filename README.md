@@ -17,8 +17,11 @@ Infighting 是一个面向嵌入式系统、边缘计算与边缘 AI 的个人�
 ```text
 .
 ├─ public/                  # 唯一可发布目录
-│  ├─ *.html               # 首页、文章、标签、归档、关于页
+│  ├─ *.html               # 首页、标签、归档与旧链接兼容入口
+│  ├─ posts/<id>.html      # 可直接抓取和分享的静态文章页
 │  ├─ assets/              # 样式、前端模块、响应式图片与构建后的文章/资讯数据
+│  ├─ sitemap.xml          # 静态文章站点地图
+│  ├─ rss.xml              # 静态文章 RSS 订阅
 │  └─ vendor/              # 浏览器端 Markdown 与代码高亮库
 ├─ assets/images/           # Hero 高分辨率源图（不直接发布）
 ├─ posts/                   # Markdown 文章源文件
@@ -102,6 +105,10 @@ npm run build
 npm test
 ```
 
+构建成功后，文章的正式发布地址是 `posts/<id>.html`，例如 `posts/stm32-uart-dma.html`。构建器会先在临时目录中生成并校验全部文章 HTML、兼容 JSON、文章索引、`sitemap.xml` 和 `rss.xml`，只有整批产物有效时才替换已有文件；构建失败不会留下半套新旧混合的发布结果。
+
+`public/post.html?id=<id>` 仅保留为旧链接兼容入口，会跳转到对应的静态文章页。`public/assets/posts/<id>.json` 也继续供旧版运行时兼容使用；新导航和搜索引擎入口都使用 `posts/<id>.html`。站点地图位于 `sitemap.xml`，订阅源位于 `rss.xml`。
+
 ## 统计接口
 
 自托管模式提供以下同源接口：
@@ -135,6 +142,8 @@ npm test
 ## 部署
 
 GitHub Pages 工作流会构建文章、抓取资讯，并且只上传 `public/`。自托管部署、环境变量和持久化建议见 [DEPLOY.md](DEPLOY.md)。
+
+Express 自托管时，生成的 HTML、`posts-index.js`、单篇文章 JSON、`sitemap.xml` 和 `rss.xml` 使用一小时缓存；可稳定复用的样式、脚本和图片等视觉资源使用一周缓存。两类资源都保留 ETag 与重新验证能力。
 
 ## License
 

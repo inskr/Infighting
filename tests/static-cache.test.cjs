@@ -76,6 +76,9 @@ test('static resources use resource-specific cache lifetimes while APIs remain n
     ['/assets/js/main.js', 'public, max-age=604800, must-revalidate'],
     ['/vendor/marked.min.js', 'public, max-age=604800, must-revalidate'],
     ['/index.html', 'public, max-age=3600, must-revalidate'],
+    ['/posts/stm32-baremetal-scheduler.html', 'public, max-age=3600, must-revalidate'],
+    ['/sitemap.xml', 'public, max-age=3600, must-revalidate'],
+    ['/rss.xml', 'public, max-age=3600, must-revalidate'],
     ['/assets/js/posts-index.js', 'public, max-age=3600, must-revalidate'],
     ['/assets/js/feed-data.js', 'public, max-age=3600, must-revalidate'],
     [

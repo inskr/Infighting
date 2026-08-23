@@ -5,8 +5,11 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { buildPosts } = require('../scripts/build-posts');
+const { buildPosts, buildSite } = require('../scripts/build-posts');
+const { renderArticlePage } = require('../scripts/article-template');
 const { loadContentIds } = require('../src/content-catalog');
+
+const SITE_URL = 'https://inskr.github.io/Infighting/';
 
 function writePost(postsDir, filename, fields = {}) {
   const id = fields.id ?? filename.replace(/\.md$/, '');
@@ -188,4 +191,61 @@ test('backend catalog applies the same portable and case-folded ID rules', () =>
       /Invalid content id.*\.\.\/secret/i
     );
   });
+});
+
+test('keeps every managed output unchanged when an article render fails', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'staged-publisher-'));
+  const postsDir = path.join(root, 'posts');
+  const publicDir = path.join(root, 'public');
+  const handAuthoredFile = path.join(publicDir, 'robots.txt');
+  const managedFiles = [
+    path.join('posts', 'alpha.html'),
+    path.join('assets', 'posts', 'alpha.json'),
+    path.join('assets', 'js', 'posts-index.js'),
+    'sitemap.xml',
+    'rss.xml',
+  ];
+
+  try {
+    fs.mkdirSync(postsDir, { recursive: true });
+    fs.mkdirSync(publicDir, { recursive: true });
+    writePost(postsDir, 'alpha.md');
+    fs.writeFileSync(handAuthoredFile, 'User-agent: *\nAllow: /\n', 'utf8');
+
+    buildSite({ postsDir, publicDir, siteUrl: SITE_URL });
+    const before = new Map(
+      managedFiles.map((relativePath) => [
+        relativePath,
+        fs.readFileSync(path.join(publicDir, relativePath)),
+      ])
+    );
+
+    writePost(postsDir, 'beta.md', { date: '2026-08-12' });
+    assert.throws(
+      () =>
+        buildSite({
+          postsDir,
+          publicDir,
+          siteUrl: SITE_URL,
+          renderArticle(options) {
+            if (options.post.id === 'beta') throw new Error('fixture render failure');
+            return renderArticlePage(options);
+          },
+        }),
+      /fixture render failure/
+    );
+
+    for (const [relativePath, expected] of before) {
+      assert.deepEqual(fs.readFileSync(path.join(publicDir, relativePath)), expected, relativePath);
+    }
+    assert.equal(fs.existsSync(path.join(publicDir, 'posts', 'beta.html')), false);
+    assert.equal(fs.existsSync(path.join(publicDir, 'assets', 'posts', 'beta.json')), false);
+    assert.equal(fs.readFileSync(handAuthoredFile, 'utf8'), 'User-agent: *\nAllow: /\n');
+    assert.deepEqual(
+      fs.readdirSync(root).filter((name) => name.startsWith('.public-publish-')),
+      []
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });

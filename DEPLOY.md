@@ -13,7 +13,7 @@
 工作流依次执行：
 
 1. `npm ci` 安装锁定版本的构建依赖。
-2. `npm run build` 生成 `posts-index.js`、单篇文章 JSON 和 Hero 响应式图片。
+2. `npm run build` 分阶段生成 `posts/<id>.html`、`posts-index.js`、单篇文章兼容 JSON、`sitemap.xml`、`rss.xml` 和 Hero 响应式图片；文章产物全部校验通过后才替换旧版本。
 3. `node scripts/fetch-feeds.js` 更新每日精选与归档。
 4. 回写 `public/assets/js/feed-data.js` 和 `feed-archive.js`。
 5. 只上传 `public/` 到 GitHub Pages。
@@ -75,7 +75,10 @@ npm start
 1. 在 `posts/` 新建 Markdown 文件。
 2. 运行 `npm run build`。
 3. 运行 `npm test`。
-4. 提交文章源文件、生成后的 `public/assets/js/posts-index.js` 和 `public/assets/posts/*.json`。`npm run build` 也会校验并重建 Hero 响应式资源。
+4. 打开 `public/posts/<id>.html` 检查正式静态文章页；旧的 `public/post.html?id=<id>` 仅用于把历史链接跳转到该地址。
+5. 提交文章源文件，以及生成后的 `public/posts/*.html`、`public/assets/js/posts-index.js`、`public/assets/posts/*.json`、`public/sitemap.xml` 和 `public/rss.xml`。单篇 JSON 是旧版运行时兼容产物；站点导航、站点地图和 RSS 均使用静态文章 URL。`npm run build` 也会校验并重建 Hero 响应式资源。
+
+文章构建会在 `public/` 的同级临时目录中完成，并在替换前校验文章/JSON 数量以及索引、JSON 和 XML 格式。失败时保留上一版受管理产物，不会删除 `public/` 下其他手工维护的页面或资源。
 
 ### 更新资讯
 
@@ -95,3 +98,5 @@ git status --short
 ```
 
 确认部署物始终是 `public/`，而不是仓库根目录。
+
+自托管响应将生成的 HTML、`posts-index.js`、单篇文章 JSON、`sitemap.xml` 和 `rss.xml` 缓存一小时；样式、脚本、图片和 `vendor/` 资源缓存一周，并通过 ETag 重新验证。

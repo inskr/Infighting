@@ -1,4 +1,4 @@
-// Build posts/*.md into a lightweight browser index and per-article documents.
+// Build posts/*.md into the staged static site outputs and legacy helper outputs.
 // Usage: node scripts/build-posts.js
 const fs = require("fs");
 const path = require("path");
@@ -44,4 +44,4 @@ if (require.main === module) {
   console.log("Generated " + OUT_INDEX_FILE + " with " + posts.length + " posts.");
 }
 
-module.exports = { parseFrontmatter, buildPosts };
+module.exports = { parseFrontmatter, buildPosts, buildSite };

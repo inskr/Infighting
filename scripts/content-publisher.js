@@ -10,6 +10,15 @@ const {
 const { renderArticlePage } = require('./article-template');
 const { renderRss, renderSitemap } = require('./discovery-output');
 
+const MANAGED_OUTPUTS = [
+  { relativePath: 'posts', staged: true },
+  { relativePath: path.join('assets', 'posts'), staged: true },
+  { relativePath: path.join('assets', 'js', 'posts-index.js'), staged: true },
+  { relativePath: 'sitemap.xml', staged: true },
+  { relativePath: 'rss.xml', staged: true },
+  { relativePath: path.join('assets', 'js', 'posts-data.js'), staged: false },
+];
+
 function parseFrontmatter(raw) {
   const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!match) return { meta: {}, content: raw };
@@ -112,7 +121,7 @@ function writeCompatibilityDocuments(publicDir, posts) {
   }
 }
 
-function writeArticlePages(publicDir, posts, siteUrl) {
+function writeArticlePages(publicDir, posts, siteUrl, renderArticle = renderArticlePage) {
   const outArticlesDir = path.join(publicDir, 'posts');
 
   fs.rmSync(outArticlesDir, { recursive: true, force: true });
@@ -120,7 +129,7 @@ function writeArticlePages(publicDir, posts, siteUrl) {
   for (const post of posts) {
     fs.writeFileSync(
       path.join(outArticlesDir, `${post.id}.html`),
-      renderArticlePage({ post, posts, siteUrl }),
+      renderArticle({ post, posts, siteUrl }),
       'utf8'
     );
   }
@@ -135,13 +144,164 @@ function writeDiscoveryOutputs(publicDir, posts, siteUrl) {
   fs.writeFileSync(path.join(publicDir, 'rss.xml'), renderRss({ posts, siteUrl }), 'utf8');
 }
 
-function buildSite({ postsDir, publicDir, siteUrl }) {
+function directFileNames(directory, extension) {
+  return fs
+    .readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(extension))
+    .map((entry) => entry.name)
+    .sort();
+}
+
+function expectFileNames(directory, extension, expectedNames) {
+  const actualNames = directFileNames(directory, extension);
+  const expected = [...expectedNames].sort();
+  if (JSON.stringify(actualNames) !== JSON.stringify(expected)) {
+    throw new Error(
+      `Invalid staged ${extension} outputs: expected ${expected.length}, found ${actualNames.length}`
+    );
+  }
+}
+
+function parsePostIndex(source) {
+  const prefix = '// Auto-generated.\nwindow.POSTS = ';
+  const suffix = ';\n';
+  if (!source.startsWith(prefix) || !source.endsWith(suffix)) {
+    throw new Error('Invalid staged post index wrapper');
+  }
+  return JSON.parse(source.slice(prefix.length, -suffix.length));
+}
+
+function parseXmlDocument(source) {
+  const stack = [];
+  let rootName;
+  let rootCount = 0;
+  let cursor = 0;
+  const tokenPattern = /<[^>]+>/g;
+  let match;
+
+  while ((match = tokenPattern.exec(source)) !== null) {
+    if (/[<>]/.test(source.slice(cursor, match.index))) {
+      throw new Error('Malformed XML text');
+    }
+    cursor = tokenPattern.lastIndex;
+    const token = match[0];
+    if (token.startsWith('<?') || token.startsWith('<!--')) continue;
+
+    const closing = token.match(/^<\/([A-Za-z_][\w:.-]*)\s*>$/);
+    if (closing) {
+      if (stack.pop() !== closing[1]) throw new Error('Mismatched XML element');
+      continue;
+    }
+
+    const opening = token.match(/^<([A-Za-z_][\w:.-]*)(?:\s[^<>]*)?\s*\/?>$/);
+    if (!opening) throw new Error('Malformed XML element');
+    if (stack.length === 0) {
+      rootCount += 1;
+      rootName = opening[1];
+    }
+    if (!token.endsWith('/>')) stack.push(opening[1]);
+  }
+
+  if (/[<>]/.test(source.slice(cursor)) || stack.length !== 0 || rootCount !== 1) {
+    throw new Error('Malformed XML document');
+  }
+  return { rootName };
+}
+
+function validateStagedOutputs(stagedPublicDir, posts) {
+  const articleNames = posts.map((post) => `${post.id}.html`);
+  const jsonNames = posts.map((post) => `${post.id}.json`);
+  const stagedArticlesDir = path.join(stagedPublicDir, 'posts');
+  const stagedJsonDir = path.join(stagedPublicDir, 'assets', 'posts');
+
+  expectFileNames(stagedArticlesDir, '.html', articleNames);
+  expectFileNames(stagedJsonDir, '.json', jsonNames);
+
+  for (const post of posts) {
+    const parsed = JSON.parse(
+      fs.readFileSync(path.join(stagedJsonDir, `${post.id}.json`), 'utf8')
+    );
+    if (parsed.id !== post.id) throw new Error(`Invalid staged article JSON for ${post.id}`);
+  }
+
+  const index = parsePostIndex(
+    fs.readFileSync(path.join(stagedPublicDir, 'assets', 'js', 'posts-index.js'), 'utf8')
+  );
+  if (!Array.isArray(index) || index.length !== posts.length) {
+    throw new Error('Invalid staged post index count');
+  }
+
+  const sitemap = parseXmlDocument(
+    fs.readFileSync(path.join(stagedPublicDir, 'sitemap.xml'), 'utf8')
+  );
+  const rss = parseXmlDocument(fs.readFileSync(path.join(stagedPublicDir, 'rss.xml'), 'utf8'));
+  if (sitemap.rootName !== 'urlset' || rss.rootName !== 'rss') {
+    throw new Error('Invalid staged discovery document root');
+  }
+}
+
+function replaceManagedOutputs(stagedPublicDir, publicDir, backupDir) {
+  const operations = [];
+
+  try {
+    for (const output of MANAGED_OUTPUTS) {
+      const livePath = path.join(publicDir, output.relativePath);
+      const backupPath = path.join(backupDir, output.relativePath);
+      const stagedPath = path.join(stagedPublicDir, output.relativePath);
+      const operation = {
+        backupPath,
+        hadExisting: fs.existsSync(livePath),
+        installed: false,
+        livePath,
+      };
+      operations.push(operation);
+
+      if (operation.hadExisting) {
+        fs.mkdirSync(path.dirname(backupPath), { recursive: true });
+        fs.renameSync(livePath, backupPath);
+      }
+      if (output.staged) {
+        fs.mkdirSync(path.dirname(livePath), { recursive: true });
+        fs.renameSync(stagedPath, livePath);
+        operation.installed = true;
+      }
+    }
+  } catch (error) {
+    for (const operation of operations.reverse()) {
+      if (operation.installed) {
+        fs.rmSync(operation.livePath, { recursive: true, force: true });
+      }
+      if (operation.hadExisting && fs.existsSync(operation.backupPath)) {
+        fs.mkdirSync(path.dirname(operation.livePath), { recursive: true });
+        fs.renameSync(operation.backupPath, operation.livePath);
+      }
+    }
+    throw error;
+  }
+}
+
+function buildSite({ postsDir, publicDir, siteUrl, renderArticle = renderArticlePage }) {
   const posts = readAndValidatePosts(postsDir);
-  writePostIndex(publicDir, posts);
-  writeCompatibilityDocuments(publicDir, posts);
-  writeArticlePages(publicDir, posts, siteUrl);
-  writeDiscoveryOutputs(publicDir, posts, siteUrl);
-  return posts.map(({ content, ...entry }) => entry);
+  const resolvedPublicDir = path.resolve(publicDir);
+  const publicParent = path.dirname(resolvedPublicDir);
+  fs.mkdirSync(publicParent, { recursive: true });
+  const stageDir = fs.mkdtempSync(
+    path.join(publicParent, `.${path.basename(resolvedPublicDir)}-publish-`)
+  );
+  const stagedPublicDir = path.join(stageDir, 'next');
+  const backupDir = path.join(stageDir, 'previous');
+
+  try {
+    writePostIndex(stagedPublicDir, posts);
+    writeCompatibilityDocuments(stagedPublicDir, posts);
+    writeArticlePages(stagedPublicDir, posts, siteUrl, renderArticle);
+    writeDiscoveryOutputs(stagedPublicDir, posts, siteUrl);
+    validateStagedOutputs(stagedPublicDir, posts);
+    replaceManagedOutputs(stagedPublicDir, resolvedPublicDir, backupDir);
+    return posts.map(({ content, ...entry }) => entry);
+  } finally {
+    fs.rmSync(stageDir, { recursive: true, force: true });
+  }
 }
 
 module.exports = {
