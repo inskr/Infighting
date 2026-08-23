@@ -8,6 +8,7 @@ const {
   isValidContentId,
 } = require('../src/content-id');
 const { renderArticlePage } = require('./article-template');
+const { renderRss, renderSitemap } = require('./discovery-output');
 
 function parseFrontmatter(raw) {
   const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
@@ -125,11 +126,21 @@ function writeArticlePages(publicDir, posts, siteUrl) {
   }
 }
 
+function writeDiscoveryOutputs(publicDir, posts, siteUrl) {
+  fs.writeFileSync(
+    path.join(publicDir, 'sitemap.xml'),
+    renderSitemap({ posts, siteUrl }),
+    'utf8'
+  );
+  fs.writeFileSync(path.join(publicDir, 'rss.xml'), renderRss({ posts, siteUrl }), 'utf8');
+}
+
 function buildSite({ postsDir, publicDir, siteUrl }) {
   const posts = readAndValidatePosts(postsDir);
   writePostIndex(publicDir, posts);
   writeCompatibilityDocuments(publicDir, posts);
   writeArticlePages(publicDir, posts, siteUrl);
+  writeDiscoveryOutputs(publicDir, posts, siteUrl);
   return posts.map(({ content, ...entry }) => entry);
 }
 
@@ -139,5 +150,6 @@ module.exports = {
   readAndValidatePosts,
   writeArticlePages,
   writeCompatibilityDocuments,
+  writeDiscoveryOutputs,
   writePostIndex,
 };
