@@ -6,6 +6,17 @@
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
   <title>STM32 裸机多任务调度框架设计与实践 · Infighting</title>
+  <meta name="description" content="在四轴无人机飞控项目中，没有 RTOS 的裸机环境如何组织多任务？本文介绍一个基于时间片轮询的轻量级调度框架，涵盖任务表设计、SysTick 时基与负载评估。">
+  <link rel="canonical" href="https://inskr.github.io/Infighting/posts/stm32-baremetal-scheduler.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="STM32 裸机多任务调度框架设计与实践 · Infighting">
+  <meta property="og:description" content="在四轴无人机飞控项目中，没有 RTOS 的裸机环境如何组织多任务？本文介绍一个基于时间片轮询的轻量级调度框架，涵盖任务表设计、SysTick 时基与负载评估。">
+  <meta property="og:url" content="https://inskr.github.io/Infighting/posts/stm32-baremetal-scheduler.html">
+  <meta property="article:published_time" content="2025-04-18">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="STM32 裸机多任务调度框架设计与实践 · Infighting">
+  <meta name="twitter:description" content="在四轴无人机飞控项目中，没有 RTOS 的裸机环境如何组织多任务？本文介绍一个基于时间片轮询的轻量级调度框架，涵盖任务表设计、SysTick 时基与负载评估。">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"STM32 裸机多任务调度框架设计与实践","description":"在四轴无人机飞控项目中，没有 RTOS 的裸机环境如何组织多任务？本文介绍一个基于时间片轮询的轻量级调度框架，涵盖任务表设计、SysTick 时基与负载评估。","url":"https://inskr.github.io/Infighting/posts/stm32-baremetal-scheduler.html","mainEntityOfPage":"https://inskr.github.io/Infighting/posts/stm32-baremetal-scheduler.html","datePublished":"2025-04-18","dateModified":"2025-04-18","keywords":["STM32","裸机开发","任务调度"]}</script>
   <script src="../assets/js/theme.js"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>

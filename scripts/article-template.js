@@ -1,14 +1,7 @@
 'use strict';
 
 const { marked } = require('marked');
-
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+const { escapeHtml, jsonForInlineScript } = require('./output-encoding');
 
 function createHeadingSlugger() {
   const counts = new Map();
@@ -107,8 +100,19 @@ function renderRelatedPosts(post, posts) {
 }
 
 function renderArticlePage({ post, posts, siteUrl }) {
-  void siteUrl;
-
+  const articleUrl = `${siteUrl}posts/${encodeURIComponent(post.id)}.html`;
+  const description = post.summary || post.title;
+  const jsonLd = jsonForInlineScript({
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description,
+    url: articleUrl,
+    mainEntityOfPage: articleUrl,
+    datePublished: post.date,
+    dateModified: post.date,
+    keywords: post.tags,
+  });
   const { articleHtml, headings } = renderArticleContent(post.content);
   const tags = post.tags
     .map(
@@ -129,6 +133,17 @@ function renderArticlePage({ post, posts, siteUrl }) {
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
   <title>${escapeHtml(post.title)} · Infighting</title>
+  <meta name="description" content="${escapeHtml(description)}">
+  <link rel="canonical" href="${escapeHtml(articleUrl)}">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="${escapeHtml(post.title)} · Infighting">
+  <meta property="og:description" content="${escapeHtml(description)}">
+  <meta property="og:url" content="${escapeHtml(articleUrl)}">
+  <meta property="article:published_time" content="${escapeHtml(post.date)}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(post.title)} · Infighting">
+  <meta name="twitter:description" content="${escapeHtml(description)}">
+  <script type="application/ld+json">${jsonLd}</script>
   <script src="../assets/js/theme.js"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
