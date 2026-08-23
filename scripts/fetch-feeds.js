@@ -13,9 +13,14 @@ const OUT_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-data.js");
 const ARCHIVE_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-archive.js");
 const ARCHIVE_DAYS = 7; // 归档只保留最近 7 天的每日精选
 const ITEMS_PER_BOARD = 8;
-const MIN_DOMESTIC_ITEMS = 4;
+const DOMESTIC_ITEMS_LIMIT = 10;
+const MIN_DOMESTIC_ITEMS = 8;
 const SUMMARY_MAX_LEN = 180;
 const TIMEOUT_MS = 15000;
+const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
+const ARTICLE_FETCH_CONCURRENCY = 4;
+const MIN_DEEP_ARTICLE_LENGTH = 600;
+const MIN_ENGINEERING_SIGNAL_COUNT = 2;
 
 // 领域相关性计分：核心词每个 2 分，命中核心词可在 2 分入选；外围词每个 1 分，
 // 纯外围词内容至少需要 3 分且标题中命中外围词，确保内容与目标领域紧密相关。
@@ -147,6 +152,17 @@ const BOARDS = {
       { name: "开源中国", url: "https://www.oschina.net/news/rss" },
       { name: "IT之家", url: "https://www.ithome.com/rss/" },
       { name: "SegmentFault", url: "https://segmentfault.com/feeds" },
+      {
+        name: "博客园嵌入式",
+        url: "https://www.cnblogs.com/cate/108757/",
+        parser: "cnblogs-category",
+        maxAgeDays: 90,
+      },
+      { name: "ArnoldLu 嵌入式内核", url: "https://feed.cnblogs.com/blog/u/323754/rss/", maxAgeDays: 730 },
+      { name: "Sky&Zhang 嵌入式", url: "https://feed.cnblogs.com/blog/u/206828/rss/", maxAgeDays: 730 },
+      { name: "嵌入式 Linux", url: "https://feed.cnblogs.com/blog/u/237676/rss/", maxAgeDays: 730 },
+      { name: "拉风摊主 Linux 驱动", url: "https://feed.cnblogs.com/blog/u/412377/rss/", maxAgeDays: 730 },
+      { name: "阳光嵌入式", url: "https://feed.cnblogs.com/blog/u/330048/rss/", maxAgeDays: 730 },
     ],
   },
 };
@@ -182,8 +198,16 @@ function fetchText(url, redirectsLeft) {
           return;
         }
         let data = "";
+        let receivedBytes = 0;
         res.setEncoding("utf8");
-        res.on("data", (chunk) => (data += chunk));
+        res.on("data", (chunk) => {
+          receivedBytes += Buffer.byteLength(chunk, "utf8");
+          if (receivedBytes > MAX_RESPONSE_BYTES) {
+            req.destroy(new Error("response too large " + url));
+            return;
+          }
+          data += chunk;
+        });
         res.on("end", () => resolve(data));
       }
     );
@@ -224,6 +248,24 @@ function stripHtml(html) {
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function extractArticleText(html) {
+  if (typeof html !== "string") return "";
+  let articleHtml = html;
+  const cnblogsStart = html.search(/<div\b[^>]*class=["'][^"']*\bpostBody\b[^"']*["'][^>]*>/i);
+  if (cnblogsStart >= 0) {
+    const tail = html.slice(cnblogsStart);
+    const end = tail.search(/<div\b[^>]*id=["'](?:MySignature|blog_post_info_block|post_next_prev)["']/i);
+    articleHtml = end > 0 ? tail.slice(0, end) : tail;
+  } else {
+    const semanticBlock = html.match(/<(article|main)\b[^>]*>([\s\S]*?)<\/\1>/i);
+    if (semanticBlock) articleHtml = semanticBlock[2];
+  }
+  const withoutChrome = articleHtml
+    .replace(/<(script|style|noscript|svg|nav|footer|aside|form|header)\b[^>]*>[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<!--([\s\S]*?)-->/g, " ");
+  return decodeEntities(stripHtml(withoutChrome));
 }
 
 function truncateSummary(text) {
@@ -290,7 +332,8 @@ function includesKeyword(text, keyword) {
 function topicScore(item) {
   const rawTitle = item.title || "";
   const title = rawTitle.toLowerCase();
-  const text = title + " " + (item.summary || "").toLowerCase();
+  const text = title + " " + (item.summary || "").toLowerCase() +
+    " " + (item.articleText || "").toLowerCase();
   const acquisitionContext = text.replace(TECHNICAL_ACQUISITION_PATTERN, "");
   // 负向词一票否决
   for (const kw of NEGATIVE_KEYWORDS) {
@@ -341,7 +384,7 @@ function includesAnySignal(text, signals) {
 
 function isDomesticTechnicalContent(item) {
   const title = (item.title || '').toLowerCase();
-  const summary = (item.summary || '').toLowerCase();
+  const summary = ((item.summary || '') + ' ' + (item.articleText || '')).toLowerCase();
   const text = title + ' ' + summary;
   const topic = topicScore(item);
   if (topic.score < 0) return false;
@@ -380,9 +423,67 @@ function isDomesticTechnicalContent(item) {
   return titleHasPractice && summaryHasEngineeringEvidence;
 }
 
-function isBoardItemRelevant(item, lang) {
+function parseCnblogsCategoryPage(html, sourceName) {
+  if (typeof html !== 'string') return [];
+  const items = [];
+  const cards = html.match(/<article\b[^>]*class=["'][^"']*\bpost-item\b[^"']*["'][^>]*>[\s\S]*?<\/article>/gi) || [];
+  for (const card of cards) {
+    const titleMatch = card.match(
+      /<a\b[^>]*class=["'][^"']*\bpost-item-title\b[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i
+    );
+    const summaryMatch = card.match(
+      /<p\b[^>]*class=["'][^"']*\bpost-item-summary\b[^"']*["'][^>]*>([\s\S]*?)<\/p>/i
+    );
+    const dateMatch = card.match(/<span[^>]*>(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})<\/span>/i);
+    if (!titleMatch) continue;
+
+    const link = UrlPolicy.safeExternalUrl(decodeEntities(titleMatch[1]));
+    const title = decodeEntities(stripHtml(titleMatch[2]));
+    if (!link || !title) continue;
+
+    const date = dateMatch ? dateMatch[1] : '';
+    const timestamp = dateMatch
+      ? Date.parse(dateMatch[1] + 'T' + dateMatch[2] + ':00+08:00')
+      : 0;
+    items.push({
+      title,
+      link,
+      source: sourceName,
+      date,
+      summary: truncateSummary(summaryMatch ? decodeEntities(summaryMatch[1]) : ''),
+      _ts: Number.isNaN(timestamp) ? 0 : timestamp,
+    });
+  }
+  return items;
+}
+
+function countUniqueSignals(text, signals) {
+  return signals.reduce(
+    (count, signal) => count + (includesKeyword(text, signal) ? 1 : 0),
+    0
+  );
+}
+
+function isDeepDomesticTechnicalContent(item) {
+  const articleText = (item.articleText || '').replace(/\s+/g, ' ').trim();
+  if (articleText.length < MIN_DEEP_ARTICLE_LENGTH) return false;
+
+  const topic = topicScore(item);
+  if (topic.score < 0 || !topic.hasCore) return false;
+  if (!isDomesticTechnicalContent(item)) return false;
+
+  const engineeringSignalCount = countUniqueSignals(
+    articleText.toLowerCase(),
+    DOMESTIC_ENGINEERING_EVIDENCE
+  );
+  return engineeringSignalCount >= MIN_ENGINEERING_SIGNAL_COUNT;
+}
+
+function isBoardItemRelevant(item, lang, requireDeepDomestic = false) {
   return lang === 'zh'
-    ? isDomesticTechnicalContent(item)
+    ? requireDeepDomestic
+      ? item.depthVerified === true || isDeepDomesticTechnicalContent(item)
+      : isDomesticTechnicalContent(item)
     : isTopicRelevant(item);
 }
 
@@ -427,28 +528,36 @@ function isDuplicateTitle(normTitle, accepted) {
 }
 
 /* ---------- 主流程 ---------- */
-function selectBoardItems(items, lang, now = Date.now()) {
-  // 按日期倒序、去重（按链接）
+function isFreshItem(item, now) {
+  if (item._ts === 0) return true;
+  const maxAgeDays = Number.isFinite(item.maxAgeDays) ? item.maxAgeDays : MAX_AGE_DAYS;
+  return now - item._ts <= maxAgeDays * 24 * 3600 * 1000;
+}
+
+function prepareFreshUniqueItems(items, now) {
   const seen = new Set();
-  const sorted = items
+  return items
     .slice()
     .sort((a, b) => b._ts - a._ts)
     .filter((it) => {
+      if (!isFreshItem(it, now)) return false;
       if (seen.has(it.link)) return false;
       seen.add(it.link);
       return true;
     });
-  // 时间窗：只保留最近 MAX_AGE_DAYS 天的内容（无日期的条目保留）
-  const maxAgeMs = MAX_AGE_DAYS * 24 * 3600 * 1000;
-  const fresh = sorted.filter((it) => it._ts === 0 || now - it._ts <= maxAgeMs);
+}
+
+function selectBoardItems(items, lang, now = Date.now(), requireDeepDomestic = false) {
+  // 按日期倒序、链接去重并应用每个来源的时效窗口
+  const fresh = prepareFreshUniqueItems(items, now);
   const strict = fresh
-    .filter((item) => isBoardItemRelevant(item, lang))
+    .filter((item) => isBoardItemRelevant(item, lang, requireDeepDomestic))
     .sort((a, b) => b._ts - a._ts);
   const relaxed = fresh
-    .filter((item) => !isBoardItemRelevant(item, lang) && isTopicFallbackRelevant(item))
+    .filter((item) => !isBoardItemRelevant(item, lang, requireDeepDomestic) && isTopicFallbackRelevant(item))
     .sort((a, b) => b._ts - a._ts);
   console.log(
-    "  [FILTER] " + sorted.length + " -> " + strict.length +
+    "  [FILTER] " + fresh.length + " -> " + strict.length +
       " strict, " + relaxed.length + " relaxed items"
   );
   // 标题近似去重（同一新闻的不同来源/标题变体只留一条）
@@ -464,20 +573,97 @@ function selectBoardItems(items, lang, now = Date.now()) {
     }
   }
 
-  appendUnique(strict, ITEMS_PER_BOARD);
-  return picked.map(({ title, link, source, date, summary }) => ({
+  const limit = lang === 'zh' ? DOMESTIC_ITEMS_LIMIT : ITEMS_PER_BOARD;
+  appendUnique(strict, limit);
+  return picked.map(({ title, link, source, date, summary, depthVerified }) => ({
     title,
     link,
     source,
     date,
     summary,
     lang,
+    ...(depthVerified === true ? { depthVerified: true } : {}),
   }));
 }
 
-async function collectBoard(feeds, lang, fetcher = fetchText, now = Date.now()) {
+async function mapWithConcurrency(items, concurrency, mapper) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+  async function worker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex++;
+      try {
+        results[index] = await mapper(items[index], index);
+      } catch (error) {
+        if (process.env.FEED_DEBUG_DEPTH === '1') {
+          console.log(
+            "  [DEPTH:FETCH-FAIL] " + (items[index].link || '<no-link>') +
+              " :: " + error.message
+          );
+        }
+        results[index] = null;
+      }
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, () => worker())
+  );
+  return results;
+}
+
+async function verifyDomesticArticleDepth(items, articleFetcher = fetchText) {
+  const candidates = items.filter((item) => {
+    const topic = topicScore(item);
+    return topic.score >= 0 && topic.hasCore;
+  });
+  const verified = await mapWithConcurrency(
+    candidates,
+    ARTICLE_FETCH_CONCURRENCY,
+    async (item) => {
+      const html = await articleFetcher(item.link, 2);
+      const articleText = extractArticleText(html);
+      const enriched = { ...item, articleText };
+      if (isDeepDomesticTechnicalContent(enriched)) {
+        if (process.env.FEED_DEBUG_DEPTH === '1') {
+          console.log(
+            "  [DEPTH:PASS] " + (item.date || '<no-date>') +
+              " source=" + item.source + " :: " + item.title
+          );
+        }
+        return { ...enriched, depthVerified: true };
+      }
+      if (process.env.FEED_DEBUG_DEPTH === '1') {
+        const topic = topicScore(enriched);
+        const signalCount = countUniqueSignals(
+          articleText.toLowerCase(),
+          DOMESTIC_ENGINEERING_EVIDENCE
+        );
+        console.log(
+          "  [DEPTH:REJECT] len=" + articleText.length +
+            " core=" + topic.hasCore + " score=" + topic.score +
+            " evidence=" + signalCount + " :: " + item.title
+        );
+      }
+      return null;
+    }
+  );
+  return verified.filter(Boolean);
+}
+
+async function collectBoard(
+  feeds,
+  lang,
+  fetcher = fetchText,
+  now = Date.now(),
+  articleFetcher = fetchText
+) {
   const results = await Promise.allSettled(
-    feeds.map((f) => fetcher(f.url, 2).then((xml) => parseFeed(xml, f.name)))
+    feeds.map((f) => fetcher(f.url, 2).then((body) =>
+      (f.parser === 'cnblogs-category'
+        ? parseCnblogsCategoryPage(body, f.name)
+        : parseFeed(body, f.name)
+      ).map((item) => ({ ...item, maxAgeDays: f.maxAgeDays }))
+    ))
   );
   const items = [];
   results.forEach((r, i) => {
@@ -488,6 +674,12 @@ async function collectBoard(feeds, lang, fetcher = fetchText, now = Date.now()) 
       console.log("  [FAIL] " + feeds[i].name + ": " + r.reason.message);
     }
   });
+  if (lang === 'zh') {
+    const eligible = prepareFreshUniqueItems(items, now);
+    const verified = await verifyDomesticArticleDepth(eligible, articleFetcher);
+    console.log("  [DEPTH] " + eligible.length + " eligible -> " + verified.length + " verified articles");
+    return selectBoardItems(verified, lang, now, true);
+  }
   return selectBoardItems(items, lang, now);
 }
 
@@ -537,7 +729,7 @@ function mergeDomesticWithPrevious(current, previous, minimum = MIN_DOMESTIC_ITE
 
   for (const entry of Array.isArray(previous) ? previous : []) {
     if (merged.length >= minimum) break;
-    if (!entry || !isDomesticTechnicalContent(entry)) continue;
+    if (!entry || entry.depthVerified !== true || !isDomesticTechnicalContent(entry)) continue;
 
     const safeLink = UrlPolicy.safeExternalUrl(entry.link);
     const normalizedTitle = normalizeTitle(entry.title || '');
@@ -574,7 +766,11 @@ function sanitizeArchiveBoards(boards) {
     Object.entries(boards || {}).map(([key, items]) => [
       key,
       Array.isArray(items)
-        ? items.filter((item) => isBoardItemRelevant(item, key))
+        ? items.filter((item) =>
+          key === 'zh'
+            ? item && item.depthVerified === true
+            : isBoardItemRelevant(item, key)
+        )
         : [],
     ])
   );
@@ -684,11 +880,14 @@ module.exports = {
   assertPublishableBoards,
   classifyTopic,
   collectBoard,
+  extractArticleText,
+  isDeepDomesticTechnicalContent,
   isDomesticTechnicalContent,
   isTopicFallbackRelevant,
   isTopicRelevant,
   mergeDomesticWithPrevious,
   mergeArchive,
+  parseCnblogsCategoryPage,
   parseGeneratedFeeds,
   selectBoardItems,
 };
