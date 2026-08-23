@@ -174,6 +174,12 @@ test('published homepage serves the supplied image through an accessible Hero', 
     assert.match(html, /alt="蓝黑色流体光影抽象封面"/);
     assert.match(html, /href="#daily-section"/);
     assert.match(html, /href="#posts-title"/);
+    assert.match(html, /data-motion-hero/);
+    assert.match(html, /data-motion-depth="image"/);
+    assert.doesNotMatch(html, /hero-motion-field/);
+    assert.doesNotMatch(html, /motion-orb/);
+    assert.match(html, /<canvas class="signal-field" data-signal-field aria-hidden="true"><\/canvas>/);
+    assert.match(html, /data-kinetic-heading/);
 
     const image = await fetch(`${baseUrl}/assets/images/hero-ink-1920.png`);
     assert.equal(image.status, 200);
