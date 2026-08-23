@@ -249,3 +249,52 @@ test('keeps every managed output unchanged when an article render fails', () => 
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('successful publication preserves entries not owned by the generated post catalogs', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'publisher-sentinels-'));
+  const postsDir = path.join(root, 'posts');
+  const publicDir = path.join(root, 'public');
+  const sentinels = new Map([
+    [path.join('posts', 'README.txt'), 'hand-authored article notes'],
+    [path.join('posts', 'hand-authored.html'), '<p>hand-authored article page</p>'],
+    [path.join('posts', 'manual', 'guide.html'), '<p>hand-authored guide</p>'],
+    [path.join('assets', 'posts', 'hand-authored.dat'), 'hand-authored article data'],
+    [path.join('assets', 'posts', 'hand-authored.json'), '{"owner":"human"}'],
+    [path.join('assets', 'posts', 'manual', 'metadata.json'), '{"owner":"human"}'],
+  ]);
+
+  try {
+    fs.mkdirSync(postsDir, { recursive: true });
+    writePost(postsDir, 'alpha.md');
+    for (const [relativePath, content] of sentinels) {
+      const target = path.join(publicDir, relativePath);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, content, 'utf8');
+    }
+
+    buildSite({ postsDir, publicDir, siteUrl: SITE_URL });
+
+    assert.equal(fs.existsSync(path.join(publicDir, 'posts', 'alpha.html')), true);
+    assert.equal(fs.existsSync(path.join(publicDir, 'assets', 'posts', 'alpha.json')), true);
+    for (const [relativePath, content] of sentinels) {
+      assert.equal(fs.readFileSync(path.join(publicDir, relativePath), 'utf8'), content);
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('configured full suite includes every Phase 1 publishing contract test', () => {
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')
+  );
+  const configuredCommands = new Set(packageJson.scripts.test.split(/\s+/));
+
+  for (const testFile of [
+    'tests/discovery-output.test.cjs',
+    'tests/seo-output.test.cjs',
+    'tests/legacy-post.test.cjs',
+  ]) {
+    assert.equal(configuredCommands.has(testFile), true, testFile);
+  }
+});

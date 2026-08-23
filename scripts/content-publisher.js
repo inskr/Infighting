@@ -240,6 +240,55 @@ function validateStagedOutputs(stagedPublicDir, posts) {
   }
 }
 
+function readPublishedPostIds(publicDir) {
+  const indexFile = path.join(publicDir, 'assets', 'js', 'posts-index.js');
+  if (!fs.existsSync(indexFile)) return [];
+
+  try {
+    const index = parsePostIndex(fs.readFileSync(indexFile, 'utf8'));
+    if (!Array.isArray(index)) return [];
+    return index
+      .map((entry) => entry && entry.id)
+      .filter((id) => typeof id === 'string');
+  } catch {
+    return [];
+  }
+}
+
+function copyUnmanagedEntries(sourceDir, targetDir, managedNames) {
+  if (!fs.existsSync(sourceDir)) return;
+
+  fs.mkdirSync(targetDir, { recursive: true });
+  for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
+    if (managedNames.has(entry.name)) continue;
+    fs.cpSync(path.join(sourceDir, entry.name), path.join(targetDir, entry.name), {
+      errorOnExist: true,
+      force: false,
+      recursive: entry.isDirectory(),
+    });
+  }
+}
+
+function preserveUnmanagedEntries(stagedPublicDir, publicDir, posts) {
+  const managedIds = new Set([
+    ...readPublishedPostIds(publicDir),
+    ...posts.map((post) => post.id),
+  ]);
+  const articleNames = new Set([...managedIds].map((id) => `${id}.html`));
+  const jsonNames = new Set([...managedIds].map((id) => `${id}.json`));
+
+  copyUnmanagedEntries(
+    path.join(publicDir, 'posts'),
+    path.join(stagedPublicDir, 'posts'),
+    articleNames
+  );
+  copyUnmanagedEntries(
+    path.join(publicDir, 'assets', 'posts'),
+    path.join(stagedPublicDir, 'assets', 'posts'),
+    jsonNames
+  );
+}
+
 function replaceManagedOutputs(stagedPublicDir, publicDir, backupDir) {
   const operations = [];
 
@@ -297,6 +346,7 @@ function buildSite({ postsDir, publicDir, siteUrl, renderArticle = renderArticle
     writeArticlePages(stagedPublicDir, posts, siteUrl, renderArticle);
     writeDiscoveryOutputs(stagedPublicDir, posts, siteUrl);
     validateStagedOutputs(stagedPublicDir, posts);
+    preserveUnmanagedEntries(stagedPublicDir, resolvedPublicDir, posts);
     replaceManagedOutputs(stagedPublicDir, resolvedPublicDir, backupDir);
     return posts.map(({ content, ...entry }) => entry);
   } finally {
