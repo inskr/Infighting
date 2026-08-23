@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>STM32 裸机多任务调度框架设计与实践 · Infighting</title>
+  <script src="../assets/js/theme.js"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-shell glass-surface">
+      <a class="brand" href="../index.html" aria-label="Infighting 首页">
+        <span class="logo" aria-hidden="true">&gt;_</span>
+        <span class="brand-copy">Infighting<small>嵌入式 × 边缘计算</small></span>
+      </a>
+      <div class="nav-actions">
+        <nav class="site-nav" aria-label="主导航">
+          <a href="../index.html">首页</a>
+          <a href="../tags.html">标签</a>
+          <a href="../archive.html">精选归档</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换到浅色主题" aria-pressed="false">
+          <span class="theme-icon theme-icon-sun" aria-hidden="true">☼</span>
+          <span class="theme-icon theme-icon-moon" aria-hidden="true">☾</span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
+    <article class="article glass-surface">
+      <header class="article-header">
+        <h1>STM32 裸机多任务调度框架设计与实践</h1>
+        <div class="post-meta"><span>2025-04-18</span><a class="tag" href="../tags.html?tag=STM32">STM32</a><a class="tag" href="../tags.html?tag=%E8%A3%B8%E6%9C%BA%E5%BC%80%E5%8F%91">裸机开发</a><a class="tag" href="../tags.html?tag=%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6">任务调度</a></div>
+      </header>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#为什么需要调度框架">为什么需要调度框架</a></li><li class="article-toc-level-2"><a href="#任务表设计">任务表设计</a></li><li class="article-toc-level-2"><a href="#调度循环与耗时统计">调度循环与耗时统计</a></li><li class="article-toc-level-2"><a href="#实测数据与结论">实测数据与结论</a></li></ol></nav>
+      <div class="article-body"><p>在四轴无人机飞控项目中，我选择基于 STM32F103 裸机开发，而不是直接上 FreeRTOS。原因有两个：一是飞控任务数量少且实时性要求明确，裸机调度足够；二是想彻底搞清楚&quot;操作系统到底在干什么&quot;。</p>
+<h2 id="为什么需要调度框架">为什么需要调度框架</h2>
+<p>裸机开发最常见的问题是 <code>while(1)</code> 大循环里堆满各种功能：传感器采集、姿态解算、PID 控制、无线通信……一旦某个任务耗时变长，其他任务全部被阻塞，飞控直接失控。</p>
+<p>一个最小可用的调度框架需要解决三件事：</p>
+<ol>
+<li><strong>任务按固定周期执行</strong>（如姿态解算 500Hz、遥控解析 50Hz）</li>
+<li><strong>任务之间互不阻塞</strong>（单个任务超时可以被检出）</li>
+<li><strong>CPU 负载可观测</strong>（知道还剩多少余量）</li>
+</ol>
+<h2 id="任务表设计">任务表设计</h2>
+<p>核心思路是&quot;函数指针 + 周期计数&quot;，用结构体数组描述所有任务：</p>
+<pre><code class="language-c">typedef struct {
+    void (*task_func)(void);  // 任务入口
+    uint32_t period_ms;       // 执行周期
+    uint32_t last_run;        // 上次执行时刻
+    uint32_t max_cost_us;     // 历史最大耗时
+    const char *name;         // 任务名（调试用）
+} task_t;
+
+static task_t task_table[] = {
+    { task_attitude_update,  2,  0, 0, &quot;attitude&quot;  },  // 500Hz 姿态解算
+    { task_pid_control,      2,  0, 0, &quot;pid&quot;       },  // 500Hz 控制输出
+    { task_nrf24_receive,   20,  0, 0, &quot;nrf24&quot;     },  // 50Hz  遥控接收
+    { task_battery_check,  100,  0, 0, &quot;battery&quot;   },  // 10Hz  电压检测
+    { task_led_heartbeat,  500,  0, 0, &quot;led&quot;       },  // 2Hz   心跳灯
+};
+
+#define TASK_NUM (sizeof(task_table) / sizeof(task_t))
+</code></pre>
+<h2 id="调度循环与耗时统计">调度循环与耗时统计</h2>
+<p>主循环遍历任务表，到期的任务立即执行，并用 DWT 周期计数器统计耗时：</p>
+<pre><code class="language-c">void scheduler_run(void)
+{
+    for (uint8_t i = 0; i &lt; TASK_NUM; i++) {
+        uint32_t now = HAL_GetTick();
+        if (now - task_table[i].last_run &gt;= task_table[i].period_ms) {
+            task_table[i].last_run = now;
+
+            uint32_t start = DWT-&gt;CYCCNT;
+            task_table[i].task_func();
+            uint32_t cost = (DWT-&gt;CYCCNT - start) / (SystemCoreClock / 1000000U);
+
+            if (cost &gt; task_table[i].max_cost_us) {
+                task_table[i].max_cost_us = cost;  // 记录最差情况
+            }
+        }
+    }
+}
+</code></pre>
+<p>使用 DWT 前需要在初始化中使能：</p>
+<pre><code class="language-c">void dwt_init(void)
+{
+    CoreDebug-&gt;DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT-&gt;CYCCNT = 0;
+    DWT-&gt;CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+}
+</code></pre>
+<h2 id="实测数据与结论">实测数据与结论</h2>
+<p>在 72MHz 的 STM32F103 上实测：</p>
+<table>
+<thead>
+<tr>
+<th>任务</th>
+<th>周期</th>
+<th>平均耗时</th>
+<th>最大耗时</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>姿态解算（含四元数更新）</td>
+<td>2ms</td>
+<td>180μs</td>
+<td>240μs</td>
+</tr>
+<tr>
+<td>双环 PID</td>
+<td>2ms</td>
+<td>45μs</td>
+<td>60μs</td>
+</tr>
+<tr>
+<td>NRF24L01 接收解析</td>
+<td>20ms</td>
+<td>90μs</td>
+<td>150μs</td>
+</tr>
+</tbody></table>
+<p>总负载约 15%，余量充足。<strong>关键经验</strong>：周期任务的单次耗时必须远小于周期，否则要考虑拆分状态机或上 RTOS。这套框架后来也被我复用到了智能手表项目中，配合 LVGL 的 <code>lv_timer_handler</code> 一起工作得很好。</p>
+</div>
+      <nav class="article-navigation" aria-label="文章导航"><a href="../posts/linux-driver-char-device.html">上一篇：嵌入式 Linux 驱动开发入门：从字符设备到设备树</a><a href="../posts/mpu6050-attitude-solution.html">下一篇：MPU6050 姿态解算：四元数与卡尔曼滤波实战</a></nav>
+      <nav class="related-posts" aria-label="相关文章"><ol><li><a href="../posts/embedded-robotics-learning-roadmap.html">嵌入式与机器人学习路线</a></li><li><a href="../posts/mpu6050-attitude-solution.html">MPU6050 姿态解算：四元数与卡尔曼滤波实战</a></li><li><a href="../posts/nrf24l01-low-latency-protocol.html">NRF24L01 2.4GHz 低延迟通信协议设计笔记</a></li></ol></nav>
+    </article>
+    </article>
+  </main>
+  <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>在 ESP32-S3 上用 LVGL 构建流畅的智能手表 UI · Infighting</title>
+  <script src="../assets/js/theme.js"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-shell glass-surface">
+      <a class="brand" href="../index.html" aria-label="Infighting 首页">
+        <span class="logo" aria-hidden="true">&gt;_</span>
+        <span class="brand-copy">Infighting<small>嵌入式 × 边缘计算</small></span>
+      </a>
+      <div class="nav-actions">
+        <nav class="site-nav" aria-label="主导航">
+          <a href="../index.html">首页</a>
+          <a href="../tags.html">标签</a>
+          <a href="../archive.html">精选归档</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换到浅色主题" aria-pressed="false">
+          <span class="theme-icon theme-icon-sun" aria-hidden="true">☼</span>
+          <span class="theme-icon theme-icon-moon" aria-hidden="true">☾</span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
+    <article class="article glass-surface">
+      <header class="article-header">
+        <h1>在 ESP32-S3 上用 LVGL 构建流畅的智能手表 UI</h1>
+        <div class="post-meta"><span>2024-12-20</span><a class="tag" href="../tags.html?tag=ESP32">ESP32</a><a class="tag" href="../tags.html?tag=LVGL">LVGL</a><a class="tag" href="../tags.html?tag=%E7%89%A9%E8%81%94%E7%BD%91">物联网</a></div>
+      </header>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#为什么是-lvgl">为什么是 LVGL</a></li><li class="article-toc-level-2"><a href="#事件驱动的界面导航">事件驱动的界面导航</a></li><li class="article-toc-level-2"><a href="#内存优化最痛的一课">内存优化：最痛的一课</a></li><li class="article-toc-level-2"><a href="#wifi-数据通道">WiFi 数据通道</a></li><li class="article-toc-level-2"><a href="#总结">总结</a></li></ol></nav>
+      <div class="article-body"><p>这是我大三上学期的项目：一块基于 ESP32-S3 的多功能智能手表，支持数字时钟、消息通知、天气显示。本文复盘其中最有价值的几个技术决策。</p>
+<h2 id="为什么是-lvgl">为什么是 LVGL</h2>
+<p> ESP32-S3 没有强大的 GPU，但 LVGL（Light and Versatile Graphics Library）在 MCU 上的表现足够好：</p>
+<ul>
+<li>纯 C 编写，移植只需要实现一个 flush 回调</li>
+<li>自带事件系统、动画引擎、样式系统</li>
+<li>支持部分刷新，降低 SPI 屏幕的带宽压力</li>
+</ul>
+<p>移植核心代码：</p>
+<pre><code class="language-c">static void disp_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map)
+{
+    st7789_push_pixels(area-&gt;x1, area-&gt;y1, area-&gt;x2, area-&gt;y2, (uint16_t *)color_map);
+    lv_disp_flush_ready(drv);  // 必须调用，否则 LVGL 卡死
+}
+
+void lvgl_port_init(void)
+{
+    lv_init();
+    static lv_disp_draw_buf_t draw_buf;
+    static lv_color_t buf[240 * 40];  // 40 行缓冲区，约 19KB
+    lv_disp_draw_buf_init(&amp;draw_buf, buf, NULL, 240 * 40);
+
+    static lv_disp_drv_t disp_drv;
+    lv_disp_drv_init(&amp;disp_drv);
+    disp_drv.draw_buf = &amp;draw_buf;
+    disp_drv.flush_cb = disp_flush;
+    disp_drv.hor_res = 240;
+    disp_drv.ver_res = 240;
+    lv_disp_drv_register(&amp;disp_drv);
+}
+</code></pre>
+<h2 id="事件驱动的界面导航">事件驱动的界面导航</h2>
+<p>手表有多个界面（表盘、通知、天气、设置），用裸 if-else 管理会迅速失控。我设计了一个简单的页面栈：</p>
+<pre><code class="language-c">typedef struct {
+    void (*create)(lv_obj_t *parent);
+    void (*destroy)(void);
+} page_ops_t;
+
+static const page_ops_t *page_stack[8];
+static int stack_top = -1;
+
+void page_push(const page_ops_t *page)
+{
+    if (stack_top &gt;= 0) page_stack[stack_top]-&gt;destroy();
+    page_stack[++stack_top] = page;
+    page-&gt;create(lv_scr_act());
+}
+
+void page_pop(void)
+{
+    if (stack_top &lt;= 0) return;
+    page_stack[stack_top--]-&gt;destroy();
+    page_stack[stack_top]-&gt;create(lv_scr_act());
+}
+</code></pre>
+<p>配合 LVGL 的手势事件，左右滑动切换页面、下滑返回，导航逻辑非常清晰。</p>
+<h2 id="内存优化最痛的一课">内存优化：最痛的一课</h2>
+<p>ESP32-S3 的 SRAM 只有 512KB，中文全字库根本放不下。优化手段：</p>
+<ol>
+<li><strong>字体裁剪</strong>：用 LVGL 官方的 font converter，只导出界面实际用到的 200 多个汉字，从 2MB 压到 60KB</li>
+<li><strong>图片转 C 数组 + RLE 压缩</strong>：天气图标用 <code>LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED</code>，体积减半</li>
+<li><strong>图片放 Flash</strong>：所有静态资源声明为 <code>const</code>，链接到外部 Flash，不占 RAM</li>
+</ol>
+<pre><code class="language-c">// 只包含用到的字符
+lv_font_t my_font_cn = {
+    .unicode_first = 0x4E00, .unicode_last = 0x9FA5,
+    // 通过 range + glyph_id 映射裁剪后的字形
+};
+</code></pre>
+<h2 id="wifi-数据通道">WiFi 数据通道</h2>
+<p>手表通过 WiFi 连接上位机，接收消息通知和天气数据，协议用简单的 JSON over TCP：</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;weather&quot;, &quot;temp&quot;: 26, &quot;icon&quot;: &quot;sunny&quot;, &quot;city&quot;: &quot;太原&quot;}
+</code></pre>
+<p>接收任务用 FreeRTOS 独立任务运行（ESP-IDF 环境），收到数据后通过 <code>lv_port_sem</code> 保护地更新 UI。</p>
+<h2 id="总结">总结</h2>
+<p>这个项目让我深刻理解：<strong>资源受限环境下的 UI 开发，本质上是一场内存与性能的权衡艺术</strong>。LVGL 的事件驱动架构值得学习，这套页面栈模式后来也被我用到了其他项目中。</p>
+</div>
+      <nav class="article-navigation" aria-label="文章导航"><a href="../posts/mpu6050-attitude-solution.html">上一篇：MPU6050 姿态解算：四元数与卡尔曼滤波实战</a><a href="../posts/nrf24l01-low-latency-protocol.html">下一篇：NRF24L01 2.4GHz 低延迟通信协议设计笔记</a></nav>
+    </article>
+    </article>
+  </main>
+  <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+</body>
+</html>

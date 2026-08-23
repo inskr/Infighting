@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>嵌入式与机器人学习路线 · Infighting</title>
+  <script src="../assets/js/theme.js"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-shell glass-surface">
+      <a class="brand" href="../index.html" aria-label="Infighting 首页">
+        <span class="logo" aria-hidden="true">&gt;_</span>
+        <span class="brand-copy">Infighting<small>嵌入式 × 边缘计算</small></span>
+      </a>
+      <div class="nav-actions">
+        <nav class="site-nav" aria-label="主导航">
+          <a href="../index.html">首页</a>
+          <a href="../tags.html">标签</a>
+          <a href="../archive.html">精选归档</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换到浅色主题" aria-pressed="false">
+          <span class="theme-icon theme-icon-sun" aria-hidden="true">☼</span>
+          <span class="theme-icon theme-icon-moon" aria-hidden="true">☾</span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
+    <article class="article glass-surface">
+      <header class="article-header">
+        <h1>嵌入式与机器人学习路线</h1>
+        <div class="post-meta"><span>2026-07-29</span><a class="tag" href="../tags.html?tag=%E5%B5%8C%E5%85%A5%E5%BC%8F">嵌入式</a><a class="tag" href="../tags.html?tag=STM32">STM32</a><a class="tag" href="../tags.html?tag=%E5%B5%8C%E5%85%A5%E5%BC%8FLinux">嵌入式Linux</a><a class="tag" href="../tags.html?tag=ROS%202">ROS 2</a><a class="tag" href="../tags.html?tag=%E6%9C%BA%E5%99%A8%E4%BA%BA">机器人</a></div>
+      </header>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#目录">目录</a></li><li class="article-toc-level-2"><a href="#1-路线目标">1. 路线目标</a></li><li class="article-toc-level-3"><a href="#11-这份路线适合谁">1.1 这份路线适合谁</a></li><li class="article-toc-level-3"><a href="#12-最终要形成的能力">1.2 最终要形成的能力</a></li><li class="article-toc-level-3"><a href="#13-怎样使用这份文档">1.3 怎样使用这份文档</a></li><li class="article-toc-level-3"><a href="#14-开始前的基础自测">1.4 开始前的基础自测</a></li><li class="article-toc-level-3"><a href="#15-软硬件准备">1.5 软硬件准备</a></li><li class="article-toc-level-3"><a href="#16-常用术语速查">1.6 常用术语速查</a></li><li class="article-toc-level-2"><a href="#2-总体时间表">2. 总体时间表</a></li><li class="article-toc-level-3"><a href="#21-阶段之间为什么这样排列">2.1 阶段之间为什么这样排列</a></li><li class="article-toc-level-3"><a href="#22-可以跳级吗">2.2 可以跳级吗</a></li><li class="article-toc-level-2"><a href="#3-第一阶段cortex-m-与-stm32-底层">3. 第一阶段：Cortex-M 与 STM32 底层</a></li><li class="article-toc-level-3"><a href="#31-这一阶段要解决什么问题">3.1 这一阶段要解决什么问题</a></li><li class="article-toc-level-3"><a href="#32-学习内容">3.2 学习内容</a></li><li class="article-toc-level-3"><a href="#33-六周执行安排">3.3 六周执行安排</a></li><li class="article-toc-level-3"><a href="#34-阶段项目多传感器采集器">3.4 阶段项目：多传感器采集器</a></li><li class="article-toc-level-3"><a href="#35-验收标准">3.5 验收标准</a></li><li class="article-toc-level-3"><a href="#36-四类芯片文档分别怎么看">3.6 四类芯片文档分别怎么看</a></li><li class="article-toc-level-3"><a href="#37-常见误区">3.7 常见误区</a></li><li class="article-toc-level-3"><a href="#38-学习文档">3.8 学习文档</a></li><li class="article-toc-level-2"><a href="#4-第二阶段freertos-与实时系统">4. 第二阶段：FreeRTOS 与实时系统</a></li><li class="article-toc-level-3"><a href="#41-这一阶段要解决什么问题">4.1 这一阶段要解决什么问题</a></li><li class="article-toc-level-3"><a href="#42-学习内容">4.2 学习内容</a></li><li class="article-toc-level-3"><a href="#43-八周执行安排">4.3 八周执行安排</a></li><li class="article-toc-level-3"><a href="#44-阶段项目freertos-机器人底盘控制器">4.4 阶段项目：FreeRTOS 机器人底盘控制器</a></li><li class="article-toc-level-3"><a href="#45-验收标准">4.5 验收标准</a></li><li class="article-toc-level-3"><a href="#46-常见误区">4.6 常见误区</a></li><li class="article-toc-level-3"><a href="#47-学习文档">4.7 学习文档</a></li><li class="article-toc-level-2"><a href="#5-第三阶段嵌入式工程化">5. 第三阶段：嵌入式工程化</a></li><li class="article-toc-level-3"><a href="#51-这一阶段要解决什么问题">5.1 这一阶段要解决什么问题</a></li><li class="article-toc-level-3"><a href="#52-学习内容">5.2 学习内容</a></li><li class="article-toc-level-3"><a href="#53-五周执行安排">5.3 五周执行安排</a></li><li class="article-toc-level-3"><a href="#54-推荐工程结构">5.4 推荐工程结构</a></li><li class="article-toc-level-3"><a href="#55-阶段项目可升级固件平台">5.5 阶段项目：可升级固件平台</a></li><li class="article-toc-level-3"><a href="#56-验收标准">5.6 验收标准</a></li><li class="article-toc-level-3"><a href="#57-常见误区">5.7 常见误区</a></li><li class="article-toc-level-3"><a href="#58-学习文档">5.8 学习文档</a></li><li class="article-toc-level-2"><a href="#6-第四阶段linux-与现代-c">6. 第四阶段：Linux 与现代 C++</a></li><li class="article-toc-level-3"><a href="#61-这一阶段要解决什么问题">6.1 这一阶段要解决什么问题</a></li><li class="article-toc-level-3"><a href="#62-学习内容">6.2 学习内容</a></li><li class="article-toc-level-3"><a href="#63-八周执行安排">6.3 八周执行安排</a></li><li class="article-toc-level-3"><a href="#64-阶段项目linux-机器人通信服务">6.4 阶段项目：Linux 机器人通信服务</a></li><li class="article-toc-level-3"><a href="#65-验收标准">6.5 验收标准</a></li><li class="article-toc-level-3"><a href="#66-常见误区">6.6 常见误区</a></li><li class="article-toc-level-3"><a href="#67-学习文档">6.7 学习文档</a></li><li class="article-toc-level-2"><a href="#7-第五阶段嵌入式-linux-与-bsp">7. 第五阶段：嵌入式 Linux 与 BSP</a></li><li class="article-toc-level-3"><a href="#71-这一阶段要解决什么问题">7.1 这一阶段要解决什么问题</a></li><li class="article-toc-level-3"><a href="#72-学习顺序">7.2 学习顺序</a></li><li class="article-toc-level-3"><a href="#73-十周执行安排">7.3 十周执行安排</a></li><li class="article-toc-level-3"><a href="#74-阶段项目自定义嵌入式-linux-镜像">7.4 阶段项目：自定义嵌入式 Linux 镜像</a></li><li class="article-toc-level-3"><a href="#75-验收标准">7.5 验收标准</a></li><li class="article-toc-level-3"><a href="#76-常见误区">7.6 常见误区</a></li><li class="article-toc-level-3"><a href="#77-学习文档">7.7 学习文档</a></li><li class="article-toc-level-2"><a href="#8-第六阶段机器人控制基础">8. 第六阶段：机器人控制基础</a></li><li class="article-toc-level-3"><a href="#81-这一阶段要解决什么问题">8.1 这一阶段要解决什么问题</a></li><li class="article-toc-level-3"><a href="#82-数学与控制">8.2 数学与控制</a></li><li class="article-toc-level-3"><a href="#83-八周执行安排">8.3 八周执行安排</a></li><li class="article-toc-level-3"><a href="#84-实践顺序">8.4 实践顺序</a></li><li class="article-toc-level-3"><a href="#85-阶段项目差速机器人底盘">8.5 阶段项目：差速机器人底盘</a></li><li class="article-toc-level-3"><a href="#86-验收标准">8.6 验收标准</a></li><li class="article-toc-level-3"><a href="#87-常见误区">8.7 常见误区</a></li><li class="article-toc-level-3"><a href="#88-进阶电机控制文档">8.8 进阶电机控制文档</a></li><li class="article-toc-level-2"><a href="#9-第七阶段ros-2ros2control-与-micro-ros">9. 第七阶段：ROS 2、ros2_control 与 micro-ROS</a></li><li class="article-toc-level-3"><a href="#91-这一阶段要解决什么问题">9.1 这一阶段要解决什么问题</a></li><li class="article-toc-level-3"><a href="#92-ros-2-学习内容">9.2 ROS 2 学习内容</a></li><li class="article-toc-level-3"><a href="#93-七周执行安排">9.3 七周执行安排</a></li><li class="article-toc-level-3"><a href="#94-推荐顺序">9.4 推荐顺序</a></li><li class="article-toc-level-3"><a href="#95-阶段项目ros-2-硬件接口">9.5 阶段项目：ROS 2 硬件接口</a></li><li class="article-toc-level-3"><a href="#96-验收标准">9.6 验收标准</a></li><li class="article-toc-level-3"><a href="#97-常见误区">9.7 常见误区</a></li><li class="article-toc-level-3"><a href="#98-学习文档">9.8 学习文档</a></li><li class="article-toc-level-2"><a href="#10-综合毕业项目">10. 综合毕业项目</a></li><li class="article-toc-level-3"><a href="#101-推荐项目">10.1 推荐项目</a></li><li class="article-toc-level-3"><a href="#102-八周执行安排">10.2 八周执行安排</a></li><li class="article-toc-level-3"><a href="#103-推荐集成顺序">10.3 推荐集成顺序</a></li><li class="article-toc-level-3"><a href="#104-必须实现">10.4 必须实现</a></li><li class="article-toc-level-3"><a href="#105-必测故障场景">10.5 必测故障场景</a></li><li class="article-toc-level-3"><a href="#106-加分项">10.6 加分项</a></li><li class="article-toc-level-3"><a href="#107-项目交付物">10.7 项目交付物</a></li><li class="article-toc-level-3"><a href="#108-什么样的项目适合作品集">10.8 什么样的项目适合作品集</a></li><li class="article-toc-level-2"><a href="#11-每周学习安排">11. 每周学习安排</a></li><li class="article-toc-level-2"><a href="#12-通用排错方法">12. 通用排错方法</a></li><li class="article-toc-level-3"><a href="#121-先判断问题属于哪一层">12.1 先判断问题属于哪一层</a></li><li class="article-toc-level-3"><a href="#122-六步排错循环">12.2 六步排错循环</a></li><li class="article-toc-level-3"><a href="#123-常见症状检查表">12.3 常见症状检查表</a></li><li class="article-toc-level-2"><a href="#13-学习记录与项目模板">13. 学习记录与项目模板</a></li><li class="article-toc-level-3"><a href="#131-每周复盘模板">13.1 每周复盘模板</a></li><li class="article-toc-level-3"><a href="#132-驱动设计模板">13.2 驱动设计模板</a></li><li class="article-toc-level-3"><a href="#133-通信协议最小要素">13.3 通信协议最小要素</a></li><li class="article-toc-level-3"><a href="#134-完成定义">13.4 完成定义</a></li><li class="article-toc-level-2"><a href="#14-python-在路线中的定位">14. Python 在路线中的定位</a></li><li class="article-toc-level-2"><a href="#15-学习原则">15. 学习原则</a></li><li class="article-toc-level-3"><a href="#应该做">应该做</a></li><li class="article-toc-level-3"><a href="#避免">避免</a></li><li class="article-toc-level-2"><a href="#16-阶段性能力检查">16. 阶段性能力检查</a></li><li class="article-toc-level-3"><a href="#stm32rtos-合格线">STM32/RTOS 合格线</a></li><li class="article-toc-level-3"><a href="#嵌入式-linux-合格线">嵌入式 Linux 合格线</a></li><li class="article-toc-level-3"><a href="#机器人方向合格线">机器人方向合格线</a></li><li class="article-toc-level-2"><a href="#17-文档索引">17. 文档索引</a></li><li class="article-toc-level-3"><a href="#stm32-与-cortex-m">STM32 与 Cortex-M</a></li><li class="article-toc-level-3"><a href="#freertos">FreeRTOS</a></li><li class="article-toc-level-3"><a href="#构建与调试">构建与调试</a></li><li class="article-toc-level-3"><a href="#linux-与-c">Linux 与 C++</a></li><li class="article-toc-level-3"><a href="#嵌入式-linux">嵌入式 Linux</a></li><li class="article-toc-level-3"><a href="#机器人与-ros-2">机器人与 ROS 2</a></li></ol></nav>
+      <div class="article-body"><h1 id="嵌入式与机器人学习路线">嵌入式与机器人学习路线</h1>
+<blockquote>
+<p>方向：STM32/RTOS + 嵌入式 Linux/BSP + 机器人<br>
+不包含：云平台、MQTT、智能家居等物联网方向<br>
+建议投入：每周 12～15 小时<br>
+建议周期：约 60 周（14～16 个月）<br>
+更新日期：2026-07-29</p>
+</blockquote>
+<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#1-%E8%B7%AF%E7%BA%BF%E7%9B%AE%E6%A0%87">1. 路线目标</a></li>
+<li><a href="#2-%E6%80%BB%E4%BD%93%E6%97%B6%E9%97%B4%E8%A1%A8">2. 总体时间表</a></li>
+<li><a href="#3-%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5cortex-m-%E4%B8%8E-stm32-%E5%BA%95%E5%B1%82">3. Cortex-M 与 STM32 底层</a></li>
+<li><a href="#4-%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5freertos-%E4%B8%8E%E5%AE%9E%E6%97%B6%E7%B3%BB%E7%BB%9F">4. FreeRTOS 与实时系统</a></li>
+<li><a href="#5-%E7%AC%AC%E4%B8%89%E9%98%B6%E6%AE%B5%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%B7%A5%E7%A8%8B%E5%8C%96">5. 嵌入式工程化</a></li>
+<li><a href="#6-%E7%AC%AC%E5%9B%9B%E9%98%B6%E6%AE%B5linux-%E4%B8%8E%E7%8E%B0%E4%BB%A3-c">6. Linux 与现代 C++</a></li>
+<li><a href="#7-%E7%AC%AC%E4%BA%94%E9%98%B6%E6%AE%B5%E5%B5%8C%E5%85%A5%E5%BC%8F-linux-%E4%B8%8E-bsp">7. 嵌入式 Linux 与 BSP</a></li>
+<li><a href="#8-%E7%AC%AC%E5%85%AD%E9%98%B6%E6%AE%B5%E6%9C%BA%E5%99%A8%E4%BA%BA%E6%8E%A7%E5%88%B6%E5%9F%BA%E7%A1%80">8. 机器人控制基础</a></li>
+<li><a href="#9-%E7%AC%AC%E4%B8%83%E9%98%B6%E6%AE%B5ros-2ros2_control-%E4%B8%8E-micro-ros">9. ROS 2、ros2_control 与 micro-ROS</a></li>
+<li><a href="#10-%E7%BB%BC%E5%90%88%E6%AF%95%E4%B8%9A%E9%A1%B9%E7%9B%AE">10. 综合毕业项目</a></li>
+<li><a href="#11-%E6%AF%8F%E5%91%A8%E5%AD%A6%E4%B9%A0%E5%AE%89%E6%8E%92">11. 每周学习安排</a></li>
+<li><a href="#12-%E9%80%9A%E7%94%A8%E6%8E%92%E9%94%99%E6%96%B9%E6%B3%95">12. 通用排错方法</a></li>
+<li><a href="#13-%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95%E4%B8%8E%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF">13. 学习记录与项目模板</a></li>
+<li><a href="#14-python-%E5%9C%A8%E8%B7%AF%E7%BA%BF%E4%B8%AD%E7%9A%84%E5%AE%9A%E4%BD%8D">14. Python 在路线中的定位</a></li>
+<li><a href="#15-%E5%AD%A6%E4%B9%A0%E5%8E%9F%E5%88%99">15. 学习原则</a></li>
+<li><a href="#16-%E9%98%B6%E6%AE%B5%E6%80%A7%E8%83%BD%E5%8A%9B%E6%A3%80%E6%9F%A5">16. 阶段性能力检查</a></li>
+<li><a href="#17-%E6%96%87%E6%A1%A3%E7%B4%A2%E5%BC%95">17. 文档索引</a></li>
+</ul>
+<h2 id="1-路线目标">1. 路线目标</h2>
+<h3 id="11-这份路线适合谁">1.1 这份路线适合谁</h3>
+<p>这份文档适合已经学习过 C、Python 和 STM32，但还存在以下困惑的人：</p>
+<ul>
+<li>会使用 CubeMX 配置外设，却说不清生成代码为什么能运行；</li>
+<li>会调用 HAL 函数，却不会通过参考手册独立配置新外设；</li>
+<li>项目可以跑起来，但遇到 HardFault、丢数据或偶发死机时不会定位；</li>
+<li>学过 FreeRTOS 的 API，却不知道任务应该怎样划分；</li>
+<li>想继续学习嵌入式 Linux 和机器人，却不知道三者之间的先后关系；</li>
+<li>看过很多视频，但还没有一套能够展示和复现的完整项目。</li>
+</ul>
+<p>如果你暂时只能完成点灯、串口打印等基础实验，也可以从第一阶段开始。遇到已经掌握的内容，不要直接跳过：先完成对应的验收题，确认自己能独立完成后再前进。</p>
+<h3 id="12-最终要形成的能力">1.2 最终要形成的能力</h3>
+<p>这条路线的最终目标不是单独学会几项技术，而是具备开发完整机器人嵌入式系统的能力：</p>
+<ul>
+<li>STM32/FreeRTOS 负责电机、编码器、IMU、实时控制和安全保护；</li>
+<li>嵌入式 Linux 负责设备管理、上层程序、调试、日志和系统集成；</li>
+<li>ROS 2 负责机器人组件通信、硬件抽象、可视化和高层控制；</li>
+<li>Python 用于测试工具、串口工具、数据分析和自动化；</li>
+<li>C/C++ 用于固件、Linux 系统程序、ROS 2 节点和驱动。</li>
+</ul>
+<pre><code class="language-mermaid">flowchart LR
+    A[&quot;已有基础&lt;br/&gt;C / Python / STM32&quot;] --&gt; B[&quot;Cortex-M 与外设驱动&quot;]
+    B --&gt; C[&quot;FreeRTOS 与实时系统&quot;]
+    C --&gt; D[&quot;嵌入式工程化&quot;]
+    D --&gt; E[&quot;Linux 与 C++&quot;]
+    E --&gt; F[&quot;嵌入式 Linux / BSP&quot;]
+    F --&gt; G[&quot;ROS 2 与机器人软件&quot;]
+    C --&gt; H[&quot;电机 / 编码器 / IMU / PID&quot;]
+    G --&gt; I[&quot;Linux 高层控制&quot;]
+    H --&gt; J[&quot;STM32 实时控制器&quot;]
+    I &lt;--&gt;|&quot;CAN / UART&quot;| J
+    I --&gt; K[&quot;完整机器人项目&quot;]
+    J --&gt; K
+</code></pre>
+<p>简单理解：</p>
+<ul>
+<li><strong>STM32 是“反应快的手脚”</strong>：按固定周期读取传感器、控制电机，即使 Linux 卡顿也要保证安全；</li>
+<li><strong>嵌入式 Linux 是“资源丰富的身体”</strong>：运行较大的程序，管理文件、网络、日志和多个进程；</li>
+<li><strong>ROS 2 是“机器人软件的连接框架”</strong>：让控制、传感器、定位和可视化模块使用统一方式通信；</li>
+<li><strong>Python 是“测试和分析工具”</strong>：帮助模拟设备、发送命令、绘制曲线和自动验证功能。</li>
+</ul>
+<h3 id="13-怎样使用这份文档">1.3 怎样使用这份文档</h3>
+<p>不要从头到尾只阅读一遍。每个阶段都按照下面的循环执行：</p>
+<ol>
+<li><strong>先看目标</strong>：弄清楚这阶段要解决什么实际问题；</li>
+<li><strong>做最小实验</strong>：一次只验证一个知识点，例如先让 DMA 接收工作；</li>
+<li><strong>集成进阶段项目</strong>：把孤立实验整理成可复用模块；</li>
+<li><strong>主动制造故障</strong>：例如拔掉传感器、发错误数据、降低任务栈；</li>
+<li><strong>完成验收清单</strong>：尽量不看教程，独立重新实现；</li>
+<li><strong>整理文档和 Git 提交</strong>：记录设计理由、错误现象和解决过程。</li>
+</ol>
+<p>学习时遵循“三遍法”：</p>
+<ul>
+<li>第一遍跟着官方示例运行，知道它能做什么；</li>
+<li>第二遍关掉示例，凭理解重新实现；</li>
+<li>第三遍改变条件或增加故障，确认自己真的掌握。</li>
+</ul>
+<p>如果今天就开始，可以先做三件事：</p>
+<ol>
+<li>建立一个新的 Git 仓库，并写下自己的 STM32 型号和现有器材；</li>
+<li>不看旧工程，重新完成 GPIO、UART 和定时器中断；</li>
+<li>建立 <code>notes/week-01.md</code>，使用本文的每周复盘模板记录过程。</li>
+</ol>
+<h3 id="14-开始前的基础自测">1.4 开始前的基础自测</h3>
+<p>先尝试独立完成以下任务。不会的项目就是第一阶段需要重点补齐的内容：</p>
+<ul>
+<li><input disabled="" type="checkbox"> 使用 C 编写环形缓冲区，并处理缓冲区满和空；</li>
+<li><input disabled="" type="checkbox"> 解释指针、数组、结构体和函数指针的常见用法；</li>
+<li><input disabled="" type="checkbox"> 使用 STM32 完成 GPIO、UART、定时器中断；</li>
+<li><input disabled="" type="checkbox"> 看懂芯片原理图中的电源、时钟、复位和调试接口；</li>
+<li><input disabled="" type="checkbox"> 使用断点、单步和变量观察定位简单错误；</li>
+<li><input disabled="" type="checkbox"> 使用 Python 打开串口、收发数据并保存文件；</li>
+<li><input disabled="" type="checkbox"> 使用 Git 创建仓库、提交修改并查看历史。</li>
+</ul>
+<p>自测不要求全部通过。它的作用是确定起点，不是考试。</p>
+<h3 id="15-软硬件准备">1.5 软硬件准备</h3>
+<p>前期尽量使用你已有的 STM32 开发板，不要为了“路线完整”一次购买所有设备。</p>
+<p><strong>第一至第三阶段需要：</strong></p>
+<ul>
+<li>一块带调试接口的 STM32 开发板；</li>
+<li>ST-Link 或开发板自带调试器；</li>
+<li>USB 转串口模块；</li>
+<li>面包板、杜邦线、LED、按键和常用电阻；</li>
+<li>一个常见 I²C 或 SPI 传感器；</li>
+<li>入门级逻辑分析仪；</li>
+<li>条件允许时准备示波器。</li>
+</ul>
+<p><strong>Linux 和机器人阶段再准备：</strong></p>
+<ul>
+<li>一块能够运行 Linux 的 ARM 开发板；</li>
+<li>两个带编码器的低压直流减速电机；</li>
+<li>与电机电流匹配的驱动板；</li>
+<li>一个 IMU；</li>
+<li>独立、限流的电机电源；</li>
+<li>保险丝、急停或方便断电的开关；</li>
+<li>机械底盘和固定件。</li>
+</ul>
+<p><strong>常用软件：</strong></p>
+<ul>
+<li>STM32CubeIDE、STM32CubeProgrammer；</li>
+<li>Git、CMake、Python 虚拟环境；</li>
+<li>GDB、OpenOCD；</li>
+<li>VS Code 或其他熟悉的编辑器；</li>
+<li>Ubuntu 实机、虚拟机或 WSL2，用于 Linux 与 ROS 2 学习。</li>
+</ul>
+<blockquote>
+<p>安全提醒：电机不要直接由开发板引脚供电；接线时先断电；首次调试让轮子悬空；使用限流电源；确认电机电源与逻辑电源的地线连接方式。</p>
+</blockquote>
+<h3 id="16-常用术语速查">1.6 常用术语速查</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>通俗解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MCU</td>
+<td>微控制器。STM32 就是一类 MCU，适合直接控制硬件</td>
+</tr>
+<tr>
+<td>Cortex-M</td>
+<td>STM32 常用的 Arm 处理器内核系列</td>
+</tr>
+<tr>
+<td>HAL</td>
+<td>厂商提供的硬件抽象库，用统一函数封装寄存器操作</td>
+</tr>
+<tr>
+<td>BSP</td>
+<td>板级支持包，负责让操作系统或应用适配某块硬件</td>
+</tr>
+<tr>
+<td>Driver</td>
+<td>驱动程序，把具体硬件能力包装成可调用接口</td>
+</tr>
+<tr>
+<td>ISR</td>
+<td>中断服务函数，硬件事件发生时由 CPU 立即执行的代码</td>
+</tr>
+<tr>
+<td>DMA</td>
+<td>不让 CPU 逐字节搬运数据，由硬件自动完成内存传输</td>
+</tr>
+<tr>
+<td>RTOS</td>
+<td>实时操作系统，强调任务在规定时间内得到响应</td>
+</tr>
+<tr>
+<td>Task/Thread</td>
+<td>可以独立调度的一段执行流程</td>
+</tr>
+<tr>
+<td>Bootloader</td>
+<td>上电后先运行的小程序，负责检查、升级或启动正式固件</td>
+</tr>
+<tr>
+<td>交叉编译</td>
+<td>在 PC 上编译出供 ARM 开发板运行的程序</td>
+</tr>
+<tr>
+<td>Device Tree</td>
+<td>Linux 中描述板上硬件连接关系的数据文件</td>
+</tr>
+<tr>
+<td>RootFS</td>
+<td>Linux 根文件系统，包含程序、配置和库</td>
+</tr>
+<tr>
+<td>ROS 2</td>
+<td>机器人软件通信和组件组织框架，不是普通意义上的操作系统</td>
+</tr>
+<tr>
+<td>QoS</td>
+<td>通信质量策略，例如是否允许丢消息、是否保存历史数据</td>
+</tr>
+<tr>
+<td>PID</td>
+<td>根据目标值与实际值的误差不断修正控制输出的算法</td>
+</tr>
+<tr>
+<td>里程计</td>
+<td>根据轮子或其他传感器推算机器人移动距离和姿态</td>
+</tr>
+</tbody></table>
+<h2 id="2-总体时间表">2. 总体时间表</h2>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th align="right">周数</th>
+<th>核心内容</th>
+<th>阶段项目</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cortex-M 与 STM32 底层</td>
+<td align="right">1～6</td>
+<td>启动、中断、内存、外设、DMA、CAN</td>
+<td>多传感器采集器</td>
+</tr>
+<tr>
+<td>FreeRTOS 与实时系统</td>
+<td align="right">7～14</td>
+<td>任务、IPC、调度、竞态、故障恢复</td>
+<td>机器人底盘控制器</td>
+</tr>
+<tr>
+<td>嵌入式工程化</td>
+<td align="right">15～19</td>
+<td>Git、构建、调试、测试、Bootloader</td>
+<td>可升级固件平台</td>
+</tr>
+<tr>
+<td>Linux 与现代 C++</td>
+<td align="right">20～27</td>
+<td>进程、线程、Socket、串口、CMake</td>
+<td>Linux 通信服务</td>
+</tr>
+<tr>
+<td>嵌入式 Linux/BSP</td>
+<td align="right">28～37</td>
+<td>交叉编译、Buildroot、设备树、驱动</td>
+<td>自定义 Linux 镜像</td>
+</tr>
+<tr>
+<td>机器人控制基础</td>
+<td align="right">38～45</td>
+<td>电机、编码器、IMU、PID、运动学</td>
+<td>差速底盘</td>
+</tr>
+<tr>
+<td>ROS 2 与 micro-ROS</td>
+<td align="right">46～52</td>
+<td>ROS 2、TF2、URDF、ros2_control</td>
+<td>ROS 2 硬件接口</td>
+</tr>
+<tr>
+<td>综合毕业项目</td>
+<td align="right">53～60</td>
+<td>STM32 + Linux + ROS 2 集成</td>
+<td>完整差速机器人</td>
+</tr>
+</tbody></table>
+<p>如果每周只能投入 6～8 小时，可以将每个阶段的时间增加约 50%；不要通过跳过项目来压缩周期。</p>
+<h3 id="21-阶段之间为什么这样排列">2.1 阶段之间为什么这样排列</h3>
+<ul>
+<li>先学 STM32 底层，是为了知道硬件、中断和内存真正如何工作；</li>
+<li>再学 FreeRTOS，是因为多任务问题建立在中断、定时器和内存基础之上；</li>
+<li>工程化放在 Linux 前，是为了尽早形成调试、测试和版本管理习惯；</li>
+<li>先学 Linux 应用，再学 BSP 和驱动，避免一开始被内核细节淹没；</li>
+<li>先实现稳定底盘控制，再学 ROS 2，保证机器人不是“只能在仿真里运行”；</li>
+<li>micro-ROS 放在最后，因为它同时要求理解 RTOS、ROS 2 和通信。</li>
+</ul>
+<h3 id="22-可以跳级吗">2.2 可以跳级吗</h3>
+<p>可以，但必须通过上一阶段的验收清单。建议遵循以下规则：</p>
+<ul>
+<li>已经会 HAL，不代表可以跳过 Cortex-M、中断和 DMA；</li>
+<li>已经用过 FreeRTOS，不代表理解竞态、优先级反转和栈水位；</li>
+<li>会使用 Ubuntu，不代表掌握 Linux 系统编程；</li>
+<li>会启动 ROS 2 示例，不代表能编写硬件接口；</li>
+<li>项目“运行过一次”不等于通过验收，至少还要测试错误路径。</li>
+</ul>
+<hr>
+<h2 id="3-第一阶段cortex-m-与-stm32-底层">3. 第一阶段：Cortex-M 与 STM32 底层</h2>
+<h3 id="31-这一阶段要解决什么问题">3.1 这一阶段要解决什么问题</h3>
+<p>很多初学者会使用 <code>HAL_UART_Transmit()</code>，但不知道数据为什么会从引脚发出去；程序死机后，也只能尝试重新生成代码。这一阶段要把 STM32 从“黑盒”变成可以理解和调试的系统。</p>
+<p>你不需要完全放弃 HAL。正确做法是：</p>
+<ul>
+<li>用 HAL 快速完成初始化；</li>
+<li>对照参考手册理解 HAL 修改了哪些寄存器；</li>
+<li>在关键模块中尝试 LL 或直接访问寄存器；</li>
+<li>最终能够根据手册独立配置一个没有学过的外设。</li>
+</ul>
+<h3 id="32-学习内容">3.2 学习内容</h3>
+<ul>
+<li>Cortex-M 内核与 CMSIS；</li>
+<li>上电复位、启动文件、向量表和 <code>SystemInit()</code>；</li>
+<li>Flash、SRAM、栈、堆和内存映射；</li>
+<li>ELF、链接脚本、段、符号和 map 文件；</li>
+<li>NVIC、中断优先级、SysTick、PendSV；</li>
+<li>GPIO、EXTI、UART、定时器、PWM、ADC；</li>
+<li>I²C、SPI、DMA、CAN；</li>
+<li><code>volatile</code>、内存对齐、位操作、临界区；</li>
+<li>HAL、LL 和寄存器开发之间的关系；</li>
+<li>HardFault 寄存器、调用栈和故障定位。</li>
+</ul>
+<h3 id="33-六周执行安排">3.3 六周执行安排</h3>
+<table>
+<thead>
+<tr>
+<th>周次</th>
+<th>重点</th>
+<th>当周必须完成的实验</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 1 周</td>
+<td>启动、时钟和 GPIO</td>
+<td>跟踪复位到 <code>main()</code>；不用延时库实现 LED 闪烁</td>
+</tr>
+<tr>
+<td>第 2 周</td>
+<td>中断、定时器和 UART</td>
+<td>按键中断控制状态；定时器产生固定周期；UART 输出日志</td>
+</tr>
+<tr>
+<td>第 3 周</td>
+<td>I²C、SPI 和传感器</td>
+<td>读取一个传感器；拔掉传感器后程序不能永久卡死</td>
+</tr>
+<tr>
+<td>第 4 周</td>
+<td>DMA 和环形缓冲区</td>
+<td>DMA 接收串口数据；正确处理半包、粘包和缓冲区满</td>
+</tr>
+<tr>
+<td>第 5 周</td>
+<td>ADC、PWM、CAN</td>
+<td>PWM 控制输出；ADC 采样；有 CAN 硬件时完成基础收发</td>
+</tr>
+<tr>
+<td>第 6 周</td>
+<td>故障与项目整理</td>
+<td>制造 HardFault；根据现场定位；完成采集器和项目文档</td>
+</tr>
+</tbody></table>
+<p>每周只增加一到两个新外设。一次同时调试时钟、DMA、中断和协议，出现问题后很难判断故障来自哪里。</p>
+<h3 id="34-阶段项目多传感器采集器">3.4 阶段项目：多传感器采集器</h3>
+<p>建议功能：</p>
+<ul>
+<li>使用 I²C 或 SPI 读取至少一个传感器；</li>
+<li>使用定时器产生固定采样周期；</li>
+<li>UART 使用 DMA 和环形缓冲区；</li>
+<li>使用 Python 编写串口接收和数据绘图工具；</li>
+<li>驱动接口具备错误码、超时和重试；</li>
+<li>使用逻辑分析仪验证通信时序；</li>
+<li>输出固件的 Flash、RAM 使用情况。</li>
+</ul>
+<h3 id="35-验收标准">3.5 验收标准</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 可以解释 MCU 从复位到 <code>main()</code> 的过程；</li>
+<li><input disabled="" type="checkbox"> 可以说明栈、堆、<code>.data</code>、<code>.bss</code> 和 <code>.text</code> 的位置；</li>
+<li><input disabled="" type="checkbox"> 可以根据参考手册配置一个未学过的简单外设；</li>
+<li><input disabled="" type="checkbox"> 可以用 DMA 和环形缓冲区接收不定长数据；</li>
+<li><input disabled="" type="checkbox"> 可以通过 HardFault 现场和 map 文件定位错误；</li>
+<li><input disabled="" type="checkbox"> 可以解释 HAL、LL、CMSIS 和寄存器之间的关系。</li>
+</ul>
+<h3 id="36-四类芯片文档分别怎么看">3.6 四类芯片文档分别怎么看</h3>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>主要回答的问题</th>
+<th>常见使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Datasheet</td>
+<td>芯片有哪些引脚、电气限制和外设资源</td>
+<td>查引脚复用、电压、电流、封装</td>
+</tr>
+<tr>
+<td>Reference Manual</td>
+<td>外设怎样工作、寄存器怎样配置</td>
+<td>查 UART、DMA、定时器、ADC</td>
+</tr>
+<tr>
+<td>Programming Manual</td>
+<td>Cortex-M 内核和系统寄存器怎样工作</td>
+<td>查 NVIC、异常、MPU、指令</td>
+</tr>
+<tr>
+<td>Errata Sheet</td>
+<td>芯片已知有哪些硬件问题</td>
+<td>遇到无法解释的边界问题时核对</td>
+</tr>
+</tbody></table>
+<p>阅读外设章节时，不要从第一页逐字翻译。先回答五个问题：</p>
+<ol>
+<li>外设的输入时钟来自哪里？</li>
+<li>使用哪些引脚和复用功能？</li>
+<li>启用外设需要哪些关键寄存器或 HAL 配置？</li>
+<li>完成、错误和超时通过什么标志判断？</li>
+<li>中断或 DMA 的数据流怎样走？</li>
+</ol>
+<h3 id="37-常见误区">3.7 常见误区</h3>
+<ul>
+<li><strong>误区：寄存器开发才是真正的嵌入式。</strong> 产品开发可以使用 HAL；关键是理解其行为和代价。</li>
+<li><strong>误区：串口打印正常就说明实时性正常。</strong> 阻塞式打印可能改变时序，甚至掩盖竞态问题。</li>
+<li><strong>误区：中断越多越实时。</strong> 中断过长会阻塞其他工作；ISR 应尽量短。</li>
+<li><strong>误区：DMA 完全不需要 CPU。</strong> CPU 仍需配置 DMA、处理完成事件和缓冲区所有权。</li>
+<li><strong>误区：程序跑起来就结束。</strong> 还要测试传感器断开、数据错误、缓冲区满等异常情况。</li>
+</ul>
+<h3 id="38-学习文档">3.8 学习文档</h3>
+<ul>
+<li><a href="https://www.st.com/content/st_com/en/stm32-mcu-developer-zone.html">STM32 MCU Developer Zone</a></li>
+<li><a href="https://www.st.com/content/st_com/en/support/learning/stm32-moocs.html">STM32 官方免费 MOOC</a></li>
+<li><a href="https://www.st.com/resource/en/user_manual/um2553-stm32cubeide-quick-start-guide-stmicroelectronics.pdf">STM32CubeIDE 快速入门手册（PDF）</a></li>
+<li><a href="https://arm-software.github.io/CMSIS_6/latest/Core/index.html">Arm CMSIS-Core 文档</a></li>
+<li><a href="https://www.st.com/content/st_com/en/stm32cubeprogrammer.html">STM32CubeProgrammer</a></li>
+<li><a href="https://www.st.com/en/development-tools/stm32cubemonitor.html">STM32CubeMonitor</a></li>
+</ul>
+<p>此外，需要长期保存并反复阅读自己芯片对应的四类资料：</p>
+<ol>
+<li>Datasheet；</li>
+<li>Reference Manual；</li>
+<li>Programming Manual；</li>
+<li>Errata Sheet。</li>
+</ol>
+<hr>
+<h2 id="4-第二阶段freertos-与实时系统">4. 第二阶段：FreeRTOS 与实时系统</h2>
+<h3 id="41-这一阶段要解决什么问题">4.1 这一阶段要解决什么问题</h3>
+<p>裸机程序常见写法是一个不断增长的 <code>while (1)</code>。功能少时还能维护，加入电机、IMU、通信和存储后，不同模块会互相阻塞。FreeRTOS 的作用不是让程序“看起来更高级”，而是让多个有不同时间要求的工作得到清晰调度。</p>
+<p>“实时”也不等于“速度最快”，而是重要任务能在可预测的时间内完成。例如电机控制可以规定每 1 ms 执行一次，而日志晚几十毫秒通常没有关系。</p>
+<h3 id="42-学习内容">4.2 学习内容</h3>
+<ul>
+<li>任务状态、上下文切换和抢占式调度；</li>
+<li>任务优先级、时间片和阻塞等待；</li>
+<li>队列、任务通知、信号量和互斥锁；</li>
+<li>事件组、软件定时器；</li>
+<li>ISR 安全 API；</li>
+<li>优先级反转与优先级继承；</li>
+<li>竞态条件、死锁和临界区；</li>
+<li>静态与动态内存分配；</li>
+<li>栈水位、CPU 占用和运行时间统计；</li>
+<li>看门狗、任务心跳和故障恢复；</li>
+<li>实时系统中的超时和降级策略。</li>
+</ul>
+<h3 id="43-八周执行安排">4.3 八周执行安排</h3>
+<table>
+<thead>
+<tr>
+<th>周次</th>
+<th>重点</th>
+<th>当周必须完成的实验</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 7 周</td>
+<td>任务与调度</td>
+<td>创建不同周期的任务，观察阻塞、延时和优先级</td>
+</tr>
+<tr>
+<td>第 8 周</td>
+<td>队列与任务通知</td>
+<td>ISR 产生数据，任务通过通知或队列处理</td>
+</tr>
+<tr>
+<td>第 9 周</td>
+<td>信号量与互斥锁</td>
+<td>共享串口或总线；人为制造并修复竞态</td>
+</tr>
+<tr>
+<td>第 10 周</td>
+<td>事件组与软件定时器</td>
+<td>管理系统就绪状态、超时和低频工作</td>
+</tr>
+<tr>
+<td>第 11 周</td>
+<td>内存和任务栈</td>
+<td>比较静态/动态创建；测量任务栈水位</td>
+</tr>
+<tr>
+<td>第 12 周</td>
+<td>调度异常</td>
+<td>制造死锁、优先级反转和任务饿死并记录现象</td>
+</tr>
+<tr>
+<td>第 13 周</td>
+<td>底盘任务架构</td>
+<td>集成电机、编码器、IMU、通信和诊断任务</td>
+</tr>
+<tr>
+<td>第 14 周</td>
+<td>故障注入与验收</td>
+<td>断开通信、阻塞任务、填满队列，验证安全行为</td>
+</tr>
+</tbody></table>
+<p>任务划分不是“一个函数对应一个任务”。只有执行周期、优先级或阻塞行为明显不同的工作，才考虑拆成独立任务。</p>
+<h3 id="44-阶段项目freertos-机器人底盘控制器">4.4 阶段项目：FreeRTOS 机器人底盘控制器</h3>
+<p>建议任务：</p>
+<pre><code class="language-text">MotorControlTask
+EncoderTask
+ImuTask
+CommunicationTask
+ParameterStorageTask
+DiagnosticsTask
+</code></pre>
+<p>设计要求：</p>
+<ul>
+<li>电机控制使用固定周期；</li>
+<li>中断只采集必要数据；</li>
+<li>任务间优先使用消息传递；</li>
+<li>通信超时后自动停止电机；</li>
+<li>看门狗能够识别关键任务卡死；</li>
+<li>记录每个任务的栈水位和执行时间；</li>
+<li>参数保存过程不能阻塞实时控制任务。</li>
+</ul>
+<h3 id="45-验收标准">4.5 验收标准</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 可以画出所有任务和通信关系；</li>
+<li><input disabled="" type="checkbox"> 可以解释队列、任务通知、信号量和互斥锁的区别；</li>
+<li><input disabled="" type="checkbox"> 可以解释优先级反转并给出解决方法；</li>
+<li><input disabled="" type="checkbox"> 可以发现并修复一次人为制造的竞态条件；</li>
+<li><input disabled="" type="checkbox"> 可以检测任务栈溢出和任务卡死；</li>
+<li><input disabled="" type="checkbox"> 控制周期不会被 Flash 写入或串口输出长时间阻塞。</li>
+</ul>
+<h3 id="46-常见误区">4.6 常见误区</h3>
+<ul>
+<li><strong>所有模块都建一个任务。</strong> 任务过多会增加栈内存、调度和通信复杂度。</li>
+<li><strong>用高优先级解决所有延迟。</strong> 每个任务都提高优先级，最终等于没有优先级设计。</li>
+<li><strong>循环查询共享全局变量。</strong> 优先使用队列、通知或事件表达数据与状态变化。</li>
+<li><strong>在临界区中做耗时操作。</strong> 临界区只保护最短的共享状态更新。</li>
+<li><strong>只测试正常运行。</strong> RTOS 问题通常是偶发问题，要主动制造队列满、任务超时和资源竞争。</li>
+</ul>
+<h3 id="47-学习文档">4.7 学习文档</h3>
+<ul>
+<li><a href="https://freertos.org/Documentation/01-FreeRTOS-quick-start/01-Beginners-guide/00-Overview">FreeRTOS 初学者指南</a></li>
+<li><a href="https://docs.freertos.org/">FreeRTOS 官方文档首页</a></li>
+<li><a href="https://www.st.com/content/st_com/en/support/learning/stm32-moocs/FreeRTOS_on_STM32_MOOC.html">STM32 FreeRTOS 官方 MOOC</a></li>
+<li><a href="https://www.st.com/resource/en/user_manual/um1722-developing-applications-on-stm32cube-with-rtos-stmicroelectronics.pdf">STM32Cube 中的 RTOS 应用开发手册（PDF）</a></li>
+</ul>
+<p>学习顺序建议：先掌握原生 FreeRTOS 概念，再理解 CMSIS-RTOS 封装。不要只会使用 CubeMX 生成的任务模板。</p>
+<hr>
+<h2 id="5-第三阶段嵌入式工程化">5. 第三阶段：嵌入式工程化</h2>
+<h3 id="51-这一阶段要解决什么问题">5.1 这一阶段要解决什么问题</h3>
+<p>“能运行的示例”和“能维护的工程”差别很大。真正的嵌入式项目需要可重复构建、可调试、可测试、可升级，而且出现故障后要留下线索。这一阶段会把前面的代码整理成工程，而不是继续堆功能。</p>
+<h3 id="52-学习内容">5.2 学习内容</h3>
+<ul>
+<li>Git 提交、分支、标签和版本发布；</li>
+<li>GCC 编译、汇编、链接流程；</li>
+<li>Make 和 CMake；</li>
+<li>GDB、OpenOCD、ST-Link；</li>
+<li>编译器警告和静态分析；</li>
+<li>主机端单元测试；</li>
+<li>日志分级、断言、错误码；</li>
+<li>故障现场和复位原因记录；</li>
+<li>Bootloader、固件格式、CRC；</li>
+<li>参数掉电保存和 Flash 磨损；</li>
+<li>Python 自动化测试和日志分析。</li>
+</ul>
+<h3 id="53-五周执行安排">5.3 五周执行安排</h3>
+<table>
+<thead>
+<tr>
+<th>周次</th>
+<th>重点</th>
+<th>当周必须完成的成果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 15 周</td>
+<td>Git 与构建过程</td>
+<td>整理仓库；理解预处理、编译、汇编、链接</td>
+</tr>
+<tr>
+<td>第 16 周</td>
+<td>GDB 与故障定位</td>
+<td>练习断点、观察点、反汇编、调用栈和 map 文件</td>
+</tr>
+<tr>
+<td>第 17 周</td>
+<td>测试与 Python 工具</td>
+<td>在 PC 测试协议、CRC、状态机；Python 模拟设备</td>
+</tr>
+<tr>
+<td>第 18 周</td>
+<td>Bootloader</td>
+<td>定义固件格式，实现校验和应用跳转</td>
+</tr>
+<tr>
+<td>第 19 周</td>
+<td>发布与故障恢复</td>
+<td>制造升级中断；完成版本、日志、复位原因和文档</td>
+</tr>
+</tbody></table>
+<h3 id="54-推荐工程结构">5.4 推荐工程结构</h3>
+<pre><code class="language-text">robot-firmware/
+├── app/
+├── bsp/
+├── drivers/
+├── components/
+├── middleware/
+├── bootloader/
+├── tests/
+├── tools/
+├── docs/
+├── CMakeLists.txt
+└── README.md
+</code></pre>
+<h3 id="55-阶段项目可升级固件平台">5.5 阶段项目：可升级固件平台</h3>
+<p>要求：</p>
+<ul>
+<li>Bootloader 与 Application 分离；</li>
+<li>固件包含版本、长度和校验信息；</li>
+<li>升级失败后不会直接运行损坏固件；</li>
+<li>保存复位原因和最近一次错误；</li>
+<li>Python 工具能够打包和发送固件；</li>
+<li>主机端能够测试协议解析、CRC 和状态机。</li>
+</ul>
+<h3 id="56-验收标准">5.6 验收标准</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 可以解释从源文件到 ELF/HEX/BIN 的过程；</li>
+<li><input disabled="" type="checkbox"> 可以在命令行完成编译和调试；</li>
+<li><input disabled="" type="checkbox"> 可以使用断点、条件断点、观察点和调用栈；</li>
+<li><input disabled="" type="checkbox"> 可以使用 Python 自动执行至少一组固件测试；</li>
+<li><input disabled="" type="checkbox"> 项目有 README、架构图、协议和测试说明；</li>
+<li><input disabled="" type="checkbox"> 可以执行一次失败升级并安全恢复。</li>
+</ul>
+<h3 id="57-常见误区">5.7 常见误区</h3>
+<ul>
+<li><strong>只在 IDE 里点击 Build。</strong> 至少要理解编译器、链接器、ELF 和二进制文件的关系。</li>
+<li><strong>只有硬件接上才能测试。</strong> 协议、算法和状态机应尽量在 PC 上运行单元测试。</li>
+<li><strong>日志越多越好。</strong> 日志要有级别、时间和模块，实时路径中避免阻塞输出。</li>
+<li><strong>Bootloader 只要能跳转即可。</strong> 还要验证长度、地址、校验、版本和升级失败场景。</li>
+<li><strong>Git 只是云端备份。</strong> 每次提交应表达一个清晰改动，并能根据历史恢复和定位问题。</li>
+</ul>
+<h3 id="58-学习文档">5.8 学习文档</h3>
+<ul>
+<li><a href="https://git-scm.com/book/en/v2">Git 官方参考书</a></li>
+<li><a href="https://cmake.org/cmake/help/latest/guide/tutorial/">CMake 官方教程</a></li>
+<li><a href="https://sourceware.org/gdb/current/onlinedocs/gdb">GDB 官方文档</a></li>
+<li><a href="https://sourceware.org/gdb/current/onlinedocs/gdb.html/Remote-Debugging.html">GDB 远程调试</a></li>
+<li><a href="https://openocd.org/doc/html/index.html">OpenOCD 用户手册</a></li>
+</ul>
+<hr>
+<h2 id="6-第四阶段linux-与现代-c">6. 第四阶段：Linux 与现代 C++</h2>
+<h3 id="61-这一阶段要解决什么问题">6.1 这一阶段要解决什么问题</h3>
+<p>STM32 上的程序通常直接控制硬件，没有进程和完整文件系统。Linux 则同时运行许多程序，硬件通过统一接口暴露给用户空间。你需要先学会编写可靠的 Linux 应用，之后才能真正理解驱动、BSP 和 ROS 2 在系统中的位置。</p>
+<p>C++ 也不需要一次学完。机器人 Linux 端优先掌握对象生命周期、资源管理、并发和模块接口，这些知识比复杂模板技巧更重要。</p>
+<h3 id="62-学习内容">6.2 学习内容</h3>
+<ul>
+<li>Linux 命令、目录、权限和进程；</li>
+<li>Shell 基础和自动化脚本；</li>
+<li>GCC/G++、Make、CMake、Git；</li>
+<li>C++11/17：类、RAII、智能指针、STL；</li>
+<li>多进程、多线程、互斥锁和条件变量；</li>
+<li>管道、共享内存和消息队列；</li>
+<li>串口、Socket、<code>select</code>/<code>poll</code>/<code>epoll</code>；</li>
+<li>信号、定时器和守护进程；</li>
+<li>GDB、gdbserver、strace；</li>
+<li>Python 与 C++ 程序协作；</li>
+<li>基础数据结构和状态机。</li>
+</ul>
+<p>不必一开始学习复杂模板元编程。优先掌握资源管理、对象生命周期、并发和错误处理。</p>
+<h3 id="63-八周执行安排">6.3 八周执行安排</h3>
+<table>
+<thead>
+<tr>
+<th>周次</th>
+<th>重点</th>
+<th>当周必须完成的实验</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 20 周</td>
+<td>Linux 基础</td>
+<td>文件、权限、进程、日志和 Shell 脚本</td>
+</tr>
+<tr>
+<td>第 21 周</td>
+<td>GCC、Make、CMake</td>
+<td>命令行构建多文件 C/C++ 项目</td>
+</tr>
+<tr>
+<td>第 22 周</td>
+<td>C++ 对象与 RAII</td>
+<td>封装文件、串口或线程资源</td>
+</tr>
+<tr>
+<td>第 23 周</td>
+<td>STL 与错误处理</td>
+<td>使用容器、字符串、枚举错误或异常边界</td>
+</tr>
+<tr>
+<td>第 24 周</td>
+<td>进程和线程</td>
+<td>比较进程与线程；完成生产者—消费者实验</td>
+</tr>
+<tr>
+<td>第 25 周</td>
+<td>IPC 与串口</td>
+<td>管道、共享内存；完成串口协议收发</td>
+</tr>
+<tr>
+<td>第 26 周</td>
+<td>Socket 与事件循环</td>
+<td>编写 TCP/UDP 示例；理解 <code>poll</code> 或 <code>epoll</code></td>
+</tr>
+<tr>
+<td>第 27 周</td>
+<td>通信服务集成</td>
+<td>Python 模拟 STM32；验证重连、超时和错误数据</td>
+</tr>
+</tbody></table>
+<h3 id="64-阶段项目linux-机器人通信服务">6.4 阶段项目：Linux 机器人通信服务</h3>
+<p>功能要求：</p>
+<ul>
+<li>通过 UART 或 CAN 与 STM32 通信；</li>
+<li>解析传感器、编码器和诊断数据；</li>
+<li>发送速度和控制命令；</li>
+<li>记录带时间戳的日志；</li>
+<li>支持断线检测、重连和协议错误统计；</li>
+<li>使用配置文件设置端口和波特率；</li>
+<li>可以使用模拟 STM32 的 Python 程序进行测试。</li>
+</ul>
+<h3 id="65-验收标准">6.5 验收标准</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 可以编写并调试多线程 C++ 程序；</li>
+<li><input disabled="" type="checkbox"> 可以解释 RAII 如何避免资源泄漏；</li>
+<li><input disabled="" type="checkbox"> 可以处理串口粘包、拆包和校验错误；</li>
+<li><input disabled="" type="checkbox"> 可以通过 gdbserver 远程调试目标程序；</li>
+<li><input disabled="" type="checkbox"> 可以用 Python 模拟设备并完成自动测试；</li>
+<li><input disabled="" type="checkbox"> 程序退出和异常路径不会泄漏文件描述符或线程。</li>
+</ul>
+<h3 id="66-常见误区">6.6 常见误区</h3>
+<ul>
+<li><strong>先背大量 Linux 命令。</strong> 命令应围绕编译、调试、日志和设备访问来学。</li>
+<li><strong>把 C++ 当作“带类的 C”。</strong> 核心是对象生命周期、接口边界和资源所有权。</li>
+<li><strong>一出现并发问题就加锁。</strong> 先减少共享状态，再设计线程间消息传递。</li>
+<li><strong>串口一次 <code>read()</code> 就得到完整数据帧。</strong> 实际读取可能只有半帧，也可能包含多帧。</li>
+<li><strong>只处理成功返回值。</strong> 系统调用必须处理超时、中断、断开和部分读写。</li>
+</ul>
+<h3 id="67-学习文档">6.7 学习文档</h3>
+<ul>
+<li><a href="https://documentation.ubuntu.com/desktop/en/latest/tutorial/the-linux-command-line-for-beginners/">Ubuntu：Linux 命令行入门</a></li>
+<li><a href="https://www.kernel.org/doc/man-pages/">Linux man-pages 项目</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/language">C++ 核心语言参考</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/language/raii">C++ RAII 说明</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/thread">C++ 并发支持库</a></li>
+<li><a href="https://cmake.org/cmake/help/latest/guide/tutorial/">CMake 官方教程</a></li>
+</ul>
+<hr>
+<h2 id="7-第五阶段嵌入式-linux-与-bsp">7. 第五阶段：嵌入式 Linux 与 BSP</h2>
+<h3 id="71-这一阶段要解决什么问题">7.1 这一阶段要解决什么问题</h3>
+<p>普通 Linux 应用运行在别人已经配置好的系统上；嵌入式 Linux 工程师还要负责让系统在目标板上启动，并正确识别板上的串口、I²C、SPI、GPIO 等硬件。</p>
+<p>可以把系统理解为四块：</p>
+<pre><code class="language-text">Bootloader  →  Linux Kernel + Device Tree  →  RootFS  →  你的应用
+负责启动       负责内核和硬件描述              提供文件和库   实现产品功能
+</code></pre>
+<h3 id="72-学习顺序">7.2 学习顺序</h3>
+<ol>
+<li>ARM 交叉编译；</li>
+<li>Bootloader、Kernel、Root Filesystem 的关系；</li>
+<li>使用 Buildroot 构建最小系统；</li>
+<li>Linux Device Tree；</li>
+<li>字符设备和 platform driver；</li>
+<li>I²C、SPI、GPIO 驱动模型；</li>
+<li>内核模块、sysfs、udev；</li>
+<li>系统启动服务和日志；</li>
+<li>最后再学习 Yocto。</li>
+</ol>
+<h3 id="73-十周执行安排">7.3 十周执行安排</h3>
+<table>
+<thead>
+<tr>
+<th>周次</th>
+<th>重点</th>
+<th>当周必须完成的成果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 28 周</td>
+<td>交叉编译</td>
+<td>在 PC 编译 ARM 程序并在开发板运行</td>
+</tr>
+<tr>
+<td>第 29 周</td>
+<td>Buildroot</td>
+<td>构建最小系统，保存可复现配置</td>
+</tr>
+<tr>
+<td>第 30 周</td>
+<td>启动流程</td>
+<td>阅读串口启动日志，标出 Bootloader、Kernel、RootFS 阶段</td>
+</tr>
+<tr>
+<td>第 31 周</td>
+<td>Device Tree</td>
+<td>修改一个节点或引脚配置并验证变化</td>
+</tr>
+<tr>
+<td>第 32 周</td>
+<td>字符设备</td>
+<td>编写最小内核模块，理解设备号和文件操作接口</td>
+</tr>
+<tr>
+<td>第 33 周</td>
+<td>platform/I²C/SPI</td>
+<td>理解 <code>probe()</code>、匹配和资源获取</td>
+</tr>
+<tr>
+<td>第 34 周</td>
+<td>应用集成</td>
+<td>将自己的 C++ 服务加入系统镜像</td>
+</tr>
+<tr>
+<td>第 35 周</td>
+<td>远程调试</td>
+<td>使用 gdbserver、日志和 <code>dmesg</code> 定位问题</td>
+</tr>
+<tr>
+<td>第 36 周</td>
+<td>Yocto 概览</td>
+<td>理解 layer、recipe、BitBake；暂不追求复杂定制</td>
+</tr>
+<tr>
+<td>第 37 周</td>
+<td>系统验收</td>
+<td>从干净环境重建镜像，并记录完整步骤</td>
+</tr>
+</tbody></table>
+<h3 id="74-阶段项目自定义嵌入式-linux-镜像">7.4 阶段项目：自定义嵌入式 Linux 镜像</h3>
+<p>要求：</p>
+<ul>
+<li>构建可启动的最小 Linux 镜像；</li>
+<li>集成自己的 C++ 通信服务；</li>
+<li>添加启动脚本或 systemd 服务；</li>
+<li>修改设备树启用一个硬件接口；</li>
+<li>编写一个简单字符设备或 platform driver；</li>
+<li>通过串口或网络远程调试；</li>
+<li>保存可复现的 Buildroot 配置。</li>
+</ul>
+<h3 id="75-验收标准">7.5 验收标准</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 可以解释 Bootloader、Kernel、DTB 和 RootFS 的加载关系；</li>
+<li><input disabled="" type="checkbox"> 可以交叉编译并运行 C/C++ 程序；</li>
+<li><input disabled="" type="checkbox"> 可以修改设备树启用或禁用外设；</li>
+<li><input disabled="" type="checkbox"> 可以构建并加载外部内核模块；</li>
+<li><input disabled="" type="checkbox"> 可以将自己的程序加入 Buildroot；</li>
+<li><input disabled="" type="checkbox"> 可以分析一次内核启动或驱动 probe 失败。</li>
+</ul>
+<h3 id="76-常见误区">7.6 常见误区</h3>
+<ul>
+<li><strong>直接修改 RootFS 输出目录。</strong> 重新构建后会丢失；应使用 Buildroot overlay、package 或正式配置机制。</li>
+<li><strong>设备树等同于驱动。</strong> 设备树描述硬件，驱动实现操作硬件的代码。</li>
+<li><strong>模块能加载就算驱动完成。</strong> 还要检查资源释放、并发、错误路径和卸载。</li>
+<li><strong>一开始就学 Yocto 的所有概念。</strong> 先用 Buildroot理解完整系统，再进入复杂构建体系。</li>
+<li><strong>忽略启动日志。</strong> 串口启动日志是分析内核、设备树和驱动问题的首要证据。</li>
+</ul>
+<h3 id="77-学习文档">7.7 学习文档</h3>
+<ul>
+<li><a href="https://docs.u-boot.org/en/latest/">U-Boot 官方文档</a></li>
+<li><a href="https://buildroot.org/downloads/manual/manual.html">Buildroot 用户手册</a></li>
+<li><a href="https://docs.yoctoproject.org/current/">Yocto Project 文档</a></li>
+<li><a href="https://docs.yoctoproject.org/current/overview-manual/intro.html">Yocto Overview and Concepts</a></li>
+<li><a href="https://docs.kernel.org/">Linux Kernel 文档</a></li>
+<li><a href="https://docs.kernel.org/devicetree/usage-model.html">Linux 与 Device Tree</a></li>
+<li><a href="https://docs.kernel.org/kbuild/modules.html">构建外部内核模块</a></li>
+</ul>
+<p>Buildroot 更适合第一次理解完整系统；Yocto 更适合后期学习复杂、可维护的产品构建体系。</p>
+<hr>
+<h2 id="8-第六阶段机器人控制基础">8. 第六阶段：机器人控制基础</h2>
+<h3 id="81-这一阶段要解决什么问题">8.1 这一阶段要解决什么问题</h3>
+<p>机器人不是“让电机转起来”就完成了。开环 PWM 会受电池电压、负载和摩擦影响，同样的占空比不一定得到同样的速度。编码器提供实际速度，PID 根据误差调整输出，才能形成闭环控制。</p>
+<p>这一阶段先做好低层运动控制，不急着进入 SLAM 或导航。没有稳定底盘，越上层的软件越难调试。</p>
+<h3 id="82-数学与控制">8.2 数学与控制</h3>
+<ul>
+<li>向量、矩阵和坐标系；</li>
+<li>角度、弧度和旋转；</li>
+<li>速度、加速度和采样周期；</li>
+<li>PID 与抗积分饱和；</li>
+<li>一阶低通和互补滤波；</li>
+<li>编码器计数、测速和里程；</li>
+<li>IMU 零偏、噪声和姿态基础；</li>
+<li>差速底盘运动学；</li>
+<li>里程计推算；</li>
+<li>状态机和轨迹插值。</li>
+</ul>
+<p>不需要先完成整本高等数学。围绕项目按需掌握：</p>
+<ul>
+<li>看懂直角坐标系和角度正负方向；</li>
+<li>能使用基本矩阵表示坐标变换；</li>
+<li>能根据轮径、编码器线数和减速比计算速度；</li>
+<li>理解采样周期改变会影响控制器；</li>
+<li>能读懂速度曲线并判断超调、振荡和稳态误差。</li>
+</ul>
+<h3 id="83-八周执行安排">8.3 八周执行安排</h3>
+<table>
+<thead>
+<tr>
+<th>周次</th>
+<th>重点</th>
+<th>当周必须完成的实验</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 38 周</td>
+<td>电机和安全</td>
+<td>PWM 调速、方向控制、限流和急停</td>
+</tr>
+<tr>
+<td>第 39 周</td>
+<td>编码器</td>
+<td>正确读取方向和计数，计算转速</td>
+</tr>
+<tr>
+<td>第 40 周</td>
+<td>单电机 PID</td>
+<td>记录目标与实际速度曲线并调参</td>
+</tr>
+<tr>
+<td>第 41 周</td>
+<td>双电机控制</td>
+<td>左右轮闭环，统一单位、方向和饱和限制</td>
+</tr>
+<tr>
+<td>第 42 周</td>
+<td>差速运动学</td>
+<td>将线速度/角速度转换为左右轮速度</td>
+</tr>
+<tr>
+<td>第 43 周</td>
+<td>IMU</td>
+<td>校准零偏，观察静止噪声和运动数据</td>
+</tr>
+<tr>
+<td>第 44 周</td>
+<td>里程计</td>
+<td>根据编码器推算位置和朝向</td>
+</tr>
+<tr>
+<td>第 45 周</td>
+<td>底盘集成</td>
+<td>完成安全停车、诊断和 Linux 通信</td>
+</tr>
+</tbody></table>
+<h3 id="84-实践顺序">8.4 实践顺序</h3>
+<ol>
+<li>PWM 控制一个直流电机；</li>
+<li>编码器测速；</li>
+<li>一个电机闭环调速；</li>
+<li>两个电机同步控制；</li>
+<li>差速底盘速度控制；</li>
+<li>计算里程计；</li>
+<li>读取和校准 IMU；</li>
+<li>STM32 与 Linux 主控通信。</li>
+</ol>
+<h3 id="85-阶段项目差速机器人底盘">8.5 阶段项目：差速机器人底盘</h3>
+<p>STM32 负责：</p>
+<ul>
+<li>固定周期电机控制；</li>
+<li>编码器采集；</li>
+<li>PID；</li>
+<li>IMU 采集；</li>
+<li>里程计基础数据；</li>
+<li>命令超时停车；</li>
+<li>看门狗和故障保护；</li>
+<li>与 Linux 主控通信。</li>
+</ul>
+<h3 id="86-验收标准">8.6 验收标准</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 电机能够稳定跟踪目标速度；</li>
+<li><input disabled="" type="checkbox"> 左右轮速度单位和方向定义一致；</li>
+<li><input disabled="" type="checkbox"> 控制周期可以测量并记录；</li>
+<li><input disabled="" type="checkbox"> 机器人可以完成直行、旋转和停止；</li>
+<li><input disabled="" type="checkbox"> 通信中断后能够安全停车；</li>
+<li><input disabled="" type="checkbox"> 里程计数据能够发送给 Linux；</li>
+<li><input disabled="" type="checkbox"> 能解释 PID 参数变化对系统的影响。</li>
+</ul>
+<h3 id="87-常见误区">8.7 常见误区</h3>
+<ul>
+<li><strong>车轮悬空时调好 PID 就结束。</strong> 落地负载不同，需要重新验证。</li>
+<li><strong>只看“能不能跟上”，不记录曲线。</strong> 调参必须同时记录目标值、实际值和控制输出。</li>
+<li><strong>单位混乱。</strong> 统一使用秒、米、弧度等单位，并在协议中明确。</li>
+<li><strong>忽略方向约定。</strong> 左右轮、编码器和坐标轴方向必须在文档中定义。</li>
+<li><strong>控制失联后保持最后速度。</strong> 机器人必须有命令超时停车和独立安全保护。</li>
+<li><strong>过早进入 FOC。</strong> 先把编码器、采样、PID、限幅和故障保护做扎实。</li>
+</ul>
+<h3 id="88-进阶电机控制文档">8.8 进阶电机控制文档</h3>
+<p>不要一开始直接进入 FOC。先掌握直流电机、编码器和 PID，再考虑 BLDC/PMSM。</p>
+<ul>
+<li><a href="https://www.st.com/content/st_com/en/ecosystems/stm32-motor-control-ecosystem.html">STM32 Motor Control Ecosystem</a></li>
+<li><a href="https://www.st.com/content/st_com/en/support/learning/stm32-moocs/Motor-Control-Part-5-STM32-Field-Oriented-motor-control-training.html">STM32 FOC Motor Control Training</a></li>
+<li><a href="https://hades.mech.northwestern.edu/index.php/Modern_Robotics">Modern Robotics：原作者提供的教材、课程和软件</a></li>
+</ul>
+<p>《Modern Robotics》覆盖范围很广，不需要在本阶段从头读完。优先阅读与坐标变换、移动机器人运动学和控制相关的内容，再随着项目深入查阅。</p>
+<hr>
+<h2 id="9-第七阶段ros-2ros2control-与-micro-ros">9. 第七阶段：ROS 2、ros2_control 与 micro-ROS</h2>
+<h3 id="91-这一阶段要解决什么问题">9.1 这一阶段要解决什么问题</h3>
+<p>当机器人软件只有一个程序时，读取传感器和控制电机可以写在一起。功能增加后，定位、控制、可视化和日志需要独立开发。ROS 2 提供统一的通信、配置和工具，让这些模块能够分开运行。</p>
+<p>ROS 2 不负责替代 STM32 的硬实时控制。推荐边界是：</p>
+<ul>
+<li>STM32：电机闭环、编码器、IMU 原始采集、安全保护；</li>
+<li>Linux/ROS 2：速度指令、机器人模型、里程计发布、诊断和高层算法。</li>
+</ul>
+<h3 id="92-ros-2-学习内容">9.2 ROS 2 学习内容</h3>
+<ul>
+<li>Workspace、Package 和 <code>colcon</code>；</li>
+<li>Node、Topic、Service、Action；</li>
+<li>Message、参数和 Launch；</li>
+<li>QoS、Lifecycle 和 Executor；</li>
+<li>TF2 坐标树；</li>
+<li>URDF/Xacro；</li>
+<li>RViz、rosbag；</li>
+<li>C++ ROS 2 节点；</li>
+<li>仿真环境；</li>
+<li><code>ros2_control</code>；</li>
+<li>自定义硬件接口。</li>
+</ul>
+<h3 id="93-七周执行安排">9.3 七周执行安排</h3>
+<table>
+<thead>
+<tr>
+<th>周次</th>
+<th>重点</th>
+<th>当周必须完成的实验</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 46 周</td>
+<td>ROS 2 基础</td>
+<td>创建工作区；运行节点；理解 Topic、Service、Action</td>
+</tr>
+<tr>
+<td>第 47 周</td>
+<td>C++ 节点与 Launch</td>
+<td>编写发布/订阅节点；参数化；使用 Launch 启动</td>
+</tr>
+<tr>
+<td>第 48 周</td>
+<td>TF2、URDF、RViz</td>
+<td>建立机器人模型和坐标树并可视化</td>
+</tr>
+<tr>
+<td>第 49 周</td>
+<td>QoS、rosbag、诊断</td>
+<td>模拟丢包；记录并回放问题；发布诊断状态</td>
+</tr>
+<tr>
+<td>第 50 周</td>
+<td>仿真与 ros2_control</td>
+<td>在仿真中运行差速控制器</td>
+</tr>
+<tr>
+<td>第 51 周</td>
+<td>硬件接口</td>
+<td>将左右轮命令和状态映射到 STM32 通信协议</td>
+</tr>
+<tr>
+<td>第 52 周</td>
+<td>系统集成</td>
+<td>实机运行；评估 micro-ROS 是否确有必要</td>
+</tr>
+</tbody></table>
+<h3 id="94-推荐顺序">9.4 推荐顺序</h3>
+<ol>
+<li>在 Linux PC 或开发板上完成 ROS 2 初学教程；</li>
+<li>使用模拟节点完成 Topic、Service 和 Action；</li>
+<li>学习 TF2、URDF 和 RViz；</li>
+<li>在仿真中运行差速机器人；</li>
+<li>学习 <code>ros2_control</code>；</li>
+<li>编写 Linux 到 STM32 的硬件接口；</li>
+<li>最后再评估是否使用 micro-ROS。</li>
+</ol>
+<p>micro-ROS 不是入门 ROS 2 的替代品。先理解 ROS 2，再将其运行时能力扩展到 FreeRTOS/STM32。</p>
+<h3 id="95-阶段项目ros-2-硬件接口">9.5 阶段项目：ROS 2 硬件接口</h3>
+<p>Linux/ROS 2 端负责：</p>
+<ul>
+<li>接收 <code>/cmd_vel</code>；</li>
+<li>转换为左右轮速度指令；</li>
+<li>通过 UART 或 CAN 发送给 STM32；</li>
+<li>读取编码器和 IMU 数据；</li>
+<li>发布里程计和诊断信息；</li>
+<li>对通信中断和 STM32 故障进行告警。</li>
+</ul>
+<p>STM32 端继续独立负责实时闭环控制；不要把硬实时 PID 循环放到普通 Linux ROS 节点中。</p>
+<h3 id="96-验收标准">9.6 验收标准</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 能解释 Topic、Service 和 Action 的适用场景；</li>
+<li><input disabled="" type="checkbox"> 能正确建立 <code>base_link</code>、轮子和传感器坐标系；</li>
+<li><input disabled="" type="checkbox"> 能使用 RViz 查看机器人状态；</li>
+<li><input disabled="" type="checkbox"> 能使用 rosbag 记录并回放问题；</li>
+<li><input disabled="" type="checkbox"> 能实现 <code>ros2_control</code> 硬件接口；</li>
+<li><input disabled="" type="checkbox"> Linux/ROS 2 异常退出时 STM32 仍会安全停车。</li>
+</ul>
+<h3 id="97-常见误区">9.7 常见误区</h3>
+<ul>
+<li><strong>把 ROS 2 当作操作系统。</strong> 它是运行在 Linux 等系统上的机器人软件框架。</li>
+<li><strong>每条数据都使用可靠 QoS。</strong> 传感器高频数据和关键控制命令可能需要不同策略。</li>
+<li><strong>先上实机再学 TF2。</strong> 坐标系错误会让里程计、传感器和可视化全部混乱。</li>
+<li><strong>把 PID 放到普通 ROS 2 节点。</strong> 普通 Linux 不保证微秒级确定性，底层闭环仍放在 STM32。</li>
+<li><strong>为了“技术先进”强行使用 micro-ROS。</strong> 简单稳定的自定义 UART/CAN 协议也可能更适合项目。</li>
+</ul>
+<h3 id="98-学习文档">9.8 学习文档</h3>
+<ul>
+<li><a href="https://docs.ros.org/">ROS 2 官方文档</a></li>
+<li><a href="https://docs.ros.org/en/humble/Releases.html">ROS 2 当前发行版列表</a></li>
+<li><a href="https://docs.ros.org/en/rolling/Tutorials.html">ROS 2 Tutorials</a></li>
+<li><a href="https://control.ros.org/jazzy/doc/getting_started/getting_started.html">ros2_control 入门</a></li>
+<li><a href="https://control.ros.org/jazzy/doc/api/index.html">ros2_control API</a></li>
+<li><a href="https://micro.vulcanexus.org/docs/tutorials/">micro-ROS 教程总览</a></li>
+<li><a href="https://micro.vulcanexus.org/docs/tutorials/core/first_application_rtos/">第一个 micro-ROS RTOS 应用</a></li>
+<li><a href="https://github.com/micro-ROS/freertos_apps">micro-ROS FreeRTOS 示例</a></li>
+</ul>
+<p>选择 ROS 2 发行版时，应确认目标 Ubuntu 版本、开发板架构和所需软件包是否匹配，不要只根据“最新版本”选择。</p>
+<hr>
+<h2 id="10-综合毕业项目">10. 综合毕业项目</h2>
+<h3 id="101-推荐项目">10.1 推荐项目</h3>
+<p>完成一台 STM32 + 嵌入式 Linux + ROS 2 的差速机器人。</p>
+<pre><code class="language-text">Linux 主控
+├── ROS 2
+├── ros2_control
+├── 机器人模型与坐标系
+├── 运动命令
+├── 里程计与诊断
+├── 日志与可视化
+└── UART/CAN 通信
+          │
+          ▼
+STM32 控制板
+├── FreeRTOS
+├── 电机闭环控制
+├── 编码器
+├── IMU
+├── 参数存储
+├── 看门狗
+├── 故障保护
+└── Bootloader
+</code></pre>
+<h3 id="102-八周执行安排">10.2 八周执行安排</h3>
+<table>
+<thead>
+<tr>
+<th>周次</th>
+<th>重点</th>
+<th>当周必须完成的成果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 53 周</td>
+<td>系统设计</td>
+<td>画出架构、接口、坐标系和安全状态；冻结第一版通信协议</td>
+</tr>
+<tr>
+<td>第 54 周</td>
+<td>STM32 底盘完善</td>
+<td>完成双轮闭环、命令超时、看门狗和诊断数据</td>
+</tr>
+<tr>
+<td>第 55 周</td>
+<td>Linux 通信层</td>
+<td>使用 Python 模拟器和实机分别验证收发、重连和错误处理</td>
+</tr>
+<tr>
+<td>第 56 周</td>
+<td>ROS 2 硬件接口</td>
+<td>接通 <code>/cmd_vel</code>、轮速状态、里程计和诊断 Topic</td>
+</tr>
+<tr>
+<td>第 57 周</td>
+<td>实机运动测试</td>
+<td>低速完成直行、旋转、停止，记录速度和控制曲线</td>
+</tr>
+<tr>
+<td>第 58 周</td>
+<td>故障注入</td>
+<td>测试断线、错误帧、任务卡死、传感器异常和升级中断</td>
+</tr>
+<tr>
+<td>第 59 周</td>
+<td>重建与文档</td>
+<td>从干净环境重新构建；补齐接线、编译、协议和测试说明</td>
+</tr>
+<tr>
+<td>第 60 周</td>
+<td>作品集交付</td>
+<td>整理仓库、架构图、测试报告和演示视频，记录已知限制</td>
+</tr>
+</tbody></table>
+<h3 id="103-推荐集成顺序">10.3 推荐集成顺序</h3>
+<p>不要把全部硬件和软件同时接起来再调试。按照下面的顺序，每一步通过测试后再增加下一层：</p>
+<ol>
+<li><strong>PC 模拟 STM32</strong>：Python 模拟底盘协议，先调通 Linux/ROS 2 端；</li>
+<li><strong>STM32 无电机测试</strong>：使用虚拟编码器数据，验证通信和任务架构；</li>
+<li><strong>单电机悬空测试</strong>：验证方向、编码器、限幅和急停；</li>
+<li><strong>双电机悬空测试</strong>：验证左右轮单位与同步控制；</li>
+<li><strong>底盘落地测试</strong>：低速验证直行、旋转和停车；</li>
+<li><strong>接入 Linux 通信服务</strong>：先只发送固定速度命令；</li>
+<li><strong>接入 ROS 2 硬件接口</strong>：验证 <code>/cmd_vel</code>、轮速和里程计；</li>
+<li><strong>最后增加 IMU、诊断、升级等功能</strong>。</li>
+</ol>
+<p>每增加一层，都保留上一层的独立测试方法。实机出现问题时，便可以快速判断故障位于硬件、STM32、通信、Linux 还是 ROS 2。</p>
+<h3 id="104-必须实现">10.4 必须实现</h3>
+<ul>
+<li>STM32 固定周期电机闭环控制；</li>
+<li>编码器和 IMU 采集；</li>
+<li>UART 或 CAN 可靠通信协议；</li>
+<li>通信超时安全停车；</li>
+<li>Linux 自定义系统或可复现部署；</li>
+<li>ROS 2 硬件接口；</li>
+<li>里程计和诊断信息发布；</li>
+<li>Bootloader 或可靠固件升级；</li>
+<li>Python 自动测试工具；</li>
+<li>完整架构、协议、测试和使用文档。</li>
+</ul>
+<h3 id="105-必测故障场景">10.5 必测故障场景</h3>
+<table>
+<thead>
+<tr>
+<th>故障</th>
+<th>预期行为</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Linux 主控程序退出</td>
+<td>STM32 在规定超时时间内停止电机</td>
+</tr>
+<tr>
+<td>UART/CAN 数据损坏</td>
+<td>丢弃错误帧、记录计数，不执行错误命令</td>
+</tr>
+<tr>
+<td>编码器断线或数据异常</td>
+<td>限制输出并上报故障</td>
+</tr>
+<tr>
+<td>IMU 无响应</td>
+<td>底盘基础控制仍可运行，诊断中标记降级</td>
+</tr>
+<tr>
+<td>FreeRTOS 关键任务卡死</td>
+<td>看门狗复位或进入安全状态</td>
+</tr>
+<tr>
+<td>固件升级中断</td>
+<td>不启动不完整固件，能够重新升级</td>
+</tr>
+<tr>
+<td>电池电压下降</td>
+<td>限制输出或安全关机，不能突然失控</td>
+</tr>
+<tr>
+<td>ROS 2 节点重启</td>
+<td>通信能够重新建立，旧命令不会继续生效</td>
+</tr>
+</tbody></table>
+<h3 id="106-加分项">10.6 加分项</h3>
+<ul>
+<li>硬件急停；</li>
+<li>电压、电流或温度监测；</li>
+<li>双分区固件升级；</li>
+<li>故障注入测试；</li>
+<li>自动化构建；</li>
+<li>单元测试和持续集成；</li>
+<li>rosbag 问题复现；</li>
+<li>控制周期抖动测量；</li>
+<li>简单定位或导航演示。</li>
+</ul>
+<h3 id="107-项目交付物">10.7 项目交付物</h3>
+<pre><code class="language-text">robot-project/
+├── firmware/
+├── bootloader/
+├── linux/
+├── ros2_ws/
+├── protocol/
+├── tools/
+├── tests/
+├── hardware/
+├── docs/
+├── README.md
+└── CHANGELOG.md
+</code></pre>
+<p>README 应至少包含：</p>
+<ul>
+<li>系统功能；</li>
+<li>硬件连接；</li>
+<li>软件架构；</li>
+<li>编译和烧录方法；</li>
+<li>通信协议；</li>
+<li>ROS 2 启动方法；</li>
+<li>测试方法；</li>
+<li>已知问题；</li>
+<li>演示图片或视频。</li>
+</ul>
+<h3 id="108-什么样的项目适合作品集">10.8 什么样的项目适合作品集</h3>
+<p>作品集不是代码越多越好。一个优秀项目应该让其他人能够回答：</p>
+<ul>
+<li>你解决了什么实际问题？</li>
+<li>STM32、Linux 和 ROS 2 为什么这样分工？</li>
+<li>通信协议怎样处理半包、错误和超时？</li>
+<li>实时控制周期是多少，如何测量？</li>
+<li>你遇到过哪些故障，怎样找到原因？</li>
+<li>怎样从干净环境编译、烧录和运行？</li>
+<li>哪些功能已经测试，哪些仍是已知限制？</li>
+</ul>
+<p>建议准备：</p>
+<ul>
+<li>一页系统架构图；</li>
+<li>一段 2～5 分钟演示视频；</li>
+<li>三张关键曲线或波形；</li>
+<li>一份通信协议；</li>
+<li>一份测试结果；</li>
+<li>三个最有代表性的故障排查记录。</li>
+</ul>
+<hr>
+<h2 id="11-每周学习安排">11. 每周学习安排</h2>
+<p>以每周 12～15 小时为例：</p>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th align="right">比例</th>
+<th align="right">每周时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>编程与项目</td>
+<td align="right">55%</td>
+<td align="right">7～8 小时</td>
+</tr>
+<tr>
+<td>官方文档和芯片手册</td>
+<td align="right">20%</td>
+<td align="right">2～3 小时</td>
+</tr>
+<tr>
+<td>调试与测试</td>
+<td align="right">15%</td>
+<td align="right">2 小时</td>
+</tr>
+<tr>
+<td>笔记与复盘</td>
+<td align="right">10%</td>
+<td align="right">1～2 小时</td>
+</tr>
+</tbody></table>
+<p>推荐节奏：</p>
+<ul>
+<li>周一：阅读原理和官方文档；</li>
+<li>周二：完成最小实验；</li>
+<li>周三：将实验集成进项目；</li>
+<li>周四：调试、测量和故障注入；</li>
+<li>周末：整理代码、测试、README 和复盘。</li>
+</ul>
+<p>每周必须留下至少一种可检查成果：</p>
+<ul>
+<li>一个可运行程序；</li>
+<li>一份测试结果；</li>
+<li>一张逻辑分析仪波形；</li>
+<li>一段调试记录；</li>
+<li>一次 Git 提交；</li>
+<li>一页学习笔记。</li>
+</ul>
+<hr>
+<h2 id="12-通用排错方法">12. 通用排错方法</h2>
+<h3 id="121-先判断问题属于哪一层">12.1 先判断问题属于哪一层</h3>
+<p>出现问题时，先不要大范围改代码。按层次缩小范围：</p>
+<pre><code class="language-text">电源/接线
+   ↓
+时钟/复位/引脚
+   ↓
+外设与中断
+   ↓
+驱动和协议
+   ↓
+FreeRTOS 任务
+   ↓
+Linux 应用/驱动
+   ↓
+ROS 2 配置与通信
+</code></pre>
+<p>例如 ROS 2 中看不到编码器数据，不要立即修改 ROS 2：</p>
+<ol>
+<li>用逻辑分析仪确认 STM32 是否真的发出数据；</li>
+<li>用串口工具确认 Linux 能否收到原始字节；</li>
+<li>单独测试 C++ 协议解析器；</li>
+<li>再检查 ROS 2 节点是否发布；</li>
+<li>最后检查 Topic 名称、QoS 和坐标系。</li>
+</ol>
+<h3 id="122-六步排错循环">12.2 六步排错循环</h3>
+<ol>
+<li><strong>写清现象</strong>：实际发生了什么，不要只写“程序不工作”；</li>
+<li><strong>确定复现条件</strong>：每次发生还是偶尔发生，和速度、时间、负载是否有关；</li>
+<li><strong>收集证据</strong>：日志、寄存器、波形、调用栈、错误码；</li>
+<li><strong>提出一个假设</strong>：一次只验证一个可能原因；</li>
+<li><strong>做最小实验</strong>：删除无关功能或替换为模拟数据；</li>
+<li><strong>加入回归测试</strong>：修复后确保同类问题不会再次出现。</li>
+</ol>
+<h3 id="123-常见症状检查表">12.3 常见症状检查表</h3>
+<table>
+<thead>
+<tr>
+<th>症状</th>
+<th>优先检查</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MCU 完全不运行</td>
+<td>电源、复位、Boot 引脚、时钟、烧录地址</td>
+</tr>
+<tr>
+<td>偶发 HardFault</td>
+<td>栈溢出、野指针、数组越界、错误函数指针</td>
+</tr>
+<tr>
+<td>串口偶尔丢数据</td>
+<td>阻塞处理、缓冲区满、DMA 所有权、波特率误差</td>
+</tr>
+<tr>
+<td>FreeRTOS 运行一段时间死机</td>
+<td>任务栈、堆、死锁、优先级、看门狗喂法</td>
+</tr>
+<tr>
+<td>电机速度振荡</td>
+<td>采样周期、PID 参数、编码器噪声、输出饱和</td>
+</tr>
+<tr>
+<td>Linux 驱动不执行 <code>probe()</code></td>
+<td>compatible、设备树状态、总线匹配、内核配置</td>
+</tr>
+<tr>
+<td>ROS 2 有节点但没有数据</td>
+<td>Topic 名称、QoS、Domain ID、时间和网络配置</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="13-学习记录与项目模板">13. 学习记录与项目模板</h2>
+<h3 id="131-每周复盘模板">13.1 每周复盘模板</h3>
+<pre><code class="language-markdown"># 第 X 周复盘
+
+## 本周目标
+-
+
+## 完成的实验
+- 实验：
+- 结果：
+- 证据：日志、截图、波形或测试输出
+
+## 遇到的问题
+- 现象：
+- 复现步骤：
+- 根因：
+- 修复：
+
+## 仍未理解
+-
+
+## 下周计划
+-
+</code></pre>
+<h3 id="132-驱动设计模板">13.2 驱动设计模板</h3>
+<p>编写驱动前先回答：</p>
+<ul>
+<li>驱动负责什么，不负责什么？</li>
+<li>初始化、读取、写入和停止接口是什么？</li>
+<li>超时时间由谁决定？</li>
+<li>可以在哪些上下文调用：任务、中断还是两者？</li>
+<li>多任务调用时是否安全？</li>
+<li>硬件断开或返回错误时怎样处理？</li>
+<li>怎样在没有真实硬件时测试上层逻辑？</li>
+</ul>
+<h3 id="133-通信协议最小要素">13.3 通信协议最小要素</h3>
+<p>一个可靠的 STM32—Linux 协议至少说明：</p>
+<ul>
+<li>帧头或同步方法；</li>
+<li>消息类型；</li>
+<li>数据长度；</li>
+<li>序号；</li>
+<li>负载字节序和单位；</li>
+<li>CRC 或校验；</li>
+<li>超时；</li>
+<li>错误码；</li>
+<li>版本兼容策略。</li>
+</ul>
+<p>示例结构：</p>
+<pre><code class="language-text">帧头 | 版本 | 消息类型 | 序号 | 长度 | 负载 | CRC
+</code></pre>
+<h3 id="134-完成定义">13.4 完成定义</h3>
+<p>每个功能同时满足以下条件，才算真正完成：</p>
+<ul>
+<li>正常路径可以运行；</li>
+<li>至少一个错误路径经过测试；</li>
+<li>有日志、波形或测试输出作为证据；</li>
+<li>代码已经整理并提交 Git；</li>
+<li>README 或笔记说明了使用方法；</li>
+<li>换一台电脑或重新拉取仓库后仍能构建。</li>
+</ul>
+<hr>
+<h2 id="14-python-在路线中的定位">14. Python 在路线中的定位</h2>
+<p>Python 不需要放弃，但主要作为工程工具：</p>
+<ul>
+<li>串口和 CAN 测试工具；</li>
+<li>协议模拟器；</li>
+<li>固件打包工具；</li>
+<li>日志解析和绘图；</li>
+<li>自动化烧录；</li>
+<li>硬件在环测试；</li>
+<li>ROS 2 快速验证节点；</li>
+<li>数据标定和参数分析。</li>
+</ul>
+<p>实时电机控制、底层驱动和资源受限固件仍以 C/C++ 为主。</p>
+<hr>
+<h2 id="15-学习原则">15. 学习原则</h2>
+<h3 id="应该做">应该做</h3>
+<ul>
+<li>先看数据手册和官方文档，再查教程；</li>
+<li>每学一个模块都放进实际项目；</li>
+<li>主动制造错误并练习定位；</li>
+<li>使用示波器或逻辑分析仪验证硬件现象；</li>
+<li>为通信、状态机和算法编写主机端测试；</li>
+<li>保留项目架构、协议、测试和复盘文档；</li>
+<li>学会解释为什么这样设计。</li>
+</ul>
+<h3 id="避免">避免</h3>
+<ul>
+<li>不断购买开发板但没有完整项目；</li>
+<li>只会使用 CubeMX/HAL 生成代码；</li>
+<li>同时学习多个 RTOS；</li>
+<li>跳过 Linux 基础直接写内核驱动；</li>
+<li>不懂 ROS 2 就直接移植 micro-ROS；</li>
+<li>一开始直接进入 SLAM、导航或 FOC；</li>
+<li>只看视频，不写代码、不测试、不整理文档。</li>
+</ul>
+<hr>
+<h2 id="16-阶段性能力检查">16. 阶段性能力检查</h2>
+<h3 id="stm32rtos-合格线">STM32/RTOS 合格线</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 可以独立编写和调试外设驱动；</li>
+<li><input disabled="" type="checkbox"> 可以解释中断、DMA、栈和内存布局；</li>
+<li><input disabled="" type="checkbox"> 可以设计 FreeRTOS 任务和通信关系；</li>
+<li><input disabled="" type="checkbox"> 可以定位 HardFault、竞态和栈溢出；</li>
+<li><input disabled="" type="checkbox"> 可以完成 Bootloader 和自动测试工具。</li>
+</ul>
+<h3 id="嵌入式-linux-合格线">嵌入式 Linux 合格线</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 可以交叉编译 C/C++ 程序；</li>
+<li><input disabled="" type="checkbox"> 可以构建最小 Linux 系统；</li>
+<li><input disabled="" type="checkbox"> 可以修改设备树；</li>
+<li><input disabled="" type="checkbox"> 可以构建和调试内核模块；</li>
+<li><input disabled="" type="checkbox"> 可以将自研程序加入系统镜像。</li>
+</ul>
+<h3 id="机器人方向合格线">机器人方向合格线</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 可以实现电机闭环调速；</li>
+<li><input disabled="" type="checkbox"> 可以读取编码器和 IMU；</li>
+<li><input disabled="" type="checkbox"> 可以计算差速底盘里程计；</li>
+<li><input disabled="" type="checkbox"> 可以连接 STM32 与 ROS 2；</li>
+<li><input disabled="" type="checkbox"> 可以实现安全停车和故障诊断；</li>
+<li><input disabled="" type="checkbox"> 可以交付一套可复现的完整机器人项目。</li>
+</ul>
+<hr>
+<h2 id="17-文档索引">17. 文档索引</h2>
+<h3 id="stm32-与-cortex-m">STM32 与 Cortex-M</h3>
+<ul>
+<li><a href="https://www.st.com/content/st_com/en/stm32-mcu-developer-zone.html">STM32 Developer Zone</a></li>
+<li><a href="https://www.st.com/content/st_com/en/support/learning/stm32-moocs.html">STM32 MOOCs</a></li>
+<li><a href="https://www.st.com/resource/en/user_manual/um2553-stm32cubeide-quick-start-guide-stmicroelectronics.pdf">STM32CubeIDE Quick Start</a></li>
+<li><a href="https://arm-software.github.io/CMSIS_6/latest/Core/index.html">CMSIS-Core</a></li>
+<li><a href="https://www.st.com/content/st_com/en/stm32cubeprogrammer.html">STM32CubeProgrammer</a></li>
+<li><a href="https://www.st.com/en/development-tools/stm32cubemonitor.html">STM32CubeMonitor</a></li>
+</ul>
+<h3 id="freertos">FreeRTOS</h3>
+<ul>
+<li><a href="https://freertos.org/Documentation/01-FreeRTOS-quick-start/01-Beginners-guide/00-Overview">FreeRTOS Beginner&#39;s Guide</a></li>
+<li><a href="https://docs.freertos.org/">FreeRTOS Documentation</a></li>
+<li><a href="https://www.st.com/content/st_com/en/support/learning/stm32-moocs/FreeRTOS_on_STM32_MOOC.html">FreeRTOS on STM32 MOOC</a></li>
+<li><a href="https://www.st.com/resource/en/user_manual/um1722-developing-applications-on-stm32cube-with-rtos-stmicroelectronics.pdf">Developing STM32Cube Applications with RTOS</a></li>
+</ul>
+<h3 id="构建与调试">构建与调试</h3>
+<ul>
+<li><a href="https://git-scm.com/book/en/v2">Git Book</a></li>
+<li><a href="https://cmake.org/cmake/help/latest/guide/tutorial/">CMake Tutorial</a></li>
+<li><a href="https://sourceware.org/gdb/current/onlinedocs/gdb">GDB Documentation</a></li>
+<li><a href="https://sourceware.org/gdb/current/onlinedocs/gdb.html/Remote-Debugging.html">GDB Remote Debugging</a></li>
+<li><a href="https://openocd.org/doc/html/index.html">OpenOCD User&#39;s Guide</a></li>
+</ul>
+<h3 id="linux-与-c">Linux 与 C++</h3>
+<ul>
+<li><a href="https://documentation.ubuntu.com/desktop/en/latest/tutorial/the-linux-command-line-for-beginners/">Ubuntu Command Line for Beginners</a></li>
+<li><a href="https://www.kernel.org/doc/man-pages/">Linux man-pages</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/language">C++ Language Reference</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/language/raii">C++ RAII</a></li>
+<li><a href="https://en.cppreference.com/w/cpp/thread">C++ Concurrency</a></li>
+</ul>
+<h3 id="嵌入式-linux">嵌入式 Linux</h3>
+<ul>
+<li><a href="https://docs.u-boot.org/en/latest/">U-Boot Documentation</a></li>
+<li><a href="https://buildroot.org/downloads/manual/manual.html">Buildroot Manual</a></li>
+<li><a href="https://docs.yoctoproject.org/current/">Yocto Project Documentation</a></li>
+<li><a href="https://docs.kernel.org/">Linux Kernel Documentation</a></li>
+<li><a href="https://docs.kernel.org/devicetree/usage-model.html">Linux and Device Tree</a></li>
+<li><a href="https://docs.kernel.org/kbuild/modules.html">Building External Kernel Modules</a></li>
+</ul>
+<h3 id="机器人与-ros-2">机器人与 ROS 2</h3>
+<ul>
+<li><a href="https://docs.ros.org/">ROS 2 Documentation</a></li>
+<li><a href="https://docs.ros.org/en/humble/Releases.html">ROS 2 Distributions</a></li>
+<li><a href="https://docs.ros.org/en/rolling/Tutorials.html">ROS 2 Tutorials</a></li>
+<li><a href="https://control.ros.org/jazzy/doc/getting_started/getting_started.html">ros2_control Getting Started</a></li>
+<li><a href="https://micro.vulcanexus.org/docs/tutorials/">micro-ROS Tutorials</a></li>
+<li><a href="https://micro.vulcanexus.org/docs/tutorials/core/first_application_rtos/">First micro-ROS Application on an RTOS</a></li>
+<li><a href="https://github.com/micro-ROS/freertos_apps">micro-ROS FreeRTOS Examples</a></li>
+<li><a href="https://www.st.com/content/st_com/en/ecosystems/stm32-motor-control-ecosystem.html">STM32 Motor Control Ecosystem</a></li>
+<li><a href="https://hades.mech.northwestern.edu/index.php/Modern_Robotics">Modern Robotics</a></li>
+</ul>
+</div>
+      <nav class="article-navigation" aria-label="文章导航"><a href="../posts/radar-principles-study-summary.html">下一篇：雷达原理两书学习总结（零基础详细版）</a></nav>
+      <nav class="related-posts" aria-label="相关文章"><ol><li><a href="../posts/linux-driver-char-device.html">嵌入式 Linux 驱动开发入门：从字符设备到设备树</a></li><li><a href="../posts/stm32-baremetal-scheduler.html">STM32 裸机多任务调度框架设计与实践</a></li><li><a href="../posts/mpu6050-attitude-solution.html">MPU6050 姿态解算：四元数与卡尔曼滤波实战</a></li></ol></nav>
+    </article>
+    </article>
+  </main>
+  <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+</body>
+</html>

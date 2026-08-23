@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>嵌入式 Linux 驱动开发入门：从字符设备到设备树 · Infighting</title>
+  <script src="../assets/js/theme.js"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-shell glass-surface">
+      <a class="brand" href="../index.html" aria-label="Infighting 首页">
+        <span class="logo" aria-hidden="true">&gt;_</span>
+        <span class="brand-copy">Infighting<small>嵌入式 × 边缘计算</small></span>
+      </a>
+      <div class="nav-actions">
+        <nav class="site-nav" aria-label="主导航">
+          <a href="../index.html">首页</a>
+          <a href="../tags.html">标签</a>
+          <a href="../archive.html">精选归档</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换到浅色主题" aria-pressed="false">
+          <span class="theme-icon theme-icon-sun" aria-hidden="true">☼</span>
+          <span class="theme-icon theme-icon-moon" aria-hidden="true">☾</span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
+    <article class="article glass-surface">
+      <header class="article-header">
+        <h1>嵌入式 Linux 驱动开发入门：从字符设备到设备树</h1>
+        <div class="post-meta"><span>2025-06-08</span><a class="tag" href="../tags.html?tag=%E5%B5%8C%E5%85%A5%E5%BC%8FLinux">嵌入式Linux</a><a class="tag" href="../tags.html?tag=RK3588">RK3588</a><a class="tag" href="../tags.html?tag=%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91">驱动开发</a></div>
+      </header>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#最小字符设备骨架">最小字符设备骨架</a></li><li class="article-toc-level-2"><a href="#设备树硬件描述与驱动分离">设备树：硬件描述与驱动分离</a></li><li class="article-toc-level-2"><a href="#调试技巧">调试技巧</a></li><li class="article-toc-level-2"><a href="#单片机思维-vs-linux-思维">单片机思维 vs Linux 思维</a></li></ol></nav>
+      <div class="article-body"><p>最近在学 RK3588 平台的 Linux 驱动开发。相比单片机直接操作寄存器，Linux 驱动多了一层&quot;规矩&quot;，但这层规矩让硬件管理变得可维护。本文用最小例子走通字符设备全流程。</p>
+<h2 id="最小字符设备骨架">最小字符设备骨架</h2>
+<pre><code class="language-c">#include &lt;linux/module.h&gt;
+#include &lt;linux/fs.h&gt;
+#include &lt;linux/cdev.h&gt;
+#include &lt;linux/device.h&gt;
+
+#define DEV_NAME &quot;myedge_dev&quot;
+
+static int major;
+static struct class *my_class;
+static struct cdev my_cdev;
+
+static int my_open(struct inode *inode, struct file *filp)
+{
+    pr_info(&quot;myedge: device opened\n&quot;);
+    return 0;
+}
+
+static ssize_t my_read(struct file *filp, char __user *buf,
+                       size_t count, loff_t *ppos)
+{
+    char msg[] = &quot;hello from kernel\n&quot;;
+    return simple_read_from_buffer(buf, count, ppos, msg, sizeof(msg));
+}
+
+static struct file_operations fops = {
+    .owner = THIS_MODULE,
+    .open  = my_open,
+    .read  = my_read,
+};
+
+static int __init my_init(void)
+{
+    dev_t devno;
+    alloc_chrdev_region(&amp;devno, 0, 1, DEV_NAME);
+    major = MAJOR(devno);
+
+    cdev_init(&amp;my_cdev, &amp;fops);
+    cdev_add(&amp;my_cdev, devno, 1);
+
+    // 自动创建 /dev 节点，不需要手动 mknod
+    my_class = class_create(DEV_NAME);
+    device_create(my_class, NULL, devno, NULL, DEV_NAME);
+
+    pr_info(&quot;myedge: loaded, major=%d\n&quot;, major);
+    return 0;
+}
+
+static void __exit my_exit(void)
+{
+    dev_t devno = MKDEV(major, 0);
+    device_destroy(my_class, devno);
+    class_destroy(my_class);
+    cdev_del(&amp;my_cdev);
+    unregister_chrdev_region(devno, 1);
+}
+
+module_init(my_init);
+module_exit(my_exit);
+MODULE_LICENSE(&quot;GPL&quot;);
+</code></pre>
+<p>Makefile：</p>
+<pre><code class="language-makefile">obj-m += myedge.o
+KDIR := /path/to/rk3588/kernel
+PWD  := $(shell pwd)
+
+all:
+	make -C $(KDIR) M=$(PWD) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules
+</code></pre>
+<h2 id="设备树硬件描述与驱动分离">设备树：硬件描述与驱动分离</h2>
+<p>驱动里不应硬编码 GPIO 编号，资源由设备树描述：</p>
+<pre><code class="language-dts">myedge {
+    compatible = &quot;shiyikun,myedge&quot;;
+    led-gpios = &lt;&amp;gpio3 RK_PC5 GPIO_ACTIVE_HIGH&gt;;
+    status = &quot;okay&quot;;
+};
+</code></pre>
+<p>驱动侧通过 <code>of</code> API 获取资源：</p>
+<pre><code class="language-c">static int my_probe(struct platform_device *pdev)
+{
+    struct device_node *np = pdev-&gt;dev.of_node;
+    int gpio;
+
+    gpio = of_get_named_gpio(np, &quot;led-gpios&quot;, 0);
+    if (!gpio_is_valid(gpio)) {
+        dev_err(&amp;pdev-&gt;dev, &quot;invalid led-gpios\n&quot;);
+        return -EINVAL;
+    }
+
+    gpio_request(gpio, &quot;myedge_led&quot;);
+    gpio_direction_output(gpio, 0);
+    return 0;
+}
+
+static const struct of_device_id my_of_match[] = {
+    { .compatible = &quot;shiyikun,myedge&quot; },
+    { /* sentinel */ }
+};
+MODULE_DEVICE_TABLE(of, my_of_match);
+</code></pre>
+<p><code>compatible</code> 字符串是设备树节点与驱动匹配的唯一纽带——这个名字必须两边完全一致。</p>
+<h2 id="调试技巧">调试技巧</h2>
+<ul>
+<li><code>dmesg -w</code> 实时看 <code>pr_info</code> 输出</li>
+<li><code>cat /proc/device-tree/myedge/status</code> 确认节点已启用</li>
+<li><code>ls /sys/class/myedge_dev</code> 确认 class 创建成功</li>
+</ul>
+<h2 id="单片机思维-vs-linux-思维">单片机思维 vs Linux 思维</h2>
+<p>最大的转变是：单片机里&quot;我的程序拥有整个硬件&quot;，Linux 里&quot;内核统一管理硬件，驱动只是服务员&quot;。理解了这层边界，pinmux、时钟、电源域这些概念就都顺了。下一步计划写一个 I2C 子系统下的传感器驱动。</p>
+</div>
+      <nav class="article-navigation" aria-label="文章导航"><a href="../posts/radar-principles-study-summary.html">上一篇：雷达原理两书学习总结（零基础详细版）</a><a href="../posts/stm32-baremetal-scheduler.html">下一篇：STM32 裸机多任务调度框架设计与实践</a></nav>
+      <nav class="related-posts" aria-label="相关文章"><ol><li><a href="../posts/embedded-robotics-learning-roadmap.html">嵌入式与机器人学习路线</a></li></ol></nav>
+    </article>
+    </article>
+  </main>
+  <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+</body>
+</html>
