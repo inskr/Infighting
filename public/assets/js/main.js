@@ -127,7 +127,7 @@
   function initReveal() {
     if (!("IntersectionObserver" in window)) return;
     var targets = document.querySelectorAll(
-      ".hero, .page-intro, .post-card, .about-card, .article, .board, .tag-cloud, .archive-day"
+      ".hero, .page-intro, .post-card, .article, .board, .tag-cloud, .archive-day"
     );
     targets.forEach(function (el, i) {
       el.classList.add("reveal");
@@ -555,10 +555,6 @@
     setActiveNav("tags");
   }
 
-  function initAbout() {
-    if (document.querySelector(".about-grid")) setActiveNav("about");
-  }
-
   /* ---------- 点赞事件委托（全局仅绑定一次） ---------- */
   function initLikeDelegation() {
     if (!window.Stats) return;
@@ -637,7 +633,6 @@
     }
     renderTags();
     renderArchive();
-    initAbout();
     initReveal();
   }
 

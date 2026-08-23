@@ -36,6 +36,13 @@ test('pointer movement updates CSS coordinates on the real glass surface target'
       return { matches: false };
     },
     document: {
+      documentElement: {
+        style: {
+          setProperty(name, value) {
+            values[name] = value;
+          },
+        },
+      },
       addEventListener(name, handler) {
         listeners[name] = handler;
       },
@@ -52,6 +59,8 @@ test('pointer movement updates CSS coordinates on the real glass surface target'
 
   assert.equal(values['--pointer-x'], '25%');
   assert.equal(values['--pointer-y'], '25%');
+  assert.equal(values['--ambient-x'], '150px');
+  assert.equal(values['--ambient-y'], '75px');
 });
 
 test('touch pointer movement does not update spotlight coordinates', () => {

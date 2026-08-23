@@ -59,7 +59,7 @@ function createStaticServer() {
 test('published pages bootstrap theme before CSS and expose the shared navigation controls', async () => {
   const { server, baseUrl } = await createStaticServer();
   try {
-    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html', 'about.html']) {
+    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html']) {
       const response = await fetch(`${baseUrl}/${page}`);
       assert.equal(response.status, 200, page);
       const html = await response.text();
@@ -74,16 +74,52 @@ test('published pages bootstrap theme before CSS and expose the shared navigatio
   }
 });
 
+test('published pages declare a shared favicon that is served successfully', async () => {
+  const { server, baseUrl } = await createStaticServer();
+  try {
+    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html']) {
+      const response = await fetch(`${baseUrl}/${page}`);
+      const html = await response.text();
+      assert.match(html, /<link rel="icon" href="favicon\.svg" type="image\/svg\+xml">/, page);
+    }
+
+    const icon = await fetch(`${baseUrl}/favicon.svg`);
+    assert.equal(icon.status, 200);
+    assert.match(icon.headers.get('content-type') || '', /image\/svg\+xml/);
+    assert.ok((await icon.text()).length > 0);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('the retired about page is unavailable and no published navigation links to it', async () => {
+  const { server, baseUrl } = await createStaticServer();
+  try {
+    const retired = await fetch(`${baseUrl}/about.html`);
+    assert.equal(retired.status, 404);
+
+    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html']) {
+      const response = await fetch(`${baseUrl}/${page}`);
+      assert.equal(response.status, 200, page);
+      const html = await response.text();
+      assert.doesNotMatch(html, /href="about\.html"/i, page);
+      assert.doesNotMatch(html, /data-nav="about"/i, page);
+    }
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test('published pages load only their page-specific resources and share the acknowledgement', async () => {
   const { server, baseUrl } = await createStaticServer();
   try {
-    const pageNames = ['index.html', 'tags.html', 'archive.html', 'post.html', 'about.html'];
+    const pageNames = ['index.html', 'tags.html', 'archive.html', 'post.html'];
     const pages = await Promise.all(pageNames.map(async (page) => {
       const response = await fetch(`${baseUrl}/${page}`);
       assert.equal(response.status, 200, page);
       return response.text();
     }));
-    const [home, tags, archive, post, about] = pages;
+    const [home, tags, archive, post] = pages;
 
     assert.match(home, /<picture class="hero-media">/);
     assert.match(home, /type="image\/avif"/);
@@ -96,10 +132,9 @@ test('published pages load only their page-specific resources and share the ackn
     assert.match(post, /assets\/js\/post-view\.js/);
     assert.ok(post.indexOf('assets/js/post-loader.js') < post.indexOf('assets/js/post-view.js'));
     assert.ok(post.indexOf('assets/js/post-view.js') < post.indexOf('assets/js/main.js'));
-    assert.doesNotMatch(about, /posts-index\.js/);
     assert.doesNotMatch(archive, /posts-index\.js/);
 
-    for (const html of [home, tags, archive, about]) {
+    for (const html of [home, tags, archive]) {
       assert.doesNotMatch(html, /assets\/js\/post-(?:loader|view)\.js/);
     }
 
@@ -147,6 +182,39 @@ test('published homepage serves the supplied image through an accessible Hero', 
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+});
+
+test('homepage publishes an editorial issue rail and a labelled stories region', async () => {
+  const { server, baseUrl } = await createStaticServer();
+  try {
+    const response = await fetch(`${baseUrl}/index.html`);
+    assert.equal(response.status, 200);
+    const html = await response.text();
+
+    assert.match(html, /<aside class="hero-rail" aria-label="本期信息">/);
+    assert.match(html, /<span class="rail-label">Issue<\/span>/);
+    assert.match(html, /<span class="rail-label">Focus<\/span>/);
+    assert.match(html, /<section class="posts-section" aria-labelledby="posts-title">/);
+    assert.match(html, /<span class="section-index" aria-hidden="true">02<\/span>/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('dark and light themes both map the shared frosted-glass material tokens', () => {
+  const darkTokens = ruleDeclarations(stylesheet, ':root');
+  const lightTokens = ruleDeclarations(stylesheet, '[data-theme="light"]');
+  const glass = allRuleDeclarations(stylesheet, '.glass-surface').join('\n');
+
+  for (const declarations of [darkTokens, lightTokens]) {
+    assert.match(declarations, /--glass-surface-rgb:/);
+    assert.match(declarations, /--glass-opacity:/);
+    assert.match(declarations, /--glass-blur:/);
+    assert.match(declarations, /--glass-edge:/);
+  }
+
+  assert.match(glass, /rgba\(var\(--glass-surface-rgb\),\s*var\(--glass-opacity\)\)/);
+  assert.match(glass, /backdrop-filter:\s*blur\(var\(--glass-blur\)\)/);
 });
 
 test('hero keeps opaque dark layers when backdrop filters are unavailable', () => {

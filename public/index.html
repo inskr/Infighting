@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
   <title>Infighting · 嵌入式与边缘计算开发博客</title>
   <meta name="description" content="专注嵌入式系统与边缘计算的个人技术博客：STM32、ESP32、Linux 驱动、边缘 AI 部署实战笔记。">
@@ -21,7 +22,6 @@
           <a href="index.html" data-nav="home">首页</a>
           <a href="tags.html" data-nav="tags">标签</a>
           <a href="archive.html" data-nav="archive">精选归档</a>
-          <a href="about.html" data-nav="about">关于</a>
         </nav>
         <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换到浅色主题" aria-pressed="false">
           <span class="theme-icon theme-icon-sun" aria-hidden="true">☼</span>
@@ -39,6 +39,26 @@
         <img class="hero-image" src="assets/images/hero-ink-1920.png" width="1920" height="1080" decoding="async" fetchpriority="high" alt="蓝黑色流体光影抽象封面">
       </picture>
       <div class="hero-scrim" aria-hidden="true"></div>
+      <aside class="hero-rail" aria-label="本期信息">
+        <div class="rail-group">
+          <span class="rail-label">Issue</span>
+          <strong>012</strong>
+        </div>
+        <div class="rail-group">
+          <span class="rail-label">Updated</span>
+          <span>2026.08</span>
+        </div>
+        <div class="rail-group">
+          <span class="rail-label">Focus</span>
+          <span>STM32</span>
+          <span>Embedded Linux</span>
+          <span>Edge AI</span>
+        </div>
+        <div class="rail-group">
+          <span class="rail-label">Read time</span>
+          <span>8 min</span>
+        </div>
+      </aside>
       <div class="hero-panel">
         <span class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Embedded systems · Edge AI</span>
         <h1 id="hero-title">在硬件与智能的边界，构建真正运行的系统。</h1>
@@ -51,11 +71,22 @@
           <a class="button button-ghost" href="#posts-title">阅读技术文章</a>
         </div>
       </div>
+      <div class="hero-instrument" aria-hidden="true">
+        <span>Edge inference</span>
+        <div class="instrument-line"><i></i></div>
+        <strong>23.4 TOPS</strong>
+      </div>
     </section>
 
     <section class="daily-section" id="daily-section">
       <div class="section-head">
-        <h2 class="section-title">每日精选</h2>
+        <div class="editorial-heading">
+          <span class="section-index" aria-hidden="true">01</span>
+          <div>
+            <span class="section-kicker">Signal desk</span>
+            <h2 class="section-title">每日精选</h2>
+          </div>
+        </div>
         <span class="feed-updated" id="feed-updated"></span>
       </div>
       <p class="section-desc">聚焦嵌入式与边缘 AI 领域的中英文最新技术动态与行业资讯。</p>
@@ -72,11 +103,20 @@
       </div>
     </section>
 
-    <h1 class="page-title" id="posts-title">最新文章</h1>
-    <p class="page-desc">记录嵌入式与边缘计算开发中的实践与思考 —— 从裸机调度到边缘 AI 部署。</p>
-
-    <div class="post-list" id="post-list"></div>
-    <nav class="pagination" id="pagination"></nav>
+    <section class="posts-section" aria-labelledby="posts-title">
+      <div class="section-head posts-heading">
+        <div class="editorial-heading">
+          <span class="section-index" aria-hidden="true">02</span>
+          <div>
+            <span class="section-kicker">Engineering notes</span>
+            <h2 class="page-title" id="posts-title">最新文章</h2>
+          </div>
+        </div>
+        <p class="page-desc">从裸机调度到边缘 AI 部署，记录真正运行过的工程实践。</p>
+      </div>
+      <div class="post-list" id="post-list"></div>
+      <nav class="pagination" id="pagination"></nav>
+    </section>
   </main>
 
   <footer class="site-footer">

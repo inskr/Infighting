@@ -40,6 +40,11 @@
 
     function handlePointerMove(event) {
       if (event.pointerType === "touch") return;
+      var documentElement = root.document.documentElement;
+      if (documentElement && documentElement.style) {
+        documentElement.style.setProperty("--ambient-x", event.clientX + "px");
+        documentElement.style.setProperty("--ambient-y", event.clientY + "px");
+      }
       if (!event.target || typeof event.target.closest !== "function") return;
       var surface = event.target.closest(".glass-surface");
       if (!surface || typeof surface.getBoundingClientRect !== "function") return;
