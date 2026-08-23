@@ -162,7 +162,6 @@ function renderArticlePage({ post, posts, siteUrl }) {
       ${toc}
       <div class="article-body">${articleHtml}</div>
 ${articleNavigation ? `      ${articleNavigation}\n` : ''}    </article>
-    </article>
   </main>
   <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
 </body>

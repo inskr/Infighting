@@ -87,6 +87,11 @@ test('buildSite emits crawlable article HTML and keeps compatibility JSON', () =
     assert.equal(result[0].id, 'delta');
     assert.match(html, /<h1>Alpha<\/h1>/);
     assert.match(html, /<div class="article-body">[\s\S]*<h2 id="setup">Setup<\/h2>/);
+    assert.equal(
+      (html.match(/<article\b/g) || []).length,
+      (html.match(/<\/article>/g) || []).length,
+      'article markup is balanced'
+    );
     assert.equal(json.content, '## Setup\n\n## Setup');
   });
 });
