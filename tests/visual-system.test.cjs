@@ -128,10 +128,8 @@ test('published pages load only their page-specific resources and share the ackn
     assert.match(home, /assets\/js\/posts-index\.js/);
     assert.match(tags, /assets\/js\/posts-index\.js/);
     assert.match(post, /assets\/js\/posts-index\.js/);
-    assert.match(post, /assets\/js\/post-loader\.js/);
-    assert.match(post, /assets\/js\/post-view\.js/);
-    assert.ok(post.indexOf('assets/js/post-loader.js') < post.indexOf('assets/js/post-view.js'));
-    assert.ok(post.indexOf('assets/js/post-view.js') < post.indexOf('assets/js/main.js'));
+    assert.match(post, /assets\/js\/legacy-post\.js/);
+    assert.doesNotMatch(post, /assets\/js\/(?:post-loader|post-view|stats|likes-storage|main|ui-effects)\.js/);
     assert.doesNotMatch(archive, /posts-index\.js/);
 
     for (const html of [home, tags, archive]) {
@@ -154,6 +152,23 @@ test('published pages load only their page-specific resources and share the ackn
         }
       }
     }
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('legacy post URL page stays a minimal redirect-and-recovery entry point', async () => {
+  const { server, baseUrl } = await createStaticServer();
+  try {
+    const response = await fetch(`${baseUrl}/post.html`);
+    assert.equal(response.status, 200);
+    const html = await response.text();
+
+    assert.match(html, /<h1>文章跳转中<\/h1>/);
+    assert.match(html, /href="index\.html"/);
+    assert.match(html, /assets\/js\/posts-index\.js/);
+    assert.match(html, /assets\/js\/legacy-post\.js/);
+    assert.doesNotMatch(html, /(?:marked|highlight|stats|likes-storage|post-loader|post-view|main|ui-effects)\.js/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

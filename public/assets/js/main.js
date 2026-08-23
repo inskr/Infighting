@@ -94,9 +94,9 @@
   function postCardHtml(p) {
     return (
       '<article class="post-card glass-surface">' +
-      "<h2><a href=\"post.html?id=" +
+      "<h2><a href=\"posts/" +
       encodeURIComponent(p.id) +
-      '">' +
+      '.html">' +
       escapeHtml(p.title) +
       "</a></h2>" +
       '<div class="post-meta"><span>' +
@@ -435,9 +435,9 @@
       var navHtml = '<div class="article-nav">';
       if (ni > 0) {
         navHtml +=
-          '<a class="prev" href="post.html?id=' +
+          '<a class="prev" href="posts/' +
           encodeURIComponent(normals[ni - 1].id) +
-          '"><span class="nav-label">上一篇</span>' +
+          '.html"><span class="nav-label">上一篇</span>' +
           escapeHtml(normals[ni - 1].title) +
           "</a>";
       } else {
@@ -445,9 +445,9 @@
       }
       if (ni < normals.length - 1) {
         navHtml +=
-          '<a class="next" href="post.html?id=' +
+          '<a class="next" href="posts/' +
           encodeURIComponent(normals[ni + 1].id) +
-          '"><span class="nav-label">下一篇</span>' +
+          '.html"><span class="nav-label">下一篇</span>' +
           escapeHtml(normals[ni + 1].title) +
           "</a>";
       } else {

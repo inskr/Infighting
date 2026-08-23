@@ -203,3 +203,8 @@ test('successful article rendering decorates images before reporting the view', 
   assert.deepEqual(result.reportViewCalls, ['alpha']);
   assert.deepEqual(result.fetchStatsCalls, ['alpha']);
 });
+
+test('runtime article links target generated static pages', () => {
+  assert.match(mainSource, /function postCardHtml\(p\)[\s\S]*?href=\\"posts\//);
+  assert.doesNotMatch(mainSource, /post\.html\?id=/);
+});

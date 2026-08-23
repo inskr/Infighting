@@ -8,7 +8,6 @@
   <title>文章 · Infighting</title>
   <script src="assets/js/theme.js"></script>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -32,21 +31,18 @@
   </header>
 
   <main class="container">
-    <div id="article"></div>
+    <article class="article glass-surface" id="legacy-post-status">
+      <h1>文章跳转中</h1>
+      <p>正在打开新版文章地址。</p>
+      <p><a href="index.html">返回文章列表</a></p>
+    </article>
   </main>
 
   <footer class="site-footer">
-    © <span id="year"></span> Infighting | 嵌入式与边缘计算开发笔记 · 特别鸣谢：<a href="https://www.ysjf.com/index" target="_blank" rel="noopener noreferrer">影视飓风</a>
+    © Infighting | 嵌入式与边缘计算开发笔记 · 特别鸣谢：<a href="https://www.ysjf.com/index" target="_blank" rel="noopener noreferrer">影视飓风</a>
   </footer>
 
-  <script defer src="vendor/marked.min.js"></script>
-  <script defer src="vendor/highlight.min.js"></script>
   <script defer src="assets/js/posts-index.js"></script>
-  <script defer src="assets/js/stats.js"></script>
-  <script defer src="assets/js/likes-storage.js"></script>
-  <script defer src="assets/js/post-loader.js"></script>
-  <script defer src="assets/js/post-view.js"></script>
-  <script defer src="assets/js/main.js"></script>
-  <script defer src="assets/js/ui-effects.js"></script>
+  <script defer src="assets/js/legacy-post.js"></script>
 </body>
 </html>
