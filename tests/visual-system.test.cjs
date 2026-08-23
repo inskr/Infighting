@@ -184,21 +184,26 @@ test('published homepage serves the supplied image through an accessible Hero', 
   }
 });
 
-test('homepage publishes an editorial issue rail and a labelled stories region', async () => {
+test('homepage omits editorial issue metadata and keeps a labelled stories region', async () => {
   const { server, baseUrl } = await createStaticServer();
   try {
     const response = await fetch(`${baseUrl}/index.html`);
     assert.equal(response.status, 200);
     const html = await response.text();
 
-    assert.match(html, /<aside class="hero-rail" aria-label="本期信息">/);
-    assert.match(html, /<span class="rail-label">Issue<\/span>/);
-    assert.match(html, /<span class="rail-label">Focus<\/span>/);
+    assert.doesNotMatch(html, /class="hero-rail"/);
+    assert.doesNotMatch(html, /class="hero-instrument"/);
     assert.match(html, /<section class="posts-section" aria-labelledby="posts-title">/);
     assert.match(html, /<span class="section-index" aria-hidden="true">02<\/span>/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+});
+
+test('desktop hero panel reclaims the space left by the removed issue rail', () => {
+  const heroPanel = allRuleDeclarations(stylesheet, '.hero-panel').join('\n');
+
+  assert.match(heroPanel, /margin:\s*76px 0 70px 40px/);
 });
 
 test('dark and light themes both map the shared frosted-glass material tokens', () => {

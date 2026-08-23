@@ -56,6 +56,7 @@
   --accent: #0891b2;
   --accent-rgb: 8, 145, 178;
   --accent-strong: #0e7490;
+  --hero-accent: #087e9d;
   --accent-dark: #155e75;
   --accent-alt: #4f46e5;
   --accent-alt-rgb: 79, 70, 229;
@@ -460,7 +461,7 @@ a:focus-visible {
 .hero-panel {
   z-index: 3;
   width: min(610px, 52%);
-  margin: 76px 0 70px 178px;
+  margin: 76px 0 70px 40px;
   padding: 34px 36px 36px;
   border: 1px solid var(--glass-edge);
   border-radius: 24px;
@@ -541,55 +542,6 @@ a:focus-visible {
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
 }
 
-.hero-rail {
-  position: absolute;
-  top: 90px;
-  bottom: 84px;
-  left: 28px;
-  z-index: 4;
-  width: 120px;
-  padding: 18px 18px 16px;
-  border: 1px solid var(--glass-edge);
-  border-radius: 18px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  color: #c6d0df;
-  background: rgba(var(--glass-strong-rgb), 0.44);
-  box-shadow: inset 0 1px 0 var(--glass-inner-light);
-  backdrop-filter: blur(16px) saturate(120%);
-  -webkit-backdrop-filter: blur(16px) saturate(120%);
-}
-
-.rail-group { display: grid; gap: 3px; font-size: 10px; line-height: 1.45; }
-.rail-group strong { color: var(--hero-accent); font-size: 22px; font-weight: 540; letter-spacing: 0.04em; }
-.rail-label {
-  margin-bottom: 4px;
-  color: #7f8ca2;
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-}
-
-.hero-instrument {
-  position: absolute;
-  right: 40px;
-  bottom: 44px;
-  z-index: 4;
-  width: 176px;
-  color: #8c9ab0;
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 8.5px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-}
-
-.hero-instrument strong { float: right; margin-top: 6px; color: var(--hero-accent); font-size: 10px; }
-.instrument-line { height: 2px; margin-top: 7px; overflow: hidden; background: rgba(255, 255, 255, 0.12); }
-.instrument-line i { width: 67%; height: 100%; display: block; background: linear-gradient(90deg, var(--accent), var(--accent-alt)); box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.6); }
-
 [data-theme="light"] .hero { border-color: rgba(27, 76, 103, 0.2); background: linear-gradient(135deg, #dce8f0, #edf3f7); }
 [data-theme="light"] .hero-image { filter: saturate(0.72) contrast(0.92) brightness(1.2); }
 [data-theme="light"] .hero-scrim {
@@ -597,8 +549,7 @@ a:focus-visible {
     linear-gradient(90deg, rgba(239, 246, 249, 0.96) 0%, rgba(239, 246, 249, 0.82) 44%, rgba(239, 246, 249, 0.12) 78%),
     linear-gradient(0deg, rgba(225, 237, 243, 0.64), transparent 58%);
 }
-[data-theme="light"] .hero-panel,
-[data-theme="light"] .hero-rail {
+[data-theme="light"] .hero-panel {
   color: #34435a;
   background: rgba(248, 252, 255, 0.6);
   border-color: rgba(35, 72, 98, 0.16);
@@ -606,11 +557,6 @@ a:focus-visible {
 }
 [data-theme="light"] .hero-panel h1 { color: #111d2c; }
 [data-theme="light"] .hero-panel > p { color: #465970; }
-[data-theme="light"] .hero-panel .eyebrow,
-[data-theme="light"] .rail-group strong,
-[data-theme="light"] .hero-instrument strong { color: #087e9d; }
-[data-theme="light"] .rail-label,
-[data-theme="light"] .hero-instrument { color: #607187; }
 [data-theme="light"] .hero-tags span { color: #33465d; border-color: rgba(35, 72, 98, 0.16); background: rgba(255, 255, 255, 0.48); }
 [data-theme="light"] .button-ghost { color: #24384d; border-color: rgba(35, 72, 98, 0.2); background: rgba(255, 255, 255, 0.44); }
 
@@ -1340,8 +1286,6 @@ body { animation: pageFadeIn 360ms ease; }
   .brand small { display: none; }
   .container { padding-inline: 16px; }
   .hero { min-height: 540px; }
-  .hero-rail,
-  .hero-instrument { display: none; }
   .hero-panel { width: min(650px, calc(100% - 64px)); margin: 48px 32px; }
   .daily-boards,
   .post-list { grid-template-columns: 1fr; }
@@ -1459,8 +1403,7 @@ body { animation: pageFadeIn 360ms ease; }
   .article,
   .archive-day,
   .nav-shell,
-  .hero-panel,
-  .hero-rail {
+  .hero-panel {
     background-color: var(--surface-strong);
   }
 
@@ -1472,8 +1415,7 @@ body { animation: pageFadeIn 360ms ease; }
     background: linear-gradient(145deg, #040811, #071321);
   }
 
-  [data-theme="light"] .hero-panel,
-  [data-theme="light"] .hero-rail {
+  [data-theme="light"] .hero-panel {
     background: linear-gradient(145deg, #f8fbfd, #e7f0f5);
   }
 }
