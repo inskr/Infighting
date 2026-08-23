@@ -32,14 +32,14 @@
   </header>
 
   <main class="container">
-    <section class="hero glass-surface" aria-labelledby="hero-title">
+    <section class="hero glass-surface" aria-labelledby="hero-title" data-motion-hero>
       <picture class="hero-media">
         <source type="image/avif" srcset="assets/images/hero-ink-640.avif 640w, assets/images/hero-ink-1280.avif 1280w, assets/images/hero-ink-1920.avif 1920w" sizes="(max-width: 680px) 100vw, (max-width: 1280px) calc(100vw - 40px), 1120px">
         <source type="image/webp" srcset="assets/images/hero-ink-640.webp 640w, assets/images/hero-ink-1280.webp 1280w, assets/images/hero-ink-1920.webp 1920w" sizes="(max-width: 680px) 100vw, (max-width: 1280px) calc(100vw - 40px), 1120px">
-        <img class="hero-image" src="assets/images/hero-ink-1920.png" width="1920" height="1080" decoding="async" fetchpriority="high" alt="蓝黑色流体光影抽象封面">
+        <img class="hero-image" data-motion-depth="image" src="assets/images/hero-ink-1920.png" width="1920" height="1080" decoding="async" fetchpriority="high" alt="蓝黑色流体光影抽象封面">
       </picture>
       <div class="hero-scrim" aria-hidden="true"></div>
-      <div class="hero-panel">
+      <div class="hero-panel" data-motion-depth="panel">
         <span class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Embedded systems · Edge AI</span>
         <h1 id="hero-title">在硬件与智能的边界，构建真正运行的系统。</h1>
         <p>记录从 MCU、实时系统到端侧推理部署的工程实践，也筛选值得关注的技术动态。</p>
@@ -54,7 +54,8 @@
     </section>
 
     <section class="daily-section" id="daily-section">
-      <div class="section-head">
+      <canvas class="signal-field" data-signal-field aria-hidden="true"></canvas>
+      <div class="section-head" data-kinetic-heading>
         <div class="editorial-heading">
           <span class="section-index" aria-hidden="true">01</span>
           <div>
@@ -79,7 +80,7 @@
     </section>
 
     <section class="posts-section" aria-labelledby="posts-title">
-      <div class="section-head posts-heading">
+      <div class="section-head posts-heading" data-kinetic-heading>
         <div class="editorial-heading">
           <span class="section-index" aria-hidden="true">02</span>
           <div>
