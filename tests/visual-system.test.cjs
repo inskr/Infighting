@@ -302,3 +302,14 @@ test('light page intro and dark hero use distinct eyebrow contrast tokens', () =
   assert.match(pageIntroEyebrow, /color:\s*var\(--accent-strong\)/);
   assert.match(heroEyebrow, /color:\s*var\(--hero-accent\)/);
 });
+
+test('shared announcement utility is visually hidden but remains available to assistive technology', () => {
+  const hidden = ruleDeclarations(stylesheet, '.visually-hidden');
+
+  assert.match(hidden, /position:\s*absolute/i);
+  assert.match(hidden, /width:\s*1px/i);
+  assert.match(hidden, /height:\s*1px/i);
+  assert.match(hidden, /overflow:\s*hidden/i);
+  assert.match(hidden, /clip(?:-path)?:\s*(?:rect\(0(?:,?\s*0){3}\)|inset\(50%\))/i);
+  assert.doesNotMatch(hidden, /display:\s*none|visibility:\s*hidden/i);
+});
