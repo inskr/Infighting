@@ -1,7 +1,6 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -84,12 +83,28 @@ function listPublishedHtml(publicDir) {
 
 function scriptSources(htmlPath, html) {
   const scriptTags = html.match(/<script\b[^>]*>/gi) || [];
+  const baseUrl = new URL(`/${htmlPath}`, 'https://resource-budget.invalid');
   return scriptTags.flatMap((tag) => {
-    const source = tag.match(/\bsrc\s*=\s*(?:"([^"]+)"|'([^']+)')/i);
+    const source = tag.match(/\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i);
     if (!source) return [];
-    const relativeSource = source[1] || source[2];
-    return [path.posix.normalize(path.posix.join(path.posix.dirname(htmlPath), relativeSource))];
+    const relativeSource = source[1] ?? source[2] ?? source[3];
+    const sourceUrl = new URL(relativeSource, baseUrl);
+    return [
+      sourceUrl.origin === baseUrl.origin
+        ? sourceUrl.pathname.replace(/^\//, '')
+        : sourceUrl.href,
+    ];
   });
+}
+
+function deterministicIncompressibleBytes(length, seed) {
+  let state = seed >>> 0;
+  const bytes = Buffer.allocUnsafe(length);
+  for (let index = 0; index < length; index += 1) {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    bytes[index] = state >>> 24;
+  }
+  return bytes;
 }
 
 function assertRoute(publicDir, htmlPath, rule) {
@@ -187,10 +202,12 @@ test('controlled fixtures prove each resource contract rejects a regression', ()
     );
 
     fs.writeFileSync(path.join(publicDir, 'assets', 'css', 'style.css'), 'body{}');
-    fs.writeFileSync(
-      path.join(publicDir, 'assets', 'search-index.json'),
-      crypto.randomBytes(SEARCH_INDEX_GZIP_LIMIT_BYTES + 1)
+    const overflowIndex = deterministicIncompressibleBytes(
+      SEARCH_INDEX_GZIP_LIMIT_BYTES + 1,
+      0x1a2b3c4d
     );
+    assert.ok(zlib.gzipSync(overflowIndex).length > SEARCH_INDEX_GZIP_LIMIT_BYTES);
+    fs.writeFileSync(path.join(publicDir, 'assets', 'search-index.json'), overflowIndex);
     assert.throws(
       () => assertPublishedArtifacts(publicDir, fixtureRoutes, fixtureArticleRoute),
       /search-index gzip budget exceeded/
@@ -225,4 +242,57 @@ test('controlled fixtures prove each resource contract rejects a regression', ()
       /must not request article JSON/
     );
   });
+});
+
+test('script sources accept legal attribute forms and normalize every local route form', () => {
+  // Break caught: a quoted-only parser misses a shipped module, or query/hash and route resolution bypass the allowlist.
+  const html = [
+    '<script type="application/ld+json">{"@type":"BlogPosting"}</script>',
+    '<script src="../assets/js/theme.js?cache=1#ready"></script>',
+    "<script defer src='../assets/js/site-shell.js?cache=2#ready'></script>",
+    '<script data-role=page src=../assets/js/home-page.js></script>',
+    '<script src=/assets/js/content-cards.js?cache=3#ready></script>',
+  ].join('');
+
+  assert.deepEqual(scriptSources('posts/example.html', html), [
+    'assets/js/theme.js',
+    'assets/js/site-shell.js',
+    'assets/js/home-page.js',
+    'assets/js/content-cards.js',
+  ]);
+});
+
+test('unquoted forbidden Home modules are rejected by the published script gate', () => {
+  // Break caught: unquoted SearchCore or ArticlePage escapes the Home dependency allowlist.
+  withFixture(({ fixtureArticleRoute, fixtureRoutes, publicDir }) => {
+    fs.appendFileSync(
+      path.join(publicDir, 'index.html'),
+      '<script defer src=assets/js/search-core.js></script>'
+    );
+    assert.throws(
+      () => assertPublishedArtifacts(publicDir, fixtureRoutes, fixtureArticleRoute),
+      /assets\/js\/search-core\.js/
+    );
+
+    fs.writeFileSync(
+      path.join(publicDir, 'index.html'),
+      '<script src="assets/js/theme.js"></script><script src="assets/js/site-shell.js"></script><script src="assets/js/home-page.js"></script><script src=assets/js/article-page.js></script>'
+    );
+    assert.throws(
+      () => assertPublishedArtifacts(publicDir, fixtureRoutes, fixtureArticleRoute),
+      /assets\/js\/article-page\.js/
+    );
+  });
+});
+
+test('the fixed-seed search-index overflow fixture is repeatable and genuinely exceeds gzip budget', () => {
+  // Break caught: random fixture bytes make the gzip RED proof nondeterministic or accidentally compress below the limit.
+  const first = deterministicIncompressibleBytes(SEARCH_INDEX_GZIP_LIMIT_BYTES + 1, 0x1a2b3c4d);
+  const second = deterministicIncompressibleBytes(SEARCH_INDEX_GZIP_LIMIT_BYTES + 1, 0x1a2b3c4d);
+  const firstGzip = zlib.gzipSync(first);
+  const secondGzip = zlib.gzipSync(second);
+
+  assert.deepEqual(first, second);
+  assert.deepEqual(firstGzip, secondGzip);
+  assert.ok(firstGzip.length > SEARCH_INDEX_GZIP_LIMIT_BYTES);
 });
