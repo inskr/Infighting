@@ -134,6 +134,7 @@ test('published pages load only their page-specific resources and share the ackn
     assert.match(home, /assets\/js\/content-cards\.js/);
     assert.match(home, /assets\/js\/home-page\.js/);
     assert.match(home, /assets\/js\/ui-effects\.js/);
+    assert.match(home, /assets\/js\/home-effects\.js/);
     assert.doesNotMatch(home, /assets\/js\/(?:feed-archive|main|search-core|search-page|archive-page|tags-page|article-page|legacy-post|post-loader|post-view)\.js/);
     const homeOrder = [
       'assets/js/feed-data.js',
@@ -145,6 +146,7 @@ test('published pages load only their page-specific resources and share the ackn
       'assets/js/content-cards.js',
       'assets/js/home-page.js',
       'assets/js/ui-effects.js',
+      'assets/js/home-effects.js',
     ].map((source) => home.indexOf(source));
     assert.ok(homeOrder.every((index) => index >= 0));
     assert.deepEqual(homeOrder, [...homeOrder].sort((left, right) => left - right));

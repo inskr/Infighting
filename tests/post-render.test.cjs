@@ -4,13 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const vm = require('node:vm');
 const { renderArticlePage } = require('../scripts/article-template');
-
-const mainSource = fs.readFileSync(
-  path.join(__dirname, '..', 'public', 'assets', 'js', 'main.js'),
-  'utf8'
-);
 
 test('generated article HTML owns its complete readable body and page-specific dependencies', () => {
   const html = renderArticlePage({
@@ -36,39 +30,11 @@ test('generated article HTML owns its complete readable body and page-specific d
   assert.match(html, /\.\.\/assets\/js\/likes-storage\.js/);
   assert.match(html, /\.\.\/vendor\/highlight\.min\.js/);
   assert.match(html, /\.\.\/assets\/js\/article-page\.js/);
+  assert.match(html, /\.\.\/assets\/js\/ui-effects\.js/);
   assert.doesNotMatch(html, /marked(?:\.min)?\.js|posts-index\.js|post-loader\.js|post-view\.js|assets\/posts\/alpha\.json/);
 });
 
-test('retired main entry point cannot fetch, replace, or report a static article', () => {
-  const calls = [];
-  const article = {};
-  Object.defineProperty(article, 'innerHTML', {
-    set() {
-      calls.push('replace');
-    },
-  });
-  const document = {
-    getElementById: (id) => id === 'article' ? article : null,
-  };
-  const window = {
-    document,
-    location: { search: '?id=../alpha' },
-    POSTS: [],
-    PostLoader: { isValidPostId: () => false },
-    PostView: { errorCardHtml: () => '<p>retired</p>' },
-    fetch: () => {
-      calls.push('fetch');
-      return Promise.reject(new Error('must not fetch'));
-    },
-    Stats: {
-      reportView: () => {
-        calls.push('reportView');
-        return Promise.resolve(1);
-      },
-    },
-  };
-
-  vm.runInNewContext(mainSource, { document, URLSearchParams, window });
-
-  assert.deepEqual(calls, []);
+test('the generated article does not require a retired multi-page runtime', () => {
+  const runtime = path.join(__dirname, '..', 'public', 'assets', 'js', 'main.js');
+  assert.equal(fs.existsSync(runtime), false);
 });

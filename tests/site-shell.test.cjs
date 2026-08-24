@@ -67,6 +67,7 @@ test('home loads only its page module after durable data and shared dependencies
     'assets/js/content-cards.js',
     'assets/js/home-page.js',
     'assets/js/ui-effects.js',
+    'assets/js/home-effects.js',
   ];
   const order = sources.map((source) => html.indexOf(source));
 
