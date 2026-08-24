@@ -9,12 +9,16 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
+  var INPUT_DEBOUNCE_MS = 200;
+
   function createController(root, options) {
     var settings = options || {};
     settings.fetch = settings.fetch || root.fetch.bind(root);
     settings.searchCore = settings.searchCore || root.SearchCore;
     settings.contentCards = settings.contentCards || root.ContentCards;
     settings.siteShell = settings.siteShell || root.SiteShell;
+    settings.setTimeout = settings.setTimeout || (typeof root.setTimeout === "function" ? root.setTimeout.bind(root) : null);
+    settings.clearTimeout = settings.clearTimeout || (typeof root.clearTimeout === "function" ? root.clearTimeout.bind(root) : null);
     var document = root && root.document ? root.document : root;
     var form = document.getElementById("search-form");
     var input = document.getElementById("search-input");
@@ -24,6 +28,13 @@
     var indexPromise;
     var initialized = false;
     var runVersion = 0;
+    var pendingRunTimer = null;
+
+    function cancelPendingRun() {
+      if (pendingRunTimer === null) return;
+      settings.clearTimeout(pendingRunTimer);
+      pendingRunTimer = null;
+    }
 
     function loadIndex() {
       if (!indexPromise) {
@@ -134,16 +145,25 @@
       settings.siteShell.init(root, "search");
       form.addEventListener("submit", function (event) {
         event.preventDefault();
+        cancelPendingRun();
         return run(input.value);
       });
       input.addEventListener("input", function () {
+        cancelPendingRun();
         runVersion += 1;
-        updateUrl(String(input.value == null ? "" : input.value).trim());
+        var query = String(input.value == null ? "" : input.value).trim();
+        updateUrl(query);
+        pendingRunTimer = settings.setTimeout(function () {
+          pendingRunTimer = null;
+          return run(query);
+        }, INPUT_DEBOUNCE_MS);
       });
       clear.addEventListener("click", function () {
+        cancelPendingRun();
         return run("");
       });
       root.addEventListener("popstate", function () {
+        cancelPendingRun();
         return run(queryFromLocation());
       });
 

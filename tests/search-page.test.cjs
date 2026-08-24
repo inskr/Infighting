@@ -29,6 +29,33 @@ function append(document, tagName, id) {
   return node;
 }
 
+function fakeTimers() {
+  let nextId = 1;
+  const pending = new Map();
+  return {
+    setTimeout(callback, delay) {
+      const id = nextId;
+      nextId += 1;
+      pending.set(id, { callback, delay });
+      return id;
+    },
+    clearTimeout(id) {
+      pending.delete(id);
+    },
+    pendingCount() {
+      return pending.size;
+    },
+    pendingDelays() {
+      return [...pending.values()].map(({ delay }) => delay);
+    },
+    async runAll() {
+      const callbacks = [...pending.values()];
+      pending.clear();
+      for (const { callback } of callbacks) await callback();
+    },
+  };
+}
+
 function fixture(overrides = {}) {
   const document = new FakeDocument();
   const form = append(document, 'form', 'search-form');
@@ -61,6 +88,8 @@ function fixture(overrides = {}) {
     searchCore: overrides.searchCore || { search() { return []; } },
     contentCards: overrides.contentCards || { postCard() { throw new Error('unexpected card'); } },
     siteShell: overrides.siteShell || { init() {}, announce() {} },
+    setTimeout: overrides.setTimeout,
+    clearTimeout: overrides.clearTimeout,
   });
   return { clear, controller, document, form, history, input, location, results, root, status };
 }
@@ -186,8 +215,8 @@ test('the rendered retry control refetches after a failure and recovers in place
   assert.equal(view.input.value, 'radar');
 });
 
-test('init restores a copied q URL, activates Search navigation, and wires typing plus submit', async () => {
-  // Break caught: shared URLs open blank, Search lacks active navigation, or typing reloads/fetches prematurely.
+test('init restores a copied q URL and activates Search navigation', async () => {
+  // Break caught: shared URLs open blank or Search lacks active navigation.
   let fetchCalls = 0;
   const queries = [];
   const shellCalls = [];
@@ -217,16 +246,102 @@ test('init restores a copied q URL, activates Search navigation, and wires typin
   assert.equal(shellCalls.length, 1);
   assert.equal(shellCalls[0].root, view.root);
   assert.equal(shellCalls[0].activeNav, 'search');
+});
 
-  view.input.value = 'next query';
+test('rapid typing debounces search to the final trimmed query and converges URL with visible results', async () => {
+  // Break caught: typing changes q without searching, or an earlier keystroke wins the rendered result race.
+  const timers = fakeTimers();
+  const queries = [];
+  const view = fixture({
+    fetch: async () => ({ ok: true, async json() { return []; } }),
+    searchCore: {
+      search(index, query) {
+        queries.push(query);
+        return [{
+          document: { id: query, title: query, date: '2026-08-24', tags: [] },
+          snippet: query,
+          ranges: [],
+        }];
+      },
+    },
+    contentCards: ContentCards,
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+  });
+  view.controller.init();
+
+  view.input.value = 'first';
   await view.input.dispatchEvent({ type: 'input' });
-  assert.equal(view.location.search, '?q=next+query');
-  assert.equal(fetchCalls, 1);
-  assert.deepEqual(queries, ['shared query']);
+  view.input.value = '  final query  ';
+  await view.input.dispatchEvent({ type: 'input' });
 
-  await view.form.dispatchEvent({ type: 'submit', preventDefault() {} });
-  assert.equal(fetchCalls, 1);
-  assert.deepEqual(queries, ['shared query', 'next query']);
+  assert.equal(timers.pendingCount(), 1);
+  const [delay] = timers.pendingDelays();
+  assert.ok(delay >= 150 && delay <= 250, `expected a short debounce, received ${delay}ms`);
+  assert.deepEqual(queries, []);
+  assert.equal(view.location.search, '?q=final+query');
+
+  await timers.runAll();
+
+  assert.deepEqual(queries, ['final query']);
+  assert.equal(view.input.value, 'final query');
+  assert.equal(view.location.search, '?q=final+query');
+  assert.equal(view.results.querySelector('h2').textContent, 'final query');
+  assert.equal(view.status.textContent, '找到 1 篇与“final query”匹配的文章。');
+});
+
+test('submit, clear, and popstate cancel pending debounced search work', async () => {
+  // Break caught: a delayed typing search runs after an explicit navigation action and overwrites its state.
+  const scenarios = [
+    {
+      name: 'submit',
+      act: async (view) => view.form.dispatchEvent({ type: 'submit', preventDefault() {} }),
+      expectedQueries: ['pending'],
+      expectedSearch: '?q=pending',
+    },
+    {
+      name: 'clear',
+      act: async (view) => view.clear.click(),
+      expectedQueries: [],
+      expectedSearch: '',
+    },
+    {
+      name: 'popstate',
+      act: async (view) => {
+        view.location.search = '?q=restored';
+        return view.root.dispatch('popstate');
+      },
+      expectedQueries: ['restored'],
+      expectedSearch: '?q=restored',
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    const timers = fakeTimers();
+    const queries = [];
+    const view = fixture({
+      fetch: async () => ({ ok: true, async json() { return []; } }),
+      searchCore: {
+        search(index, query) {
+          queries.push(query);
+          return [];
+        },
+      },
+      setTimeout: timers.setTimeout,
+      clearTimeout: timers.clearTimeout,
+    });
+    view.controller.init();
+    view.input.value = 'pending';
+    await view.input.dispatchEvent({ type: 'input' });
+    assert.equal(timers.pendingCount(), 1, `${scenario.name}: typing should schedule work`);
+
+    await scenario.act(view);
+    assert.equal(timers.pendingCount(), 0, `${scenario.name}: explicit action should cancel pending work`);
+    await timers.runAll();
+
+    assert.deepEqual(queries, scenario.expectedQueries, `${scenario.name}: stale typing query should not run`);
+    assert.equal(view.location.search, scenario.expectedSearch);
+  }
 });
 
 test('clear resets query and results while popstate restores the current q value', async () => {
@@ -290,6 +405,7 @@ test('typing a replacement query invalidates an older in-flight result set', asy
   // Break caught: the results shown after typing no longer correspond to the q value in the URL.
   let resolveFetch;
   const fetchResponse = new Promise((resolve) => { resolveFetch = resolve; });
+  const timers = fakeTimers();
   const view = fixture({
     fetch: async () => fetchResponse,
     searchCore: {
@@ -302,6 +418,8 @@ test('typing a replacement query invalidates an older in-flight result set', asy
       },
     },
     contentCards: ContentCards,
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
   });
 
   view.controller.init();
