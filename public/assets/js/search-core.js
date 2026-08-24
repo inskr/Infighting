@@ -17,8 +17,7 @@
   };
 
   function normalizeText(value) {
-    return normalizeDisplayText(value)
-      .toLowerCase();
+    return foldText(normalizeDisplayText(value)).text;
   }
 
   function normalizeDisplayText(value) {
@@ -34,6 +33,27 @@
       phrase: phrase,
       terms: phrase ? phrase.split(" ") : [],
     };
+  }
+
+  function foldText(displayText) {
+    var text = "";
+    var offsets = [];
+    var index = 0;
+
+    while (index < displayText.length) {
+      var codePoint = displayText.codePointAt(index);
+      var character = String.fromCodePoint(codePoint);
+      var end = index + character.length;
+      var folded = character.toLowerCase();
+
+      text += folded;
+      for (var foldedIndex = 0; foldedIndex < folded.length; foldedIndex += 1) {
+        offsets.push({ start: index, end: end });
+      }
+      index = end;
+    }
+
+    return { text: text, offsets: offsets };
   }
 
   function uniqueTerms(terms) {
@@ -73,6 +93,16 @@
     return merged;
   }
 
+  function mapRangesToDisplay(ranges, offsets) {
+    return mergeRanges(
+      ranges.map(function (range) {
+        var first = offsets[range.start];
+        var last = offsets[range.end - 1];
+        return { start: first.start, end: last.end };
+      })
+    );
+  }
+
   function fieldScore(text, terms, phrase, weight) {
     var score = 0;
     terms.forEach(function (term) {
@@ -95,10 +125,16 @@
     var matchStart = Math.max(0, Math.min(text.length, numberOr(first.start, 0)));
     var matchEnd = Math.max(matchStart, Math.min(text.length, numberOr(first.end, matchStart)));
     var matchLength = matchEnd - matchStart;
-    var visibleLength = Math.max(matchLength, limit);
-    var start = Math.max(0, Math.floor((matchStart + matchEnd - visibleLength) / 2));
-    var end = Math.min(text.length, start + visibleLength);
-    start = Math.max(0, end - visibleLength);
+    var start;
+    var end;
+    if (matchLength >= limit) {
+      start = matchStart;
+      end = Math.min(text.length, start + limit);
+    } else {
+      start = Math.max(0, Math.floor((matchStart + matchEnd - limit) / 2));
+      end = Math.min(text.length, start + limit);
+      start = Math.max(0, end - limit);
+    }
 
     var visible = text.slice(start, end);
     var leadingWhitespace = visible.match(/^\s*/)[0].length;
@@ -136,7 +172,8 @@
         var tags = normalizeText(Array.isArray(source.tags) ? source.tags.join(" ") : source.tags);
         var summary = normalizeText(source.summary);
         var displayBody = normalizeDisplayText(source.body);
-        var body = normalizeText(source.body);
+        var foldedBody = foldText(displayBody);
+        var body = foldedBody.text;
         var score =
           fieldScore(title, terms, normalized.phrase, SCORE.TITLE) +
           fieldScore(tags, terms, normalized.phrase, SCORE.TAGS) +
@@ -145,10 +182,13 @@
 
         if (!score) return null;
 
-        var matches = mergeRanges(
-          terms.reduce(function (ranges, term) {
-            return ranges.concat(allRanges(body, term));
-          }, [])
+        var matches = mapRangesToDisplay(
+          mergeRanges(
+            terms.reduce(function (ranges, term) {
+              return ranges.concat(allRanges(body, term));
+            }, [])
+          ),
+          foldedBody.offsets
         );
         var snippetData = buildSnippet(displayBody, matches, 16);
         var prefixLength = snippetData.start > 0 ? 1 : 0;

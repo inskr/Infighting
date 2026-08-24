@@ -151,6 +151,35 @@ test('creates bounded, whitespace-normalized snippets with ellipses only for rem
   assert.equal(core.createSnippet('  NEEDLE\ntext  ', [{ start: 2, end: 8 }], 20), 'NEEDLE text');
 });
 
+test('caps visible snippet text even when the earliest match exceeds the radius window', () => {
+  const snippet = api().createSnippet('ABCDEFGHIJK', [{ start: 0, end: 11 }], 3);
+
+  assert.equal(snippet, 'ABCDEF…');
+  assert.equal(snippet.replaceAll('…', '').length, 6);
+});
+
+test('clips long-match highlight ranges to the bounded search snippet', () => {
+  const term = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const [result] = api().search(
+    [
+      {
+        id: 'long-range',
+        title: 'Fixture',
+        summary: '',
+        tags: [],
+        date: '2026-08-12',
+        body: `prefix ${term} suffix`,
+      },
+    ],
+    term
+  );
+
+  assert.equal(result.snippet, `…${term.slice(0, 32)}…`);
+  assert.deepEqual(result.ranges, [{ start: 1, end: 33 }]);
+  assert.equal(result.snippet.slice(1, 33), term.slice(0, 32));
+  assert.equal(result.snippet.replaceAll('…', '').length, 32);
+});
+
 test('returns snippet ranges relative to the safe bounded snippet', () => {
   const [result] = api().search(
     [
@@ -169,6 +198,26 @@ test('returns snippet ranges relative to the safe bounded snippet', () => {
   assert.equal(result.snippet, '…content has init_hw and then mo…');
   assert.deepEqual(result.ranges, [{ start: 13, end: 20 }]);
   assert.equal(result.snippet.length <= 2 * 16 + 2, true);
+});
+
+test('maps body ranges back to display text after Unicode lowercase expansion', () => {
+  const [result] = api().search(
+    [
+      {
+        id: 'unicode-range',
+        title: 'Fixture',
+        summary: '',
+        tags: [],
+        date: '2026-08-12',
+        body: 'prefix İx marker suffix',
+      },
+    ],
+    'MARKER'
+  );
+
+  assert.equal(result.snippet, 'prefix İx marker suffix');
+  assert.deepEqual(result.ranges, [{ start: 10, end: 16 }]);
+  assert.equal(result.snippet.slice(result.ranges[0].start, result.ranges[0].end), 'marker');
 });
 
 test('is provided as a UMD browser global as well as CommonJS', () => {
