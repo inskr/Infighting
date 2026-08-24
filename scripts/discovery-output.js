@@ -22,7 +22,7 @@ function rssDate(date) {
 }
 
 function renderSitemap({ posts, siteUrl }) {
-  const pageUrls = ['', 'tags.html', 'archive.html']
+  const pageUrls = ['', 'tags.html', 'archive.html', 'search.html']
     .map(
       (relativePath) =>
         `  <url>\n    <loc>${escapeXml(`${siteUrl}${relativePath}`)}</loc>\n  </url>`

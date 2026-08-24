@@ -8,6 +8,7 @@ const STATIC_ARTICLE_TARGETS = [
   'index.html',
   'tags.html',
   'archive.html',
+  'search.html',
   path.join('assets', 'css', 'style.css'),
   path.join('assets', 'js', 'theme.js'),
   path.join('assets', 'js', 'stats.js'),

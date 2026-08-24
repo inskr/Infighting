@@ -124,6 +124,7 @@ test('article pages contain stable headings and canonical reading paths', () => 
     assert.match(html, /<a href="\.\.\/posts\/gamma\.html">上一篇：Gamma<\/a>/);
     assert.match(html, /<a href="\.\.\/posts\/beta\.html">下一篇：Beta<\/a>/);
     assert.match(html, /href="\.\.\/tags\.html\?tag=testing"/);
+    assert.match(html, /<a href="\.\.\/search\.html" data-nav="search">搜索<\/a>/);
     assert.match(html, /<nav class="related-posts" aria-label="相关文章">/);
     assert.doesNotMatch(html, /post\.html\?id=/);
 

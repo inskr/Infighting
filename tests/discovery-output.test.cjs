@@ -53,14 +53,15 @@ test('renderSitemap publishes canonical article URLs in deterministic order', ()
   assert.match(sitemap, /<loc>https:\/\/inskr\.github\.io\/Infighting\/<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/inskr\.github\.io\/Infighting\/tags\.html<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/inskr\.github\.io\/Infighting\/archive\.html<\/loc>/);
-  assert.doesNotMatch(sitemap, /search\.html/);
+  assert.match(sitemap, /<loc>https:\/\/inskr\.github\.io\/Infighting\/search\.html<\/loc>/);
   assert.doesNotMatch(sitemap, /post\.html\?id=/);
   assert.doesNotMatch(sitemap, /news-item/);
   assert.match(sitemap, /<lastmod>2026-08-11<\/lastmod>/);
   assert.ok(
     sitemap.indexOf('<loc>' + SITE_URL + '</loc>') < sitemap.indexOf('/tags.html') &&
       sitemap.indexOf('/tags.html') < sitemap.indexOf('/archive.html') &&
-      sitemap.indexOf('/archive.html') < sitemap.indexOf('/posts/alpha.html') &&
+      sitemap.indexOf('/archive.html') < sitemap.indexOf('/search.html') &&
+      sitemap.indexOf('/search.html') < sitemap.indexOf('/posts/alpha.html') &&
     sitemap.indexOf('/posts/alpha.html') < sitemap.indexOf('/posts/gamma.html') &&
       sitemap.indexOf('/posts/gamma.html') < sitemap.indexOf('/posts/beta.html'),
     'articles should be ordered by source date descending then ID ascending'

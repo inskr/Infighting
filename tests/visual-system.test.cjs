@@ -59,7 +59,7 @@ function createStaticServer() {
 test('published pages bootstrap theme before CSS and expose the shared navigation controls', async () => {
   const { server, baseUrl } = await createStaticServer();
   try {
-    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html']) {
+    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html', 'search.html']) {
       const response = await fetch(`${baseUrl}/${page}`);
       assert.equal(response.status, 200, page);
       const html = await response.text();
@@ -77,7 +77,7 @@ test('published pages bootstrap theme before CSS and expose the shared navigatio
 test('published pages declare a shared favicon that is served successfully', async () => {
   const { server, baseUrl } = await createStaticServer();
   try {
-    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html']) {
+    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html', 'search.html']) {
       const response = await fetch(`${baseUrl}/${page}`);
       const html = await response.text();
       assert.match(html, /<link rel="icon" href="favicon\.svg" type="image\/svg\+xml">/, page);
@@ -98,7 +98,7 @@ test('the retired about page is unavailable and no published navigation links to
     const retired = await fetch(`${baseUrl}/about.html`);
     assert.equal(retired.status, 404);
 
-    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html']) {
+    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html', 'search.html']) {
       const response = await fetch(`${baseUrl}/${page}`);
       assert.equal(response.status, 200, page);
       const html = await response.text();
@@ -113,13 +113,13 @@ test('the retired about page is unavailable and no published navigation links to
 test('published pages load only their page-specific resources and share the acknowledgement', async () => {
   const { server, baseUrl } = await createStaticServer();
   try {
-    const pageNames = ['index.html', 'tags.html', 'archive.html', 'post.html'];
+    const pageNames = ['index.html', 'tags.html', 'archive.html', 'post.html', 'search.html'];
     const pages = await Promise.all(pageNames.map(async (page) => {
       const response = await fetch(`${baseUrl}/${page}`);
       assert.equal(response.status, 200, page);
       return response.text();
     }));
-    const [home, tags, archive, post] = pages;
+    const [home, tags, archive, post, search] = pages;
 
     assert.match(home, /<picture class="hero-media">/);
     assert.match(home, /type="image\/avif"/);
@@ -131,6 +131,11 @@ test('published pages load only their page-specific resources and share the ackn
     assert.match(post, /assets\/js\/legacy-post\.js/);
     assert.doesNotMatch(post, /assets\/js\/(?:post-loader|post-view|stats|likes-storage|main|ui-effects)\.js/);
     assert.doesNotMatch(archive, /posts-index\.js/);
+    assert.match(search, /assets\/js\/site-shell\.js/);
+    assert.match(search, /assets\/js\/content-cards\.js/);
+    assert.match(search, /assets\/js\/search-core\.js/);
+    assert.match(search, /assets\/js\/search-page\.js/);
+    assert.doesNotMatch(search, /assets\/js\/(?:feed-data|feed-archive|posts-index|main|ui-effects|article-page|legacy-post)\.js/);
 
     for (const html of [home, tags, archive]) {
       assert.doesNotMatch(html, /assets\/js\/post-(?:loader|view)\.js/);
@@ -151,6 +156,47 @@ test('published pages load only their page-specific resources and share the ackn
           assert.match(attributes, /\bdefer\b/, `${src} on published page`);
         }
       }
+    }
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('search page exposes one labelled query field, recovery controls, and dependency-safe script order', async () => {
+  const { server, baseUrl } = await createStaticServer();
+  try {
+    const response = await fetch(`${baseUrl}/search.html`);
+    assert.equal(response.status, 200);
+    const html = await response.text();
+
+    assert.equal((html.match(/<input\b/g) || []).length, 1);
+    assert.match(html, /<label for="search-input"/);
+    assert.match(html, /<input[^>]*id="search-input"[^>]*type="search"/);
+    assert.match(html, /<button[^>]*id="search-clear"[^>]*type="button"/);
+    assert.match(html, /<button[^>]*type="submit"/);
+    assert.match(html, /id="search-status"[^>]*role="status"/);
+    assert.match(html, /id="search-results"/);
+    assert.match(html, /href="search\.html" data-nav="search"/);
+
+    const order = [
+      'assets/js/site-shell.js',
+      'assets/js/content-cards.js',
+      'assets/js/search-core.js',
+      'assets/js/search-page.js',
+    ].map((source) => html.indexOf(source));
+    assert.ok(order.every((index) => index >= 0));
+    assert.deepEqual(order, [...order].sort((left, right) => left - right));
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('every published main navigation includes the Search destination', async () => {
+  const { server, baseUrl } = await createStaticServer();
+  try {
+    for (const page of ['index.html', 'tags.html', 'archive.html', 'post.html', 'search.html']) {
+      const html = await (await fetch(`${baseUrl}/${page}`)).text();
+      assert.match(html, /<a href="search\.html" data-nav="search">搜索<\/a>/, page);
     }
   } finally {
     await new Promise((resolve) => server.close(resolve));

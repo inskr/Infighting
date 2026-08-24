@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self' https://abacus.jasoncameron.dev; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
-  <title>标签 · Infighting</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; connect-src 'self'; font-src 'self'; form-action 'self'; img-src 'self' data: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>搜索文章 · Infighting</title>
+  <meta name="description" content="搜索 Infighting 的嵌入式系统与边缘计算技术文章。">
   <script src="assets/js/theme.js"></script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -31,29 +32,35 @@
     </div>
   </header>
 
-  <main class="container">
+  <main class="container search-page">
     <section class="page-intro glass-surface">
-      <span class="eyebrow">Explore by topic</span>
-      <h1 class="page-title">标签分类</h1>
-      <p class="page-desc">按主题浏览文章，标签旁的数字为对应文章数量。</p>
+      <span class="eyebrow">Search the field notes</span>
+      <h1 class="page-title">搜索文章</h1>
+      <p class="page-desc">按标题、标签、摘要与正文内容查找技术笔记。</p>
     </section>
 
-    <div class="tag-cloud glass-surface" id="tag-cloud"></div>
+    <section class="search-panel glass-surface" aria-labelledby="search-label">
+      <form id="search-form" class="search-form" role="search">
+        <label for="search-input" id="search-label">搜索关键词</label>
+        <div class="search-controls">
+          <input id="search-input" type="search" name="q" autocomplete="off" enterkeyhint="search" placeholder="例如：STM32、雷达、Linux 驱动">
+          <button class="button button-primary" type="submit">搜索</button>
+          <button class="button button-ghost" id="search-clear" type="button">清除</button>
+        </div>
+      </form>
+      <p id="search-status" class="search-status" role="status" aria-live="polite" aria-atomic="true">输入关键词开始搜索。</p>
+    </section>
 
-    <h2 class="page-title" style="font-size:20px" id="tag-result-title"></h2>
-    <div class="post-list" id="tag-post-list" style="margin-top:16px"></div>
+    <div id="search-results" class="search-results post-list" aria-label="搜索结果"></div>
   </main>
 
   <footer class="site-footer">
     © <span id="year"></span> Infighting | 嵌入式与边缘计算开发笔记 · 特别鸣谢：<a href="https://www.ysjf.com/index" target="_blank" rel="noopener noreferrer">影视飓风</a>
   </footer>
 
-  <script defer src="assets/js/posts-index.js"></script>
-  <script defer src="assets/js/stats.js"></script>
-  <script defer src="assets/js/likes-storage.js"></script>
   <script defer src="assets/js/site-shell.js"></script>
   <script defer src="assets/js/content-cards.js"></script>
-  <script defer src="assets/js/main.js"></script>
-  <script defer src="assets/js/ui-effects.js"></script>
+  <script defer src="assets/js/search-core.js"></script>
+  <script defer src="assets/js/search-page.js"></script>
 </body>
 </html>

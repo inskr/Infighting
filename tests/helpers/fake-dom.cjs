@@ -48,6 +48,8 @@ class FakeElement {
     this.classList = new FakeClassList(this);
     this._text = '';
     this.disabled = false;
+    this.value = '';
+    this._listeners = new Map();
   }
 
   set className(value) {
@@ -87,6 +89,23 @@ class FakeElement {
     child.parentNode = this;
     this.children.push(child);
     return child;
+  }
+
+  addEventListener(type, listener) {
+    const listeners = this._listeners.get(type) || [];
+    listeners.push(listener);
+    this._listeners.set(type, listeners);
+  }
+
+  dispatchEvent(event) {
+    const input = typeof event === 'string' ? { type: event } : event;
+    if (!input.preventDefault) input.preventDefault = function preventDefault() {};
+    const returns = (this._listeners.get(input.type) || []).map((listener) => listener.call(this, input));
+    return returns.length === 1 ? returns[0] : Promise.all(returns);
+  }
+
+  click() {
+    return this.dispatchEvent({ type: 'click', preventDefault() {} });
   }
 
   remove() {
