@@ -9,10 +9,12 @@ const {
 } = require('../src/content-id');
 const { renderArticlePage } = require('./article-template');
 const { renderRss, renderSitemap } = require('./discovery-output');
+const { createSearchIndex } = require('./search-index');
 
 const MANAGED_OUTPUTS = [
   { relativePath: 'posts', staged: true },
   { relativePath: path.join('assets', 'posts'), staged: true },
+  { relativePath: path.join('assets', 'search-index.json'), staged: true },
   { relativePath: path.join('assets', 'js', 'posts-index.js'), staged: true },
   { relativePath: 'sitemap.xml', staged: true },
   { relativePath: 'rss.xml', staged: true },
@@ -156,6 +158,12 @@ function writeCompatibilityDocuments(publicDir, posts) {
   }
 }
 
+function writeSearchIndex(publicDir, posts) {
+  const outFile = path.join(publicDir, 'assets', 'search-index.json');
+  fs.mkdirSync(path.dirname(outFile), { recursive: true });
+  fs.writeFileSync(outFile, JSON.stringify(createSearchIndex(posts)), 'utf8');
+}
+
 function writeArticlePages(publicDir, posts, siteUrl, renderArticle = renderArticlePage) {
   const outArticlesDir = path.join(publicDir, 'posts');
 
@@ -278,10 +286,11 @@ function existingTarget(stagedPublicDir, publicDir, relativePath, allowPublished
 function validateArticleTargets(stagedPublicDir, publicDir, posts, siteUrl) {
   const stagedRoot = path.resolve(stagedPublicDir);
   const sitePath = new URL(siteUrl).pathname.replace(/^\/+|\/+$/g, '');
-  const generatedArticlePaths = new Set(
-    [...readPublishedPostIds(publicDir), ...posts.map((post) => post.id)].map((id) =>
-      path.normalize(path.join('posts', `${id}.html`))
-    )
+  const generatedPostPaths = new Set(
+    [...readPublishedPostIds(publicDir), ...posts.map((post) => post.id)].flatMap((id) => [
+      path.normalize(path.join('posts', `${id}.html`)),
+      path.normalize(path.join('assets', 'posts', `${id}.json`)),
+    ])
   );
 
   for (const post of posts) {
@@ -355,7 +364,7 @@ function validateArticleTargets(stagedPublicDir, publicDir, posts, siteUrl) {
         stagedRoot,
         publicDir,
         relativeTarget,
-        !generatedArticlePaths.has(path.normalize(relativeTarget))
+        !generatedPostPaths.has(path.normalize(relativeTarget))
       );
       if (!targetFile) {
         throw new Error(`Broken internal ${attribute} in ${sourceRelativePath}: ${target}`);
@@ -392,6 +401,23 @@ function validateStagedOutputs(stagedPublicDir, publicDir, posts, siteUrl) {
   );
   if (!Array.isArray(index) || index.length !== posts.length) {
     throw new Error('Invalid staged post index count');
+  }
+
+  const searchIndexSource = fs.readFileSync(
+    path.join(stagedPublicDir, 'assets', 'search-index.json'),
+    'utf8'
+  );
+  let searchIndex;
+  try {
+    searchIndex = JSON.parse(searchIndexSource);
+  } catch {
+    throw new Error('Invalid staged search index JSON');
+  }
+  if (
+    !Array.isArray(searchIndex) ||
+    searchIndexSource !== JSON.stringify(createSearchIndex(posts))
+  ) {
+    throw new Error('Invalid staged search index');
   }
 
   const sitemap = parseXmlDocument(
@@ -508,6 +534,7 @@ function buildSite({ postsDir, publicDir, siteUrl, renderArticle = renderArticle
   try {
     writePostIndex(stagedPublicDir, posts);
     writeCompatibilityDocuments(stagedPublicDir, posts);
+    writeSearchIndex(stagedPublicDir, posts);
     writeArticlePages(stagedPublicDir, posts, normalizedSiteUrl, renderArticle);
     writeDiscoveryOutputs(stagedPublicDir, posts, normalizedSiteUrl);
     validateStagedOutputs(stagedPublicDir, resolvedPublicDir, posts, normalizedSiteUrl);
@@ -527,4 +554,5 @@ module.exports = {
   writeCompatibilityDocuments,
   writeDiscoveryOutputs,
   writePostIndex,
+  writeSearchIndex,
 };

@@ -334,6 +334,37 @@ test('a staged article cannot rely on a generated route being retired by the sam
   }
 });
 
+test('a staged article cannot rely on compatibility JSON retired by the same publication', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'publisher-retired-json-'));
+  const postsDir = path.join(root, 'posts');
+  const publicDir = path.join(root, 'public');
+
+  try {
+    fs.mkdirSync(postsDir, { recursive: true });
+    seedStaticArticleTargets(publicDir);
+    writePost(postsDir, 'alpha.md');
+    writePost(postsDir, 'beta.md', { date: '2026-08-10' });
+    buildSite({ postsDir, publicDir, siteUrl: SITE_URL });
+    const before = snapshotFiles(publicDir);
+
+    fs.rmSync(path.join(postsDir, 'beta.md'));
+    fs.writeFileSync(
+      path.join(postsDir, 'alpha.md'),
+      '---\nid: alpha\ntitle: Alpha\ndate: 2026-08-11\ntags: [testing]\n' +
+        'summary: Fixture post\ntype: post\n---\n[retired](../assets/posts/beta.json)\n',
+      'utf8'
+    );
+    assert.throws(
+      () => buildSite({ postsDir, publicDir, siteUrl: SITE_URL }),
+      /Broken internal href.*beta\.json/i
+    );
+
+    assertSnapshotsEqual(snapshotFiles(publicDir), before);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('keeps every managed output unchanged when an article render fails', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'staged-publisher-'));
   const postsDir = path.join(root, 'posts');
@@ -342,6 +373,7 @@ test('keeps every managed output unchanged when an article render fails', () => 
   const managedFiles = [
     path.join('posts', 'alpha.html'),
     path.join('assets', 'posts', 'alpha.json'),
+    path.join('assets', 'search-index.json'),
     path.join('assets', 'js', 'posts-index.js'),
     'sitemap.xml',
     'rss.xml',
