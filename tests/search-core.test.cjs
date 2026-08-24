@@ -220,6 +220,36 @@ test('maps body ranges back to display text after Unicode lowercase expansion', 
   assert.equal(result.snippet.slice(result.ranges[0].start, result.ranges[0].end), 'marker');
 });
 
+test('preserves whole-string Greek final-sigma folding in titles and body ranges', () => {
+  const results = api().search(
+    [
+      {
+        id: 'greek-title',
+        title: 'ΟΣ',
+        summary: '',
+        tags: [],
+        date: '2026-08-12',
+        body: '',
+      },
+      {
+        id: 'greek-body',
+        title: 'Fixture',
+        summary: '',
+        tags: [],
+        date: '2026-08-11',
+        body: 'prefix ΟΣ suffix',
+      },
+    ],
+    'ος'
+  );
+
+  assert.equal(api().normalizeQuery('ΟΣ').phrase, 'ος');
+  assert.deepEqual(results.map((result) => result.document.id), ['greek-title', 'greek-body']);
+  assert.equal(results[1].snippet, 'prefix ΟΣ suffix');
+  assert.deepEqual(results[1].ranges, [{ start: 7, end: 9 }]);
+  assert.equal(results[1].snippet.slice(7, 9), 'ΟΣ');
+});
+
 test('is provided as a UMD browser global as well as CommonJS', () => {
   const source = fs.readFileSync(modulePath, 'utf8');
   const context = { globalThis: {} };

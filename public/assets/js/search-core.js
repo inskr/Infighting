@@ -36,7 +36,7 @@
   }
 
   function foldText(displayText) {
-    var text = "";
+    var text = displayText.toLowerCase();
     var offsets = [];
     var index = 0;
 
@@ -44,10 +44,9 @@
       var codePoint = displayText.codePointAt(index);
       var character = String.fromCodePoint(codePoint);
       var end = index + character.length;
-      var folded = character.toLowerCase();
+      var foldedLength = character.toLowerCase().length;
 
-      text += folded;
-      for (var foldedIndex = 0; foldedIndex < folded.length; foldedIndex += 1) {
+      for (var offsetIndex = 0; offsetIndex < foldedLength; offsetIndex += 1) {
         offsets.push({ start: index, end: end });
       }
       index = end;
