@@ -81,20 +81,130 @@ function listPublishedHtml(publicDir) {
   return [...rootPages, ...articlePages].sort();
 }
 
+function isWhitespace(character) {
+  return character === ' ' || character === '\n' || character === '\r' || character === '\t' || character === '\f';
+}
+
+function isScriptBoundary(character) {
+  return character === undefined || isWhitespace(character) || character === '/' || character === '>';
+}
+
+function readOpeningScriptTag(html, start) {
+  const nameStart = start + 1;
+  if (html.slice(nameStart, nameStart + 6).toLowerCase() !== 'script') return null;
+
+  let cursor = nameStart + 6;
+  if (!isScriptBoundary(html[cursor])) return null;
+  let source = null;
+
+  while (cursor < html.length) {
+    while (isWhitespace(html[cursor])) cursor += 1;
+    if (html[cursor] === '>') return { end: cursor + 1, source };
+    if (html[cursor] === '/' && html[cursor + 1] === '>') return { end: cursor + 2, source };
+
+    const attributeStart = cursor;
+    while (
+      cursor < html.length &&
+      !isWhitespace(html[cursor]) &&
+      html[cursor] !== '=' &&
+      html[cursor] !== '>' &&
+      html[cursor] !== '/'
+    ) cursor += 1;
+    if (attributeStart === cursor) return null;
+
+    const attributeName = html.slice(attributeStart, cursor).toLowerCase();
+    while (isWhitespace(html[cursor])) cursor += 1;
+    let attributeValue = '';
+    if (html[cursor] === '=') {
+      cursor += 1;
+      while (isWhitespace(html[cursor])) cursor += 1;
+      const quote = html[cursor];
+      if (quote === '"' || quote === "'") {
+        cursor += 1;
+        const valueStart = cursor;
+        while (cursor < html.length && html[cursor] !== quote) cursor += 1;
+        attributeValue = html.slice(valueStart, cursor);
+        if (cursor < html.length) cursor += 1;
+      } else {
+        const valueStart = cursor;
+        while (cursor < html.length && !isWhitespace(html[cursor]) && html[cursor] !== '>') cursor += 1;
+        attributeValue = html.slice(valueStart, cursor);
+      }
+    }
+
+    if (attributeName === 'src' && source === null) source = attributeValue;
+  }
+
+  return null;
+}
+
+function readClosingScriptTag(html, start) {
+  const nameStart = start + 2;
+  if (html.slice(nameStart, nameStart + 6).toLowerCase() !== 'script') return null;
+  if (!isScriptBoundary(html[nameStart + 6])) return null;
+
+  let quote = null;
+  for (let cursor = nameStart + 6; cursor < html.length; cursor += 1) {
+    const character = html[cursor];
+    if (quote) {
+      if (character === quote) quote = null;
+    } else if (character === '"' || character === "'") {
+      quote = character;
+    } else if (character === '>') {
+      return cursor + 1;
+    }
+  }
+  return html.length;
+}
+
 function scriptSources(htmlPath, html) {
-  const scriptTags = html.match(/<script\b[^>]*>/gi) || [];
   const baseUrl = new URL(`/${htmlPath}`, 'https://resource-budget.invalid');
-  return scriptTags.flatMap((tag) => {
-    const source = tag.match(/\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i);
-    if (!source) return [];
-    const relativeSource = source[1] ?? source[2] ?? source[3];
-    const sourceUrl = new URL(relativeSource, baseUrl);
-    return [
-      sourceUrl.origin === baseUrl.origin
-        ? sourceUrl.pathname.replace(/^\//, '')
-        : sourceUrl.href,
-    ];
-  });
+  const sources = [];
+  let cursor = 0;
+
+  while (cursor < html.length) {
+    const tagStart = html.indexOf('<', cursor);
+    if (tagStart === -1) break;
+    if (html.startsWith('<!--', tagStart)) {
+      const commentEnd = html.indexOf('-->', tagStart + 4);
+      cursor = commentEnd === -1 ? html.length : commentEnd + 3;
+      continue;
+    }
+
+    const openingTag = readOpeningScriptTag(html, tagStart);
+    if (!openingTag) {
+      cursor = tagStart + 1;
+      continue;
+    }
+
+    if (openingTag.source !== null) {
+      const sourceUrl = new URL(openingTag.source, baseUrl);
+      sources.push(
+        sourceUrl.origin === baseUrl.origin
+          ? sourceUrl.pathname.replace(/^\//, '')
+          : sourceUrl.href
+      );
+    }
+
+    const bodyStart = openingTag.end;
+    let bodyCursor = bodyStart;
+    while (bodyCursor < html.length) {
+      const closeStart = html.indexOf('<', bodyCursor);
+      if (closeStart === -1) {
+        bodyCursor = html.length;
+        break;
+      }
+      const closingTag = html[closeStart + 1] === '/' ? readClosingScriptTag(html, closeStart) : null;
+      if (closingTag) {
+        bodyCursor = closingTag;
+        break;
+      }
+      bodyCursor = closeStart + 1;
+    }
+    cursor = bodyCursor;
+  }
+
+  return sources;
 }
 
 function deterministicIncompressibleBytes(length, seed) {
@@ -295,4 +405,42 @@ test('the fixed-seed search-index overflow fixture is repeatable and genuinely e
   assert.deepEqual(first, second);
   assert.deepEqual(firstGzip, secondGzip);
   assert.ok(firstGzip.length > SEARCH_INDEX_GZIP_LIMIT_BYTES);
+});
+
+test('script scanner reads real src attributes without treating quoted markup or raw-text bodies as tags', () => {
+  // Break caught: attribute substrings, quoted >, or inline script text bypasses or invents a dependency.
+  const html = [
+    '<script data-src=assets/js/home-page.js src=assets/js/search-core.js></script>',
+    '<script data-note="value src=assets/js/home-page.js" src=assets/js/article-page.js></script>',
+    '<script data-note="a>b" src=assets/js/search-core.js></script>',
+    '<script>const sample = "<script src=assets/js/article-page.js>";</script>',
+    '<ScRiPt\n  DeFeR\tSrC = assets/js/search-core.js\t></ScRiPt>',
+  ].join('');
+
+  assert.deepEqual(scriptSources('index.html', html), [
+    'assets/js/search-core.js',
+    'assets/js/article-page.js',
+    'assets/js/search-core.js',
+    'assets/js/search-core.js',
+  ]);
+});
+
+test('real forbidden Home src attributes fail the allowlist regardless of other attributes or casing', () => {
+  // Break caught: a genuine forbidden module is hidden behind a data-src, quoted value, quoted >, or mixed-case tag.
+  const forbiddenTags = [
+    '<script data-src=assets/js/home-page.js src=assets/js/search-core.js></script>',
+    '<script data-note="value src=assets/js/home-page.js" src=assets/js/article-page.js></script>',
+    '<script data-note="a>b" src=assets/js/search-core.js></script>',
+    '<ScRiPt\n  DeFeR\tSrC = assets/js/article-page.js\t></ScRiPt>',
+  ];
+
+  for (const forbiddenTag of forbiddenTags) {
+    withFixture(({ fixtureArticleRoute, fixtureRoutes, publicDir }) => {
+      fs.appendFileSync(path.join(publicDir, 'index.html'), forbiddenTag);
+      assert.throws(
+        () => assertPublishedArtifacts(publicDir, fixtureRoutes, fixtureArticleRoute),
+        /assets\/js\/(?:search-core|article-page)\.js/
+      );
+    });
+  }
 });
