@@ -68,9 +68,16 @@ function fixture(overrides = {}) {
   const input = append(document, 'input', 'search-input');
   const clear = append(document, 'button', 'search-clear');
   const status = append(document, 'p', 'search-status');
-  const results = append(document, 'div', 'search-results');
+  const resultsSection = append(document, 'section', 'search-results-section');
+  const resultsHeading = document.createElement('h2');
+  resultsHeading.setAttribute('id', 'search-results-title');
+  resultsHeading.textContent = '搜索结果';
+  resultsSection.appendChild(resultsHeading);
+  const results = document.createElement('div');
+  results.setAttribute('id', 'search-results');
+  resultsSection.appendChild(results);
   const listeners = new Map();
-  const location = { pathname: '/search.html', search: '', hash: '' };
+  const location = { pathname: '/search.html', search: overrides.locationSearch || '', hash: '' };
   const history = {
     replaceState(state, title, url) {
       const parsed = new URL(url, 'https://example.test');
@@ -86,6 +93,9 @@ function fixture(overrides = {}) {
     addEventListener(type, listener) { listeners.set(type, listener); },
     dispatch(type) { return listeners.get(type)?.({ type }); },
   };
+  if (overrides.previewState) {
+    root.SearchPreviewState = overrides.previewState({ document, results, root });
+  }
   const fetch = overrides.fetch || (async () => {
     throw new Error('unexpected fetch');
   });
@@ -100,6 +110,9 @@ function fixture(overrides = {}) {
     },
     setTimeout: overrides.setTimeout,
     clearTimeout: overrides.clearTimeout,
+    metadata: overrides.metadata,
+    waitForHeroPaint: overrides.waitForHeroPaint,
+    waitForPreviewPaint: overrides.waitForPreviewPaint,
   });
   return {
     announcements,
@@ -111,10 +124,592 @@ function fixture(overrides = {}) {
     input,
     location,
     results,
+    resultsHeading,
+    resultsSection,
     root,
     status,
   };
 }
+
+function trackConnectedChildList(root) {
+  let mutations = 0;
+
+  function track(node) {
+    const appendChild = node.appendChild.bind(node);
+    node.appendChild = (child) => {
+      mutations += 1;
+      return appendChild(child);
+    };
+    node.children.forEach((child) => {
+      const remove = child.remove.bind(child);
+      child.remove = () => {
+        if (child.parentNode) mutations += 1;
+        return remove();
+      };
+      track(child);
+    });
+  }
+
+  track(root);
+  return { count() { return mutations; } };
+}
+
+function heroPaintRoot() {
+  const hero = { id: 'search-hero-title' };
+  const listeners = new Map();
+  const document = {
+    visibilityState: 'visible',
+    getElementById(id) { return id === hero.id ? hero : null; },
+    addEventListener(type, listener) { listeners.set(`document:${type}`, listener); },
+    removeEventListener(type, listener) {
+      if (listeners.get(`document:${type}`) === listener) listeners.delete(`document:${type}`);
+    },
+  };
+  const root = {
+    document,
+    addEventListener(type, listener) { listeners.set(`root:${type}`, listener); },
+    removeEventListener(type, listener) {
+      if (listeners.get(`root:${type}`) === listener) listeners.delete(`root:${type}`);
+    },
+    dispatch(type) { listeners.get(`root:${type}`)?.({ type }); },
+    dispatchDocument(type) { listeners.get(`document:${type}`)?.({ type }); },
+  };
+  return { document, hero, listeners, root };
+}
+
+function controlledPaintObserver() {
+  const state = { callback: null, disconnects: 0, observations: [] };
+  class Observer {
+    static supportedEntryTypes = ['largest-contentful-paint'];
+
+    constructor(callback) { state.callback = callback; }
+
+    observe(options) { state.observations.push(options); }
+
+    disconnect() { state.disconnects += 1; }
+  }
+  state.Observer = Observer;
+  state.emit = (entries) => state.callback({ getEntries() { return entries; } });
+  return state;
+}
+
+test('waitForHeroPaint keeps an unsupported observer fallback bounded', async () => {
+  const timers = fakeTimers();
+  const { root } = heroPaintRoot();
+  let fallbackCalls = 0;
+  const pending = api().waitForHeroPaint(root, {
+    PerformanceObserver: null,
+    clearTimeout: timers.clearTimeout,
+    fallback() {
+      fallbackCalls += 1;
+      return new Promise(() => {});
+    },
+    setTimeout: timers.setTimeout,
+    timeoutMs: 80,
+  });
+
+  assert.equal(fallbackCalls, 1);
+  assert.deepEqual(timers.pendingDelays(), [80]);
+  await timers.runAll();
+  await pending;
+  assert.equal(timers.pendingCount(), 0);
+});
+
+test('waitForHeroPaint accepts only the static Hero and cleans every resource', async () => {
+  const timers = fakeTimers();
+  const { hero, listeners, root } = heroPaintRoot();
+  const observer = controlledPaintObserver();
+  let settled = false;
+  const pending = api().waitForHeroPaint(root, {
+    PerformanceObserver: observer.Observer,
+    clearTimeout: timers.clearTimeout,
+    setTimeout: timers.setTimeout,
+    timeoutMs: 500,
+  }).then(() => { settled = true; });
+
+  assert.deepEqual(observer.observations, [{ type: 'largest-contentful-paint', buffered: true }]);
+  assert.equal(timers.pendingCount(), 1);
+  assert.equal(listeners.size, 2);
+  observer.emit([{ element: { id: 'search-results-title' } }]);
+  await Promise.resolve();
+  assert.equal(settled, false);
+
+  observer.emit([{ element: hero }]);
+  await pending;
+  assert.equal(observer.disconnects, 1);
+  assert.equal(timers.pendingCount(), 0);
+  assert.equal(listeners.size, 0);
+});
+
+for (const exitPath of ['pagehide', 'hidden']) {
+  test(`waitForHeroPaint releases its observer on ${exitPath}`, async () => {
+    const timers = fakeTimers();
+    const { document, listeners, root } = heroPaintRoot();
+    const observer = controlledPaintObserver();
+    const pending = api().waitForHeroPaint(root, {
+      PerformanceObserver: observer.Observer,
+      clearTimeout: timers.clearTimeout,
+      setTimeout: timers.setTimeout,
+      timeoutMs: 500,
+    });
+
+    if (exitPath === 'pagehide') root.dispatch('pagehide');
+    else {
+      document.visibilityState = 'hidden';
+      root.dispatchDocument('visibilitychange');
+    }
+    await pending;
+    assert.equal(observer.disconnects, 1);
+    assert.equal(timers.pendingCount(), 0);
+    assert.equal(listeners.size, 0);
+  });
+}
+
+test('identical preview fingerprint reuses the complete result tree with one completion announcement', async () => {
+  // Break caught: authoritative completion rebuilds cards or mutates descendants even when every visible field is unchanged.
+  const documents = [
+    { id: 'alpha', title: 'Alpha needle', date: '2026-08-24', tags: ['needle'], summary: 'Alpha summary' },
+    { id: 'beta', title: 'Beta needle', date: '2026-08-23', tags: [], summary: 'Beta summary' },
+  ];
+  let cardBuilds = 0;
+  const previewCards = [];
+  const view = fixture({
+    fetch: async () => ({ ok: true, async json() { return documents.map((post) => ({ ...post, body: 'needle body' })); } }),
+    searchCore: {
+      search() {
+        return documents.map((document) => ({
+          document: { ...document, body: 'needle body' },
+          snippet: `authoritative ${document.id} needle`,
+          ranges: [{ start: 14 + document.id.length, end: 20 + document.id.length }],
+        }));
+      },
+    },
+    contentCards: {
+      postCard(root, post, options) {
+        cardBuilds += 1;
+        return ContentCards.postCard(root, post, options);
+      },
+    },
+    previewState({ document, results }) {
+      documents.forEach((post) => {
+        const card = ContentCards.postCard({ document }, post, {
+          headingLevel: 3,
+          showStats: false,
+          summary: post.summary,
+        });
+        card.setAttribute('data-search-id', post.id);
+        results.appendChild(card);
+        previewCards.push(card);
+      });
+      results.setAttribute('data-search-preview', 'true');
+      results.setAttribute('data-search-query', 'needle');
+      results.setAttribute('aria-busy', 'true');
+      return {
+        kind: 'generated-metadata-preview',
+        preview: true,
+        query: 'needle',
+        resultIds: ['alpha', 'beta'],
+        fingerprint: '[["alpha","Alpha needle","2026-08-24",["needle"],"Alpha summary"],["beta","Beta needle","2026-08-23",[],"Beta summary"]]',
+        results,
+      };
+    },
+    waitForPreviewPaint: () => Promise.resolve(),
+  });
+  const originalDescendants = previewCards.map((card) => ({
+    heading: card.querySelector('h3'),
+    meta: card.querySelector('.post-meta'),
+    summary: card.querySelector('.post-summary'),
+  }));
+  const mutations = trackConnectedChildList(view.results);
+
+  await view.controller.run('needle');
+
+  assert.equal(cardBuilds, 0);
+  assert.equal(mutations.count(), 0);
+  assert.equal(view.results.children.length, 2);
+  previewCards.forEach((card, index) => {
+    assert.equal(view.results.children[index], card);
+    assert.equal(card.querySelector('h3'), originalDescendants[index].heading);
+    assert.equal(card.querySelector('.post-meta'), originalDescendants[index].meta);
+    assert.equal(card.querySelector('.post-summary'), originalDescendants[index].summary);
+  });
+  assert.equal(view.results.getAttribute('data-search-preview'), null);
+  assert.equal(view.results.getAttribute('aria-busy'), 'false');
+  assert.deepEqual(view.announcements, [
+    '正在搜索“needle”。',
+    '找到 2 篇与“needle”匹配的文章。',
+  ]);
+  assert.equal(view.announcements.filter((message) => message.startsWith('找到')).length, 1);
+});
+
+test('render metadata fingerprint changes retain authoritative replacement behavior', async () => {
+  // Break caught: matching IDs alone preserve stale preview title, date, tags, or summary content.
+  let authoritativeBuilds = 0;
+  const view = fixture({
+    fetch: async () => ({ ok: true, async json() { return []; } }),
+    searchCore: {
+      search() {
+        return [{
+          document: {
+            id: 'same',
+            title: 'Authoritative needle title',
+            date: '2026-08-25',
+            tags: ['updated'],
+            summary: 'Authoritative metadata summary',
+          },
+          snippet: 'Authoritative needle snippet',
+          ranges: [{ start: 14, end: 20 }],
+        }];
+      },
+    },
+    contentCards: {
+      postCard(root, post, options) {
+        authoritativeBuilds += 1;
+        return ContentCards.postCard(root, post, options);
+      },
+    },
+    previewState({ document, results }) {
+      const post = {
+        id: 'same',
+        title: 'Preview needle title',
+        date: '2026-08-24',
+        tags: ['preview'],
+        summary: 'Preview summary',
+      };
+      const card = ContentCards.postCard({ document }, post, {
+        headingLevel: 3,
+        showStats: false,
+        summary: post.summary,
+      });
+      card.setAttribute('data-search-id', post.id);
+      results.appendChild(card);
+      results.setAttribute('data-search-preview', 'true');
+      results.setAttribute('data-search-query', 'needle');
+      results.setAttribute('aria-busy', 'true');
+      return {
+        kind: 'generated-metadata-preview',
+        preview: true,
+        query: 'needle',
+        resultIds: ['same'],
+        fingerprint: '[["same","Preview needle title","2026-08-24",["preview"],"Preview summary"]]',
+        results,
+      };
+    },
+    waitForPreviewPaint: () => Promise.resolve(),
+  });
+
+  await view.controller.run('needle');
+
+  assert.equal(authoritativeBuilds, 1);
+  assert.equal(view.results.querySelector('h3').textContent, 'Authoritative needle title');
+  assert.equal(view.results.querySelector('.post-meta').textContent, '2026-08-25updated');
+  assert.equal(view.results.querySelector('.post-summary').textContent, 'Authoritative needle snippet');
+  assert.equal(view.results.getAttribute('data-search-preview'), null);
+  assert.deepEqual(view.announcements.filter((message) => message.startsWith('找到')), [
+    '找到 1 篇与“needle”匹配的文章。',
+  ]);
+});
+
+test('initial SearchPage run adopts generated preview without recreating its heading and retains sole async ownership', async () => {
+  // Break caught: SearchPage rerenders/announces the handed-off preview or bootstrap starts authoritative work itself.
+  let resolveFetch;
+  let previewHeading;
+  const searches = [];
+  const view = fixture({
+    locationSearch: '?q=needle',
+    fetch: () => new Promise((resolve) => { resolveFetch = resolve; }),
+    metadata: [{ id: 'same', title: 'needle title', summary: 'preview', tags: [], date: '2026-08-24' }],
+    searchCore: {
+      search(index, query) {
+        searches.push({ index, query });
+        return [
+          {
+            document: { id: 'same', title: 'needle title', summary: 'final', body: 'needle', tags: [], date: '2026-08-24' },
+            snippet: 'needle',
+            ranges: [{ start: 0, end: 6 }],
+          },
+          {
+            document: { id: 'second', title: 'second needle', summary: 'second', body: 'needle', tags: [], date: '2026-08-23' },
+            snippet: 'needle second',
+            ranges: [{ start: 0, end: 6 }],
+          },
+        ];
+      },
+    },
+    contentCards: ContentCards,
+    previewState({ document, results }) {
+      const card = ContentCards.postCard({ document }, {
+        id: 'same', title: 'needle title', summary: 'preview', tags: [], date: '2026-08-24',
+      }, { headingLevel: 3, showStats: false, summary: 'preview' });
+      card.setAttribute('data-search-id', 'same');
+      results.appendChild(card);
+      results.setAttribute('data-search-preview', 'true');
+      results.setAttribute('data-search-active', 'true');
+      results.setAttribute('data-search-query', 'needle');
+      results.setAttribute('aria-busy', 'true');
+      previewHeading = card.querySelector('h3');
+      return { kind: 'generated-metadata-preview', preview: true, query: 'needle', resultIds: ['same'], results };
+    },
+    waitForPreviewPaint: () => Promise.resolve(),
+  });
+
+  const pending = view.controller.run('needle');
+
+  assert.equal(view.results.querySelector('h3'), previewHeading);
+  assert.deepEqual(searches, []);
+  assert.equal(view.root.SearchPreviewState, null);
+  assert.equal(view.status.textContent, '已显示快速预览，正在搜索“needle”的全文内容。');
+  assert.deepEqual(view.announcements, ['正在搜索“needle”。']);
+
+  await new Promise((resolve) => setImmediate(resolve));
+  resolveFetch({ ok: true, async json() { return [{ id: 'same' }]; } });
+  await pending;
+
+  assert.equal(view.results.querySelector('h3'), previewHeading);
+  assert.equal(searches.length, 1);
+  assert.equal(view.results.querySelectorAll('.post-card').length, 2);
+  assert.equal(view.results.querySelectorAll('h3')[1].textContent, 'second needle');
+  assert.equal(view.results.getAttribute('aria-busy'), 'false');
+  assert.deepEqual(view.announcements, [
+    '正在搜索“needle”。',
+    '找到 2 篇与“needle”匹配的文章。',
+  ]);
+});
+
+test('SearchPage discards a stale generated handoff before rendering the current query preview', async () => {
+  // Break caught: a parser preview for the initial URL survives after a different run owns the Search state.
+  let resolveFetch;
+  const view = fixture({
+    locationSearch: '?q=alpha',
+    fetch: () => new Promise((resolve) => { resolveFetch = resolve; }),
+    metadata: [{ id: 'beta', title: 'beta preview', summary: '', tags: [], date: '2026-08-24' }],
+    searchCore: SearchCore,
+    contentCards: ContentCards,
+    previewState({ document, results }) {
+      const card = ContentCards.postCard({ document }, {
+        id: 'alpha', title: 'alpha stale', summary: '', tags: [], date: '2026-08-24',
+      }, { headingLevel: 3, showStats: false });
+      card.setAttribute('data-search-id', 'alpha');
+      results.appendChild(card);
+      results.setAttribute('data-search-preview', 'true');
+      results.setAttribute('data-search-query', 'alpha');
+      return { kind: 'generated-metadata-preview', preview: true, query: 'alpha', resultIds: ['alpha'], results };
+    },
+  });
+
+  const pending = view.controller.run('beta');
+
+  assert.equal(view.results.querySelector('h3').textContent, 'beta preview');
+  assert.equal(view.results.getAttribute('data-search-query'), 'beta');
+  assert.equal(view.root.SearchPreviewState, null);
+
+  await new Promise((resolve) => setImmediate(resolve));
+  resolveFetch({ ok: true, async json() { return []; } });
+  await pending;
+});
+
+test('metadata preview paints before the full index and final results replace it with one completion announcement', async () => {
+  // Break caught: the first result remains gated on the full-body index or preview is announced as final.
+  let resolveFetch;
+  const fetchResponse = new Promise((resolve) => { resolveFetch = resolve; });
+  const view = fixture({
+    fetch: () => fetchResponse,
+    metadata: [{
+      id: 'preview',
+      title: 'STM32 preview',
+      summary: 'Fast metadata result',
+      tags: ['STM32'],
+      date: '2026-08-24',
+    }],
+    searchCore: SearchCore,
+    contentCards: ContentCards,
+  });
+
+  const pending = view.controller.run('STM32');
+
+  const sectionHeading = view.resultsHeading;
+  assert.equal(view.results.querySelector('h3').textContent, 'STM32 preview');
+  assert.equal(view.results.getAttribute('data-search-preview'), 'true');
+  assert.equal(view.results.getAttribute('data-search-active'), 'true');
+  assert.equal(view.results.getAttribute('aria-busy'), 'true');
+  assert.equal(view.status.textContent, '已显示快速预览，正在搜索“STM32”的全文内容。');
+  assert.deepEqual(view.announcements, ['正在搜索“STM32”。']);
+
+  resolveFetch({
+    ok: true,
+    async json() {
+      return [{
+        id: 'final',
+        title: 'STM32 authoritative result',
+        summary: 'Final summary',
+        body: 'STM32 full body',
+        tags: [],
+        date: '2026-08-25',
+      }];
+    },
+  });
+  await pending;
+
+  assert.equal(view.results.querySelector('h3').textContent, 'STM32 authoritative result');
+  assert.equal(view.resultsHeading, sectionHeading);
+  assert.equal(view.resultsHeading.textContent, '搜索结果');
+  assert.equal(view.results.getAttribute('data-search-preview'), null);
+  assert.equal(view.results.getAttribute('data-search-active'), 'true');
+  assert.equal(view.results.getAttribute('aria-busy'), 'false');
+  assert.deepEqual(view.announcements, [
+    '正在搜索“STM32”。',
+    '找到 1 篇与“STM32”匹配的文章。',
+  ]);
+});
+
+test('a body-only match appears in the authoritative final results after an empty preview', async () => {
+  // Break caught: metadata-first search accidentally drops full-body-only matches.
+  let resolveFetch;
+  const view = fixture({
+    fetch: () => new Promise((resolve) => { resolveFetch = resolve; }),
+    metadata: [{ id: 'metadata', title: 'Unrelated', summary: '', tags: [], date: '2026-08-24' }],
+    searchCore: SearchCore,
+    contentCards: ContentCards,
+  });
+
+  const pending = view.controller.run('bodyneedle');
+  assert.equal(view.results.children.length, 0);
+  assert.equal(view.results.getAttribute('data-search-preview'), 'true');
+  assert.equal(view.results.getAttribute('aria-busy'), 'true');
+
+  await new Promise((resolve) => setImmediate(resolve));
+  resolveFetch({
+    ok: true,
+    async json() {
+      return [{
+        id: 'body-only',
+        title: 'Body result',
+        summary: '',
+        tags: [],
+        body: 'A bodyneedle exists only in the full document.',
+        date: '2026-08-24',
+      }];
+    },
+  });
+  await pending;
+
+  assert.equal(view.results.querySelector('h3').textContent, 'Body result');
+  assert.equal(view.results.getAttribute('data-search-preview'), null);
+  assert.equal(view.status.textContent, '找到 1 篇与“bodyneedle”匹配的文章。');
+});
+
+test('identical authoritative fingerprint waits for preview paint and preserves the metadata result subtree', async () => {
+  // Break caught: no-op completion starts before the preview checkpoint or replaces metadata content with a body snippet.
+  let releasePaint;
+  const paintCheckpoint = new Promise((resolve) => { releasePaint = resolve; });
+  const view = fixture({
+    fetch: async () => ({
+      ok: true,
+      async json() {
+        return [{
+          id: 'same-result',
+          title: 'needle title',
+          summary: 'Metadata summary',
+          tags: ['needle'],
+          body: 'Authoritative needle body excerpt.',
+          date: '2026-08-24',
+        }];
+      },
+    }),
+    metadata: [{
+      id: 'same-result',
+      title: 'needle title',
+      summary: 'Metadata summary',
+      tags: ['needle'],
+      date: '2026-08-24',
+    }],
+    searchCore: SearchCore,
+    contentCards: ContentCards,
+    waitForPreviewPaint: () => paintCheckpoint,
+  });
+
+  const pending = view.controller.run('needle');
+  const previewHeading = view.results.querySelector('h3');
+  assert.ok(previewHeading);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(view.results.getAttribute('data-search-preview'), 'true');
+  assert.equal(view.results.querySelector('h3'), previewHeading);
+
+  releasePaint();
+  await pending;
+
+  assert.equal(view.results.querySelector('h3'), previewHeading);
+  assert.equal(view.results.querySelector('.post-summary').textContent, 'Metadata summary');
+  assert.equal(view.results.getAttribute('data-search-preview'), null);
+  assert.equal(view.results.getAttribute('aria-busy'), 'false');
+});
+
+test('a usable preview reaches its paint checkpoint before the full index request starts', async () => {
+  // Break caught: the 242 KiB full index enters the parser-preview H3's Lighthouse dependency chain.
+  let releasePaint;
+  let fetchCalls = 0;
+  const paintCheckpoint = new Promise((resolve) => { releasePaint = resolve; });
+  const view = fixture({
+    fetch: async () => {
+      fetchCalls += 1;
+      return { ok: true, async json() { return []; } };
+    },
+    metadata: [{
+      id: 'preview', title: 'needle preview', summary: '', tags: [], date: '2026-08-24',
+    }],
+    searchCore: SearchCore,
+    contentCards: ContentCards,
+    waitForPreviewPaint: () => paintCheckpoint,
+  });
+
+  const pending = view.controller.run('needle');
+  assert.equal(view.results.querySelector('h3').textContent, 'needle preview');
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(fetchCalls, 0);
+
+  releasePaint();
+  await pending;
+  assert.equal(fetchCalls, 1);
+  assert.equal(view.results.getAttribute('aria-busy'), 'false');
+});
+
+test('replacement queries replace stale previews immediately and only their final result can commit', async () => {
+  // Break caught: an earlier preview or shared-index continuation renders under a newer q URL.
+  let resolveFetch;
+  const view = fixture({
+    fetch: () => new Promise((resolve) => { resolveFetch = resolve; }),
+    metadata: [
+      { id: 'alpha', title: 'alpha preview', summary: '', tags: [], date: '2026-08-24' },
+      { id: 'beta', title: 'beta preview', summary: '', tags: [], date: '2026-08-24' },
+    ],
+    searchCore: SearchCore,
+    contentCards: ContentCards,
+  });
+
+  const alpha = view.controller.run('alpha');
+  assert.equal(view.results.querySelector('h3').textContent, 'alpha preview');
+  const beta = view.controller.run('beta');
+  assert.equal(view.results.querySelector('h3').textContent, 'beta preview');
+
+  await new Promise((resolve) => setImmediate(resolve));
+  resolveFetch({
+    ok: true,
+    async json() {
+      return [
+        { id: 'alpha-final', title: 'alpha final', body: 'alpha', tags: [], date: '2026-08-24' },
+        { id: 'beta-final', title: 'beta final', body: 'beta', tags: [], date: '2026-08-24' },
+      ];
+    },
+  });
+  await Promise.all([alpha, beta]);
+
+  assert.equal(view.results.querySelector('h3').textContent, 'beta final');
+  assert.equal(view.location.search, '?q=beta');
+  assert.equal(view.results.getAttribute('data-search-preview'), null);
+  assert.deepEqual(view.announcements.filter((message) => /找到|没有找到/.test(message)), [
+    '找到 1 篇与“beta”匹配的文章。',
+  ]);
+});
 
 test('marks only active index loading busy and announces one aggregate completion', async () => {
   // Break caught: loading is silent, busy survives completion, or each result is announced separately.
@@ -190,14 +785,21 @@ test('focuses Retry only after an explicit submitted search fails', async () => 
 test('an empty normalized query clears the view without fetching the index', async () => {
   // Break caught: opening or clearing Search downloads the article index unnecessarily.
   let fetchCalls = 0;
-  const view = fixture({ fetch: async () => { fetchCalls += 1; } });
+  let previewSearches = 0;
+  const view = fixture({
+    fetch: async () => { fetchCalls += 1; },
+    metadata: [{ id: 'metadata', title: 'Metadata', summary: '', tags: [] }],
+    searchCore: { search() { previewSearches += 1; return []; } },
+  });
 
   await view.controller.run('  \u3000  ');
 
   assert.equal(fetchCalls, 0);
+  assert.equal(previewSearches, 0);
   assert.equal(view.input.value, '');
   assert.equal(view.status.textContent, '输入关键词开始搜索。');
   assert.equal(view.results.children.length, 0);
+  assert.equal(view.results.getAttribute('data-search-active'), null);
   assert.equal(view.location.search, '');
 });
 
@@ -256,8 +858,8 @@ test('results navigate to static articles and render hostile index fields as tex
 
   const card = view.results.querySelector('.post-card');
   assert.ok(card);
-  assert.equal(card.querySelector('h2').querySelector('a').getAttribute('href'), 'posts/alpha%2Fbeta.html');
-  assert.equal(card.querySelector('h2').textContent, '<img src=x onerror=alert(1)> needle');
+  assert.equal(card.querySelector('h3').querySelector('a').getAttribute('href'), 'posts/alpha%2Fbeta.html');
+  assert.equal(card.querySelector('h3').textContent, '<img src=x onerror=alert(1)> needle');
   assert.equal(card.querySelector('.tag').textContent, '<script>alert(1)</script>');
   assert.equal(card.querySelector('.post-summary').textContent, '<svg> needle </svg>');
   assert.equal(card.querySelector('mark').textContent, 'needle');
@@ -379,7 +981,7 @@ test('rapid typing debounces search to the final trimmed query and converges URL
   assert.deepEqual(queries, ['final query']);
   assert.equal(view.input.value, 'final query');
   assert.equal(view.location.search, '?q=final+query');
-  assert.equal(view.results.querySelector('h2').textContent, 'final query');
+  assert.equal(view.results.querySelector('h3').textContent, 'final query');
   assert.equal(view.status.textContent, '找到 1 篇与“final query”匹配的文章。');
 });
 

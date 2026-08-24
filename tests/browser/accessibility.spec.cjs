@@ -47,6 +47,17 @@ for (const theme of ['dark', 'light']) {
     await expect(page.locator('.post-card').first()).toBeVisible();
     await analyzeStableState(page, testInfo, `home ${theme} — /`);
   });
+
+  test(`search Hero ${theme} theme preserves its labelled heading and has no blocking axe violations`, async ({ page }, testInfo) => {
+    // Break caught: the parser-present Search Hero loses its accessible name or theme contrast.
+    await selectThemeBeforeNavigation(page, theme);
+    await page.goto('/search.html?q=STM32');
+    await expect(page.locator('#search-results')).toHaveAttribute('aria-busy', 'false');
+    const hero = page.locator('.search-hero');
+    await expect(hero).toHaveAttribute('aria-labelledby', 'search-hero-title');
+    await expect(page.locator('#search-hero-title')).toHaveText('搜索站内内容');
+    await analyzeStableState(page, testInfo, `search Hero ${theme} — /search.html?q=STM32`);
+  });
 }
 
 test('empty search has no serious or critical axe violations', async ({ page }, testInfo) => {
@@ -67,6 +78,28 @@ test('populated search has no serious or critical axe violations', async ({ page
   await expect(page.locator('#search-results .post-card').first()).toBeVisible();
   await expect(page.locator('#search-status')).toContainText('找到 ');
   await analyzeStableState(page, testInfo, 'search populated (STM32) — /search.html?q=STM32');
+});
+
+test('populated search preserves h1, h2, h3 outline with zero axe violations at every impact', async ({ page }) => {
+  // Break caught: result-card headings bypass their persistent section heading or introduce lesser-impact axe debt.
+  await page.goto('/search.html?q=STM32');
+  await expect(page.locator('#search-results')).toHaveAttribute('aria-busy', 'false');
+  await expect(page.locator('#search-results .post-card').first()).toBeVisible();
+
+  const outline = await page.locator('main h1, main h2, main h3')
+    .evaluateAll((headings) => headings.map((heading) => ({
+      id: heading.id,
+      level: Number(heading.tagName.slice(1)),
+      text: heading.textContent.trim(),
+    })));
+  expect(outline[0].level).toBe(1);
+  expect(outline[0]).toEqual({ id: 'search-hero-title', level: 1, text: '搜索站内内容' });
+  expect(outline.find(({ id }) => id === 'search-results-title')?.level).toBe(2);
+  expect(outline.filter(({ level }) => level === 3).length).toBeGreaterThan(0);
+  expect(outline.every(({ level }, index) => index === 0 || level <= outline[index - 1].level + 1)).toBe(true);
+
+  const axe = await new AxeBuilder({ page }).analyze();
+  expect(axe.violations, JSON.stringify(findingReport('search outline', axe.violations), null, 2)).toEqual([]);
 });
 
 test('no-result search has no serious or critical axe violations', async ({ page }, testInfo) => {

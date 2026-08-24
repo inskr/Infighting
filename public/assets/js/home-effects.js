@@ -11,6 +11,8 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
+  var initializedRoots = [];
+
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
@@ -252,9 +254,32 @@
 
   function init(root) {
     if (!root || !root.document || prefersSimpleEffects(root)) return false;
-    var heroBound = createHeroMotionController(root).bind();
-    var signalBound = createSignalFieldController(root).bind();
-    return heroBound || signalBound;
+    if (initializedRoots.indexOf(root) !== -1) return true;
+    if (typeof root.document.addEventListener !== "function") return false;
+    initializedRoots.push(root);
+    var activated = false;
+    var interactionEvents = ["pointermove", "pointerdown", "focusin"];
+
+    function removeInteractionGate() {
+      if (typeof root.document.removeEventListener !== "function") return;
+      interactionEvents.forEach(function (name) {
+        root.document.removeEventListener(name, activate);
+      });
+    }
+
+    function activate(event) {
+      if (activated || (event && event.isTrusted === false) || prefersSimpleEffects(root)) return false;
+      activated = true;
+      removeInteractionGate();
+      var heroBound = createHeroMotionController(root).bind();
+      var signalBound = createSignalFieldController(root).bind();
+      return heroBound || signalBound;
+    }
+
+    interactionEvents.forEach(function (name) {
+      root.document.addEventListener(name, activate, { passive: true });
+    });
+    return true;
   }
 
   return {

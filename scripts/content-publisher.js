@@ -10,12 +10,20 @@ const {
 const { renderArticlePage } = require('./article-template');
 const { renderRss, renderSitemap } = require('./discovery-output');
 const { createSearchIndex } = require('./search-index');
+const {
+  inlineScriptHash,
+  renderSearchCriticalCss,
+  renderSearchThemeBundle,
+} = require('./search-critical-bundle');
+const { renderSearchPreviewBundle } = require('./search-preview-bundle');
 
 const MANAGED_OUTPUTS = [
   { relativePath: 'posts', staged: true },
   { relativePath: path.join('assets', 'posts'), staged: true },
   { relativePath: path.join('assets', 'search-index.json'), staged: true },
   { relativePath: path.join('assets', 'js', 'posts-index.js'), staged: true },
+  { relativePath: 'search.html', staged: true },
+  { relativePath: path.join('assets', 'js', 'search-preview.js'), staged: false },
   { relativePath: 'sitemap.xml', staged: true },
   { relativePath: 'rss.xml', staged: true },
   { relativePath: path.join('assets', 'js', 'posts-data.js'), staged: false },
@@ -162,6 +170,61 @@ function writeSearchIndex(publicDir, posts) {
   const outFile = path.join(publicDir, 'assets', 'search-index.json');
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   fs.writeFileSync(outFile, JSON.stringify(createSearchIndex(posts)), 'utf8');
+}
+
+function renderSearchPageWithPreview(source, posts, { cssSource, themeSource } = {}) {
+  const critical = renderSearchCriticalCss(cssSource);
+  const theme = renderSearchThemeBundle(themeSource);
+  const preview = renderSearchPreviewBundle(posts);
+  const criticalBlock = [
+    '  <!-- search-critical:start -->',
+    `  <style data-search-critical>${critical}</style>`,
+    '  <!-- search-critical:end -->',
+  ].join('\n');
+  const themeBlock = [
+    '  <!-- search-theme:start -->',
+    `  <script data-search-theme>${theme}</script>`,
+    '  <!-- search-theme:end -->',
+  ].join('\n');
+  const previewBlock = [
+    '    <!-- search-preview:start -->',
+    `    <script data-search-preview>${preview}</script>`,
+    '    <!-- search-preview:end -->',
+  ].join('\n');
+  const generatedCritical = /[ \t]*<!-- search-critical:start -->[\s\S]*?<!-- search-critical:end -->/;
+  const generatedTheme = /[ \t]*<!-- search-theme:start -->[\s\S]*?<!-- search-theme:end -->/;
+  const generatedPreview = /[ \t]*<!-- search-preview:start -->[\s\S]*?<!-- search-preview:end -->/;
+  const legacyScript = /[ \t]*<script src="assets\/js\/search-preview\.js"><\/script>/;
+  const preload = /[ \t]*<link rel="preload" href="assets\/js\/search-preview\.js" as="script">\r?\n?/;
+  const scriptPolicy = /(script-src\s+'self')(?:\s+'sha256-[A-Za-z0-9+/]+=*')*/;
+
+  let rendered = String(source).replace(preload, '');
+  if (!generatedCritical.test(rendered)) throw new Error('Search page is missing its critical CSS insertion point');
+  if (!generatedTheme.test(rendered)) throw new Error('Search page is missing its theme insertion point');
+  rendered = rendered.replace(generatedCritical, criticalBlock);
+  rendered = rendered.replace(generatedTheme, themeBlock);
+  if (generatedPreview.test(rendered)) rendered = rendered.replace(generatedPreview, previewBlock);
+  else if (legacyScript.test(rendered)) rendered = rendered.replace(legacyScript, previewBlock);
+  else throw new Error('Search page is missing its preview insertion point');
+  if (!scriptPolicy.test(rendered)) throw new Error('Search page is missing its script CSP');
+  return rendered.replace(
+    scriptPolicy,
+    `$1 '${inlineScriptHash(theme)}' '${inlineScriptHash(preview)}'`
+  );
+}
+
+function writeSearchPreview(publicDir, posts, templatePublicDir = publicDir) {
+  const templateFile = path.join(templatePublicDir, 'search.html');
+  const outFile = path.join(publicDir, 'search.html');
+  const source = fs.readFileSync(templateFile, 'utf8');
+  const cssSource = fs.readFileSync(path.join(templatePublicDir, 'assets', 'css', 'style.css'), 'utf8');
+  const themeSource = fs.readFileSync(path.join(templatePublicDir, 'assets', 'js', 'theme.js'), 'utf8');
+  fs.mkdirSync(path.dirname(outFile), { recursive: true });
+  fs.writeFileSync(
+    outFile,
+    renderSearchPageWithPreview(source, posts, { cssSource, themeSource }),
+    'utf8'
+  );
 }
 
 function writeArticlePages(publicDir, posts, siteUrl, renderArticle = renderArticlePage) {
@@ -420,6 +483,41 @@ function validateStagedOutputs(stagedPublicDir, publicDir, posts, siteUrl) {
     throw new Error('Invalid staged search index');
   }
 
+  const cssSource = fs.readFileSync(path.join(publicDir, 'assets', 'css', 'style.css'), 'utf8');
+  const themeFileSource = fs.readFileSync(path.join(publicDir, 'assets', 'js', 'theme.js'), 'utf8');
+  const criticalSource = renderSearchCriticalCss(cssSource);
+  const themeSource = renderSearchThemeBundle(themeFileSource);
+  const previewSource = renderSearchPreviewBundle(posts);
+  const searchPage = fs.readFileSync(path.join(stagedPublicDir, 'search.html'), 'utf8');
+  const criticalMatch = searchPage.match(
+    /<!-- search-critical:start -->\s*<style data-search-critical>([\s\S]*?)<\/style>\s*<!-- search-critical:end -->/
+  );
+  const themeMatch = searchPage.match(
+    /<!-- search-theme:start -->\s*<script data-search-theme>([\s\S]*?)<\/script>\s*<!-- search-theme:end -->/
+  );
+  const previewMatch = searchPage.match(
+    /<!-- search-preview:start -->\s*<script data-search-preview>([\s\S]*?)<\/script>\s*<!-- search-preview:end -->/
+  );
+  if (
+    !criticalMatch ||
+    criticalMatch[1] !== criticalSource ||
+    !themeMatch ||
+    themeMatch[1] !== themeSource ||
+    !previewMatch ||
+    previewMatch[1] !== previewSource ||
+    !searchPage.includes(
+      `script-src 'self' '${inlineScriptHash(themeSource)}' '${inlineScriptHash(previewSource)}'`
+    ) ||
+    !searchPage.includes(
+      '<link rel="stylesheet" href="assets/css/style.css" media="print" data-enhancement-stylesheet>'
+    ) ||
+    !/<noscript>\s*<link rel="stylesheet" href="assets\/css\/style\.css">\s*<\/noscript>/.test(searchPage) ||
+    /<script[^>]+src="assets\/js\/theme\.js"/.test(searchPage) ||
+    /(?:preload|src)[^>]*search-preview\.js/.test(searchPage)
+  ) {
+    throw new Error('Invalid staged Search critical head or preview');
+  }
+
   const sitemap = parseXmlDocument(
     fs.readFileSync(path.join(stagedPublicDir, 'sitemap.xml'), 'utf8')
   );
@@ -533,6 +631,7 @@ function buildSite({ postsDir, publicDir, siteUrl, renderArticle = renderArticle
 
   try {
     writePostIndex(stagedPublicDir, posts);
+    writeSearchPreview(stagedPublicDir, posts, resolvedPublicDir);
     writeCompatibilityDocuments(stagedPublicDir, posts);
     writeSearchIndex(stagedPublicDir, posts);
     writeArticlePages(stagedPublicDir, posts, normalizedSiteUrl, renderArticle);
@@ -550,9 +649,11 @@ module.exports = {
   buildSite,
   parseFrontmatter,
   readAndValidatePosts,
+  renderSearchPageWithPreview,
   writeArticlePages,
   writeCompatibilityDocuments,
   writeDiscoveryOutputs,
   writePostIndex,
   writeSearchIndex,
+  writeSearchPreview,
 };

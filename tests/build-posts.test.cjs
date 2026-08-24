@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -375,6 +376,7 @@ test('keeps every managed output unchanged when an article render fails', () => 
     path.join('assets', 'posts', 'alpha.json'),
     path.join('assets', 'search-index.json'),
     path.join('assets', 'js', 'posts-index.js'),
+    'search.html',
     'sitemap.xml',
     'rss.xml',
   ];
@@ -418,6 +420,61 @@ test('keeps every managed output unchanged when an article render fails', () => 
       fs.readdirSync(root).filter((name) => name.startsWith('.public-publish-')),
       []
     );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('buildSite deterministically generates the Search critical head, CSP hashes, and metadata preview', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'search-preview-build-'));
+  const postsDir = path.join(root, 'posts');
+  const publicDir = path.join(root, 'public');
+
+  try {
+    fs.mkdirSync(postsDir, { recursive: true });
+    writePost(postsDir, 'alpha.md', { title: 'Alpha STM32' });
+    seedStaticArticleTargets(publicDir);
+
+    buildSite({ postsDir, publicDir, siteUrl: SITE_URL });
+    const outputPath = path.join(publicDir, 'search.html');
+    const first = fs.readFileSync(outputPath);
+    buildSite({ postsDir, publicDir, siteUrl: SITE_URL });
+    const second = fs.readFileSync(outputPath);
+
+    assert.deepEqual(second, first);
+    const html = first.toString('utf8');
+    assert.match(html, /<!-- search-preview:start -->\s*<script data-search-preview>/);
+    assert.match(html, /\/\/ Auto-generated Search metadata preview\./);
+    const critical = html.match(
+      /<!-- search-critical:start -->\s*<style data-search-critical>([\s\S]*?)<\/style>\s*<!-- search-critical:end -->/
+    );
+    const theme = html.match(
+      /<!-- search-theme:start -->\s*<script data-search-theme>([\s\S]*?)<\/script>\s*<!-- search-theme:end -->/
+    );
+    assert.ok(critical, 'Search must contain generated critical CSS');
+    assert.ok(theme, 'Search must contain its generated theme bootstrap');
+    assert.match(critical[1], /^\/\* Auto-generated from assets\/css\/style\.css/);
+    assert.match(theme[1], /^\/\/ Auto-generated from assets\/js\/theme\.js\./);
+    assert.match(
+      html,
+      /<link rel="stylesheet" href="assets\/css\/style\.css" media="print" data-enhancement-stylesheet>/
+    );
+    assert.match(
+      html,
+      /<noscript>\s*<link rel="stylesheet" href="assets\/css\/style\.css">\s*<\/noscript>/
+    );
+    assert.doesNotMatch(html, /<script[^>]+src="assets\/js\/theme\.js"/);
+    const policy = html.match(/script-src 'self'((?: 'sha256-[A-Za-z0-9+/]+=*')+)/);
+    assert.ok(policy, 'Search CSP must authorize its generated scripts');
+    const hashes = [...policy[1].matchAll(/'(sha256-[A-Za-z0-9+/]+=*)'/g)]
+      .map((match) => match[1]);
+    const inlineScripts = [...html.matchAll(/<script data-search-(?:theme|preview)>([\s\S]*?)<\/script>/g)]
+      .map((match) => crypto.createHash('sha256').update(match[1]).digest('base64'))
+      .map((hash) => `sha256-${hash}`);
+    assert.deepEqual(hashes, inlineScripts);
+    assert.doesNotMatch(html, /# Body/);
+    assert.doesNotMatch(html, /(?:preload|src)[^>]*search-preview\.js/);
+    assert.equal(fs.existsSync(path.join(publicDir, 'assets', 'js', 'search-preview.js')), false);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

@@ -1,6 +1,8 @@
 'use strict';
 
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const { CONTENT_ID_PATTERN, isPortableContentId } = require('./content-id');
 
 const SECURITY_POLICY = [
@@ -19,6 +21,17 @@ const LONG_CACHE_CONTROL = 'public, max-age=604800, must-revalidate';
 const SHORT_CACHE_CONTROL = 'public, max-age=3600, must-revalidate';
 const SHORT_CACHE_SCRIPTS = new Set(['feed-archive.js', 'feed-data.js', 'posts-index.js']);
 const SHORT_CACHE_DOCUMENTS = new Set(['rss.xml', 'sitemap.xml']);
+
+function searchPreviewPolicy(publicDir) {
+  const source = fs.readFileSync(path.join(publicDir, 'search.html'), 'utf8');
+  const directive = source.match(/script-src 'self'((?: 'sha256-[A-Za-z0-9+/]+=*')+)/);
+  if (!directive) return SECURITY_POLICY;
+  const hashes = [...directive[1].matchAll(/'(sha256-[A-Za-z0-9+/]+=*)'/g)]
+    .map((match) => `'${match[1]}'`);
+  return hashes.length
+    ? SECURITY_POLICY.replace("script-src 'self'", `script-src 'self' ${hashes.join(' ')}`)
+    : SECURITY_POLICY;
+}
 
 function setStaticCacheHeaders(res, filePath) {
   const normalizedPath = filePath.replace(/\\/g, '/');
@@ -104,6 +117,7 @@ function createApp(options) {
   const contentIds = options.contentIds || new Set();
   const logger = options.logger || console;
   const app = express();
+  const searchPolicy = searchPreviewPolicy(options.publicDir);
   const limitMutation = createMutationLimiter({
     max: options.mutationLimit,
     windowMs: options.mutationWindowMs
@@ -112,7 +126,7 @@ function createApp(options) {
   app.disable('x-powered-by');
   app.use((req, res, next) => {
     res.set({
-      'Content-Security-Policy': SECURITY_POLICY,
+      'Content-Security-Policy': req.path === '/search.html' ? searchPolicy : SECURITY_POLICY,
       'Cross-Origin-Resource-Policy': 'same-origin',
       'Permissions-Policy': 'camera=(), geolocation=(), microphone=()',
       'Referrer-Policy': 'strict-origin-when-cross-origin',

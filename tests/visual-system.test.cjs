@@ -63,8 +63,15 @@ test('published pages bootstrap theme before CSS and expose the shared navigatio
       const response = await fetch(`${baseUrl}/${page}`);
       assert.equal(response.status, 200, page);
       const html = await response.text();
-      assert.match(html, /<script src="assets\/js\/theme\.js"><\/script>/, page);
-      assert.ok(html.indexOf('assets/js/theme.js') < html.indexOf('assets/css/style.css'), page);
+      if (page === 'search.html') {
+        assert.match(html, /<script data-search-theme>\/\/ Auto-generated from assets\/js\/theme\.js\./);
+        assert.doesNotMatch(html, /<script src="assets\/js\/theme\.js"><\/script>/);
+        assert.ok(html.indexOf('<style data-search-critical>') < html.indexOf('<body>'), page);
+        assert.ok(html.indexOf('<script data-search-theme>') < html.indexOf('<body>'), page);
+      } else {
+        assert.match(html, /<script src="assets\/js\/theme\.js"><\/script>/, page);
+        assert.ok(html.indexOf('assets/js/theme.js') < html.indexOf('assets/css/style.css'), page);
+      }
       assert.match(html, /class="nav-shell glass-surface"/, page);
       assert.match(html, /data-theme-toggle/, page);
       assert.match(html, /aria-label="主导航"/, page);
@@ -179,11 +186,15 @@ test('published pages load only their page-specific resources and share the ackn
     assert.match(archive, /assets\/js\/archive-page\.js/);
     assert.match(archive, /assets\/js\/ui-effects\.js/);
     assert.doesNotMatch(archive, /assets\/js\/(?:stats|likes-storage|content-cards|main)\.js/);
+    assert.match(search, /assets\/js\/posts-index\.js/);
     assert.match(search, /assets\/js\/site-shell\.js/);
     assert.match(search, /assets\/js\/content-cards\.js/);
     assert.match(search, /assets\/js\/search-core\.js/);
+    assert.doesNotMatch(search, /assets\/js\/search-preview\.js/);
+    assert.match(search, /<script data-search-preview>\s*\/\/ Auto-generated Search metadata preview\./);
+    assert.doesNotMatch(search, /assets\/js\/search-bootstrap\.js/);
     assert.match(search, /assets\/js\/search-page\.js/);
-    assert.doesNotMatch(search, /assets\/js\/(?:feed-data|feed-archive|posts-index|main|ui-effects|article-page|legacy-post)\.js/);
+    assert.doesNotMatch(search, /assets\/js\/(?:feed-data|feed-archive|main|ui-effects|article-page|legacy-post)\.js/);
 
     for (const html of [home, tags, archive]) {
       assert.doesNotMatch(html, /assets\/js\/post-(?:loader|view)\.js/);
@@ -217,23 +228,54 @@ test('search page exposes one labelled query field, recovery controls, and depen
     assert.equal(response.status, 200);
     const html = await response.text();
 
+    assert.match(
+      html,
+      /<section class="page-intro search-hero glass-surface" aria-labelledby="search-hero-title">\s*<span class="eyebrow">Search the field notes<\/span>\s*<h1 id="search-hero-title" class="page-title">搜索站内内容<\/h1>\s*<p class="page-desc">按标题、标签与正文查找技术文章。<\/p>/
+    );
+    assert.equal((html.match(/<h1\b/g) || []).length, 1);
+    assert.equal((html.match(/搜索站内内容/g) || []).length, 1);
     assert.equal((html.match(/<input\b/g) || []).length, 1);
     assert.match(html, /<label for="search-input"/);
     assert.match(html, /<input[^>]*id="search-input"[^>]*type="search"/);
     assert.match(html, /<button[^>]*id="search-clear"[^>]*type="button"/);
     assert.match(html, /<button[^>]*type="submit"/);
     assert.match(html, /id="search-status"[^>]*role="status"/);
-    assert.match(html, /id="search-results"/);
+    assert.match(
+      html,
+      /<section class="search-results-section" aria-labelledby="search-results-title">\s*<h2 id="search-results-title"[^>]*>[^<]*搜索结果/
+    );
+    assert.match(html, /<div id="search-results" class="search-results post-list"><\/div>/);
     assert.match(html, /href="search\.html" data-nav="search"/);
+    const inlineHashes = [...html.matchAll(/<script data-search-(?:theme|preview)>([\s\S]*?)<\/script>/g)]
+      .map((match) => require('node:crypto').createHash('sha256').update(match[1]).digest('base64'))
+      .map((hash) => `sha256-${hash}`);
+    assert.equal(inlineHashes.length, 2);
+    const metaPolicy = html.match(/script-src 'self'((?: 'sha256-[A-Za-z0-9+/]+=*')+)/);
+    assert.ok(metaPolicy);
+    const metaHashes = [...metaPolicy[1].matchAll(/'(sha256-[A-Za-z0-9+/]+=*)'/g)]
+      .map((match) => match[1]);
+    assert.deepEqual(metaHashes, inlineHashes);
+    const responseHashes = [...response.headers.get('content-security-policy')
+      .matchAll(/sha256-[A-Za-z0-9+/]+=*/g)]
+      .map((match) => match[0]);
+    assert.deepEqual(responseHashes, inlineHashes);
+    assert.doesNotMatch(html, /<link rel="preload" href="assets\/js\/search-preview\.js" as="script">/);
+    assert.doesNotMatch(html, /<link rel="preload" href="assets\/js\/(?:posts-index|content-cards|search-core)\.js"/);
+    assert.match(html, /<noscript>\s*<p[^>]*>[^<]*JavaScript[^<]*<a href="tags\.html">/);
 
-    const order = [
+    const declaredScripts = [...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"[^>]*><\/script>/g)]
+      .map((match) => match[1]);
+    assert.deepEqual(declaredScripts, [
+      'assets/js/posts-index.js',
       'assets/js/site-shell.js',
       'assets/js/content-cards.js',
       'assets/js/search-core.js',
       'assets/js/search-page.js',
-    ].map((source) => html.indexOf(source));
-    assert.ok(order.every((index) => index >= 0));
-    assert.deepEqual(order, [...order].sort((left, right) => left - right));
+    ]);
+    const resultsIndex = html.indexOf('id="search-results"');
+    const previewIndex = html.indexOf('<script data-search-preview>');
+    assert.ok(resultsIndex >= 0 && previewIndex > resultsIndex);
+    assert.equal((html.match(/<script(?![^>]*\bsrc=)[^>]*>\s*[^<\s]/g) || []).length, 2);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -381,6 +423,37 @@ test('dark and light themes both map the shared frosted-glass material tokens', 
 
   assert.match(glass, /rgba\(var\(--glass-surface-rgb\),\s*var\(--glass-opacity\)\)/);
   assert.match(glass, /backdrop-filter:\s*blur\(var\(--glass-blur\)\)/);
+});
+
+test('the whole-page fade is a non-blocking curtain over fully paintable content', () => {
+  // Break caught: animating body opacity disqualifies static article text from LCP.
+  const bodyRules = allRuleDeclarations(stylesheet, 'body').join('\n');
+  const curtain = allRuleDeclarations(stylesheet, 'body::after').join('\n');
+  const keyframes = atRuleBlock(stylesheet, '@keyframes pageCurtainReveal');
+  const reducedMotion = atRuleBlock(stylesheet, '@media (prefers-reduced-motion: reduce)');
+  const reducedCurtain = allRuleDeclarations(reducedMotion, 'body::after').join('\n');
+
+  assert.doesNotMatch(bodyRules, /animation:\s*pageFadeIn/);
+  assert.doesNotMatch(bodyRules, /opacity\s*:/);
+  assert.match(curtain, /content:\s*""/);
+  assert.match(curtain, /position:\s*fixed/);
+  assert.match(curtain, /inset:\s*0/);
+  assert.match(curtain, /pointer-events:\s*none/);
+  assert.match(curtain, /background(?:-color)?:\s*var\(--bg\)/);
+  assert.match(curtain, /animation:\s*pageCurtainReveal 360ms\b/);
+  assert.match(keyframes, /from\s*\{\s*opacity:\s*1/);
+  assert.match(keyframes, /to\s*\{\s*opacity:\s*0/);
+  assert.match(reducedCurtain, /animation:\s*none/);
+  assert.match(reducedCurtain, /opacity:\s*0/);
+});
+
+test('an active search keeps a viewport of result geometry after preview and final rendering', () => {
+  // Break caught: inserting client-only results moves the initially visible footer and exceeds the CLS gate.
+  const activeResults = allRuleDeclarations(stylesheet, '.search-results').join('\n');
+
+  assert.match(activeResults, /display:\s*grid/);
+  assert.match(activeResults, /min-block-size:\s*100vh/);
+  assert.doesNotMatch(stylesheet, /\.search-results:empty\s*\{[^}]*display:\s*none/);
 });
 
 test('hero keeps opaque dark layers when backdrop filters are unavailable', () => {

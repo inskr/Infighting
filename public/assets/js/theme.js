@@ -29,6 +29,15 @@
   function createThemeController(root) {
     var current = "dark";
 
+    function activateEnhancementStylesheet() {
+      var stylesheet = root.document.querySelector &&
+        root.document.querySelector("link[data-enhancement-stylesheet]");
+      if (!stylesheet || !stylesheet.addEventListener) return;
+      stylesheet.addEventListener("load", function () {
+        stylesheet.media = "all";
+      }, { once: true });
+    }
+
     function syncButtons() {
       var isLight = current === "light";
       root.document
@@ -66,6 +75,7 @@
       }
       current = normalizeTheme(stored) || "dark";
       root.document.documentElement.setAttribute("data-theme", current);
+      activateEnhancementStylesheet();
       return current;
     }
 

@@ -112,6 +112,74 @@ test('enabling reduced motion cancels an active hero animation frame', () => {
   assert.equal(values['--motion-y'], '0px');
 });
 
+test('homepage effects defer Canvas, layout, and frames until trusted pointer or focus interaction', () => {
+  // Break caught: decorative continuous effects consume the no-interaction Lighthouse startup budget.
+  const gateListeners = {};
+  const heroListeners = {};
+  const canvasListeners = {};
+  let contexts = 0;
+  let frames = 0;
+  let layoutReads = 0;
+  const context = {
+    setTransform() {},
+    clearRect() {},
+    beginPath() {},
+    moveTo() {},
+    lineTo() {},
+    stroke() {},
+    arc() {},
+    fill() {},
+  };
+  const hero = {
+    dataset: {},
+    style: { setProperty() {} },
+    addEventListener(name, handler) { heroListeners[name] = handler; },
+    querySelectorAll() { return []; },
+    getBoundingClientRect() {
+      layoutReads += 1;
+      return { left: 0, top: 0, width: 400, height: 200 };
+    },
+  };
+  const canvas = {
+    parentElement: null,
+    style: {},
+    addEventListener(name, handler) { canvasListeners[name] = handler; },
+    getContext() { contexts += 1; return context; },
+    getBoundingClientRect() {
+      layoutReads += 1;
+      return { left: 0, top: 0, width: 400, height: 200 };
+    },
+  };
+  const root = {
+    devicePixelRatio: 1,
+    matchMedia() { return { matches: false, addEventListener() {} }; },
+    requestAnimationFrame() { frames += 1; return frames; },
+    cancelAnimationFrame() {},
+    document: {
+      addEventListener(name, handler) { gateListeners[name] = handler; },
+      removeEventListener(name) { delete gateListeners[name]; },
+      querySelector(selector) {
+        if (selector === '[data-motion-hero]') return hero;
+        if (selector === '[data-signal-field]') return canvas;
+        return null;
+      },
+    },
+  };
+
+  assert.equal(HomeEffects.init(root), true);
+  assert.deepEqual({ contexts, frames, layoutReads }, { contexts: 0, frames: 0, layoutReads: 0 });
+  assert.equal(typeof gateListeners.pointermove, 'function');
+  assert.equal(typeof gateListeners.focusin, 'function');
+
+  gateListeners.pointermove({ isTrusted: false });
+  assert.deepEqual({ contexts, frames, layoutReads }, { contexts: 0, frames: 0, layoutReads: 0 });
+
+  gateListeners.pointermove({ isTrusted: true });
+  assert.deepEqual({ contexts, frames, layoutReads }, { contexts: 1, frames: 1, layoutReads: 1 });
+  assert.equal(typeof heroListeners.pointermove, 'function');
+  assert.equal(typeof canvasListeners.pointermove, 'function');
+});
+
 test('simple-effect preferences skip Canvas, pointer listeners, and animation frames', () => {
   // Break caught: coarse pointers or reduced-motion users pay setup cost before effects are disabled.
   for (const preferredQuery of ['(pointer: coarse)', '(prefers-reduced-motion: reduce)']) {

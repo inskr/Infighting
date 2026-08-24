@@ -13,6 +13,13 @@ try {
 function fixture(savedTheme) {
   const attrs = {};
   const listeners = {};
+  const stylesheetListeners = {};
+  const stylesheet = {
+    media: 'print',
+    addEventListener(name, handler) {
+      stylesheetListeners[name] = handler;
+    },
+  };
   const button = {
     attrs: {},
     setAttribute(name, value) {
@@ -35,6 +42,9 @@ function fixture(savedTheme) {
     querySelectorAll(selector) {
       return selector === '[data-theme-toggle]' ? [button] : [];
     },
+    querySelector(selector) {
+      return selector === 'link[data-enhancement-stylesheet]' ? stylesheet : null;
+    },
   };
   const storage = {
     value: savedTheme,
@@ -50,6 +60,8 @@ function fixture(savedTheme) {
     attrs,
     button,
     listeners,
+    stylesheet,
+    stylesheetListeners,
     storage,
   };
 }
@@ -70,6 +82,17 @@ test('defaults to dark and applies a saved light theme', () => {
   const saved = fixture('light');
   assert.equal(Theme.createThemeController(saved.root).bootstrap(), 'light');
   assert.equal(saved.attrs['data-theme'], 'light');
+});
+
+test('bootstrap activates the Search enhancement stylesheet only after it loads', () => {
+  // Break caught: Search either blocks first paint or never applies the full stylesheet after download.
+  const state = fixture('light');
+  Theme.createThemeController(state.root).bootstrap();
+
+  assert.equal(state.stylesheet.media, 'print');
+  assert.equal(typeof state.stylesheetListeners.load, 'function');
+  state.stylesheetListeners.load();
+  assert.equal(state.stylesheet.media, 'all');
 });
 
 test('theme button toggles, persists, and updates its accessible state', () => {

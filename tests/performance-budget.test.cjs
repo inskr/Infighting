@@ -9,6 +9,7 @@ const zlib = require('node:zlib');
 
 const CSS_LIMIT_BYTES = 50 * 1024;
 const SEARCH_INDEX_GZIP_LIMIT_BYTES = 150 * 1024;
+const SEARCH_PREVIEW_GZIP_LIMIT_BYTES = 8 * 1024;
 const PAGE_MODULES = new Set([
   'assets/js/archive-page.js',
   'assets/js/article-page.js',
@@ -47,8 +48,9 @@ const ROOT_ROUTES = {
   'search.html': {
     pageModule: 'assets/js/search-page.js',
     scripts: [
-      'assets/js/theme.js', 'assets/js/site-shell.js', 'assets/js/content-cards.js',
-      'assets/js/search-core.js', 'assets/js/search-page.js',
+      'assets/js/posts-index.js', 'assets/js/site-shell.js',
+      'assets/js/content-cards.js', 'assets/js/search-core.js',
+      'assets/js/search-page.js',
     ],
   },
   'tags.html': {
@@ -293,6 +295,17 @@ function assertPublishedArtifacts(publicDir, rootRoutes = ROOT_ROUTES, articleRo
     indexBytes <= SEARCH_INDEX_GZIP_LIMIT_BYTES,
     `search-index gzip budget exceeded: ${indexBytes} > ${SEARCH_INDEX_GZIP_LIMIT_BYTES}`
   );
+  const searchPageFile = path.join(publicDir, 'search.html');
+  if (fs.existsSync(searchPageFile)) {
+    const searchPage = fs.readFileSync(searchPageFile, 'utf8');
+    const preview = searchPage.match(/<script data-search-preview>([\s\S]*?)<\/script>/);
+    assert.ok(preview, 'search.html must contain its generated inline preview');
+    const previewBytes = zlib.gzipSync(preview[1]).length;
+    assert.ok(
+      previewBytes <= SEARCH_PREVIEW_GZIP_LIMIT_BYTES,
+      `search-preview gzip budget exceeded: ${previewBytes} > ${SEARCH_PREVIEW_GZIP_LIMIT_BYTES}`
+    );
+  }
 }
 
 function withFixture(callback) {
@@ -310,6 +323,7 @@ function withFixture(callback) {
 
   try {
     fs.mkdirSync(path.join(publicDir, 'assets', 'css'), { recursive: true });
+    fs.mkdirSync(path.join(publicDir, 'assets', 'js'), { recursive: true });
     fs.mkdirSync(path.join(publicDir, 'assets'), { recursive: true });
     fs.mkdirSync(path.join(publicDir, 'posts'), { recursive: true });
     fs.writeFileSync(path.join(publicDir, 'assets', 'css', 'style.css'), 'body{}');

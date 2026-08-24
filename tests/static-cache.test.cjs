@@ -28,6 +28,7 @@ test('serves a published vendor asset with the one-week cache policy', async () 
   const publicDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vendor-cache-'));
   const vendorDir = path.join(publicDir, 'vendor');
   fs.mkdirSync(vendorDir, { recursive: true });
+  fs.writeFileSync(path.join(publicDir, 'search.html'), '<!doctype html>');
   fs.writeFileSync(path.join(vendorDir, 'parser.wasm'), Buffer.from([0, 97, 115, 109]));
   const app = createApp({
     statsStore: { getAllStats() { return Object.create(null); } },

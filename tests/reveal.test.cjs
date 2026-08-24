@@ -12,17 +12,23 @@ const source = fs.readFileSync(
   'utf8'
 );
 
-function revealTarget(kind, { top = 100, height = 100, descendants = [] } = {}) {
+function revealTarget(kind, { top = 100, height = 100, descendants = [], operations = null } = {}) {
   const classes = new Set([kind]);
   return {
     nodeType: 1,
     height,
     style: {},
     classList: {
-      add(name) { classes.add(name); },
+      add(name) {
+        if (operations) operations.push(`write:${kind}:${name}`);
+        classes.add(name);
+      },
       contains(name) { return classes.has(name); },
     },
-    getBoundingClientRect() { return { top }; },
+    getBoundingClientRect() {
+      if (operations) operations.push(`read:${kind}`);
+      return { top };
+    },
     matches(selector) { return selector.includes(`.${kind}`); },
     querySelectorAll(selector) {
       return descendants.filter((node) => node.matches(selector));
@@ -103,6 +109,28 @@ test('loaded effects bootstrap reveals initial tag and tall article surfaces', (
   assert.equal(tallArticle.hasClass('visible'), true);
   assert.deepEqual(view.observed, [tallArticle]);
   assert.deepEqual(view.unobserved, [tallArticle]);
+});
+
+test('reveal bootstrap batches every layout read before class and style writes', () => {
+  // Break caught: reveal setup alternates class writes and layout reads, forcing layout once per surface.
+  const operations = [];
+  const hero = revealTarget('hero', { top: 100, operations });
+  const article = revealTarget('article', { top: 120, height: 50000, operations });
+  const board = revealTarget('board', { top: 900, operations });
+  const view = bootstrapFixture([hero, article, board]);
+
+  assert.equal(Effects.createRevealController(view.root).bind(), true);
+
+  const lastRead = operations.reduce((last, operation, index) => (
+    operation.startsWith('read:') ? index : last
+  ), -1);
+  const firstWrite = operations.findIndex((operation) => operation.startsWith('write:'));
+  assert.deepEqual(operations.filter((operation) => operation.startsWith('read:')), [
+    'read:hero',
+    'read:article',
+    'read:board',
+  ]);
+  assert.ok(firstWrite > lastRead, operations.join(', '));
 });
 
 test('reveal controller enhances cards and boards added after page rendering', () => {

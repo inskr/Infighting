@@ -24,7 +24,16 @@ function seedStaticArticleTargets(publicDir) {
   for (const relativePath of STATIC_ARTICLE_TARGETS) {
     const target = path.join(publicDir, relativePath);
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    if (!fs.existsSync(target)) fs.writeFileSync(target, `fixture: ${relativePath}\n`, 'utf8');
+    if (fs.existsSync(target)) continue;
+    if (
+      relativePath === 'search.html' ||
+      relativePath === path.join('assets', 'css', 'style.css') ||
+      relativePath === path.join('assets', 'js', 'theme.js')
+    ) {
+      fs.copyFileSync(path.join(__dirname, '..', '..', 'public', relativePath), target);
+      continue;
+    }
+    fs.writeFileSync(target, `fixture: ${relativePath}\n`, 'utf8');
   }
 }
 

@@ -44,6 +44,18 @@ jobs:
       - name: Build site assets
         run: npm run build
 
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run unit and integration tests
+        run: npm test
+
+      - name: Run accessibility gate
+        run: npm run test:a11y
+
+      - name: Run Lighthouse gate
+        run: npm run test:lighthouse
+
       - name: Fetch daily feeds
         run: node scripts/fetch-feeds.js
         continue-on-error: true   # 抓取失败不阻断部署，保留上次数据
@@ -70,11 +82,13 @@ jobs:
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
+        # 只发布明确的静态目录，不暴露源码、测试或配置
         with:
-          path: "public"   # 只发布明确的静态目录，不暴露源码、测试或配置
+          path: "public"
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        # Pages 未启用时自动启用（需仓库为 Public 或具备资格）
         with:
-          enablement: true   # Pages 未启用时自动启用（需仓库为 Public 或具备资格）
+          enablement: true

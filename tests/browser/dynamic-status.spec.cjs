@@ -41,7 +41,7 @@ test('search exposes one shared status, aggregate completion, and loading busy s
   await input.fill('radar');
   await page.getByRole('button', { name: '搜索', exact: true }).click();
   await expect(results).toHaveAttribute('aria-busy', 'true');
-  await expect(status).toHaveText('正在搜索“radar”。');
+  await expect(status).toHaveText('已显示快速预览，正在搜索“radar”的全文内容。');
 
   releaseIndex();
   await expect(results).toHaveAttribute('aria-busy', 'false');
@@ -77,23 +77,35 @@ test('newer non-empty search exclusively owns busy completion and announcement',
   const status = page.locator(sharedStatus);
   await input.fill('alpha');
   await page.getByRole('button', { name: '搜索', exact: true }).click();
-  await expect(status).toHaveText('正在搜索“alpha”。');
+  await expect(status).toHaveText('已显示快速预览，正在搜索“alpha”的全文内容。');
   await input.fill('beta');
   await page.getByRole('button', { name: '搜索', exact: true }).click();
   await expect(results).toHaveAttribute('aria-busy', 'true');
-  await expect(status).toHaveText('正在搜索“beta”。');
+  await expect(status).toHaveText('已显示快速预览，正在搜索“beta”的全文内容。');
 
   releaseIndex();
   await expect(results).toHaveAttribute('aria-busy', 'false');
   await expect(status).toHaveText('没有找到与“beta”匹配的文章。');
-  expect(await page.evaluate(() => window.__beforeCurrentCompletion)).toEqual([{
-    busy: 'true',
-    query: 'beta',
-    status: '正在搜索“beta”。',
-  }]);
+  expect(await page.evaluate(() => window.__beforeCurrentCompletion)).toEqual([
+    {
+      busy: 'true',
+      query: 'alpha',
+      status: '正在搜索“alpha”。',
+    },
+    {
+      busy: 'true',
+      query: 'beta',
+      status: '正在搜索“beta”。',
+    },
+    {
+      busy: 'true',
+      query: 'beta',
+      status: '已显示快速预览，正在搜索“beta”的全文内容。',
+    },
+  ]);
   expect(await announcementLog(page)).toEqual([
-    '正在搜索“alpha”。',
-    '正在搜索“beta”。',
+    '已显示快速预览，正在搜索“alpha”的全文内容。',
+    '已显示快速预览，正在搜索“beta”的全文内容。',
     '没有找到与“beta”匹配的文章。',
   ]);
 });

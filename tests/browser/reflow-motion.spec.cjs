@@ -173,3 +173,59 @@ test('reduced motion skips animation work, reveals content, and paginates withou
     pointerBindings: window.__motionWork.pointerBindings,
   }))).toEqual({ canvasContexts: 0, frames: 0, pointerBindings: 0 });
 });
+
+test('whole-page fade keeps article content paintable and never intercepts interaction', async ({ page }) => {
+  // Break caught: a fade applied to body produces NO_LCP even though the article becomes visually opaque.
+  await page.addInitScript(() => {
+    window.__lcpEntries = [];
+    new PerformanceObserver((list) => {
+      window.__lcpEntries.push(...list.getEntries().map((entry) => ({
+        size: entry.size,
+        tagName: entry.element && entry.element.tagName,
+      })));
+    }).observe({ type: 'largest-contentful-paint', buffered: true });
+  });
+  await page.goto('/posts/stm32-baremetal-scheduler.html');
+
+  const paintState = await page.evaluate(() => {
+    const body = getComputedStyle(document.body);
+    const curtain = getComputedStyle(document.body, '::after');
+    return {
+      bodyOpacity: body.opacity,
+      curtainAnimation: curtain.animationName,
+      curtainPointerEvents: curtain.pointerEvents,
+    };
+  });
+  expect(paintState).toEqual({
+    bodyOpacity: '1',
+    curtainAnimation: 'pageCurtainReveal',
+    curtainPointerEvents: 'none',
+  });
+  await expect.poll(() => page.evaluate(() => window.__lcpEntries)).not.toEqual([]);
+});
+
+test('search reserves result geometry and keeps cumulative layout shift within its gate', async ({ page }) => {
+  // Break caught: the empty client-rendered result region leaves the footer visible before cards push it away.
+  await page.addInitScript(() => {
+    window.__layoutShift = 0;
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (!entry.hadRecentInput) window.__layoutShift += entry.value;
+      }
+    }).observe({ type: 'layout-shift', buffered: true });
+  });
+  await page.goto('/search.html?q=STM32');
+  const results = page.locator('#search-results');
+  await expect(results).toHaveAttribute('data-search-active', 'true');
+  await expect(results).toHaveAttribute('aria-busy', 'false');
+  await expect(results.locator('.post-card').first()).toBeVisible();
+
+  const geometry = await results.evaluate((element) => ({
+    height: element.getBoundingClientRect().height,
+    minBlockSize: getComputedStyle(element).minBlockSize,
+    viewportHeight: window.innerHeight,
+  }));
+  expect(geometry.minBlockSize).toBe(`${geometry.viewportHeight}px`);
+  expect(geometry.height).toBeGreaterThanOrEqual(geometry.viewportHeight);
+  expect(await page.evaluate(() => window.__layoutShift)).toBeLessThanOrEqual(0.1);
+});

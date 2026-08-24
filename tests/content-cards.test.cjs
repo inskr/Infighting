@@ -36,6 +36,23 @@ test('postCard builds hostile caller text as text and links to the encoded stati
   assert.equal(card.querySelectorAll('svg').length, 0);
 });
 
+test('postCard keeps h2 by default and accepts an explicit h3 for nested Search results', () => {
+  // Break caught: Search skips its results-section h2 or a Search-only hierarchy change leaks into Home cards.
+  const document = new FakeDocument();
+  const defaultCard = ContentCards.postCard({ document }, post(), { showStats: false });
+  const searchCard = ContentCards.postCard(
+    { document },
+    post({ title: 'Nested result' }),
+    { showStats: false, headingLevel: 3 }
+  );
+
+  assert.ok(defaultCard.querySelector('h2'));
+  assert.equal(defaultCard.querySelector('h3'), null);
+  assert.ok(searchCard.querySelector('h3'));
+  assert.equal(searchCard.querySelector('h2'), null);
+  assert.equal(searchCard.querySelector('h3').textContent, 'Nested result');
+});
+
 test('statBar reflects cached counts and stored liked state without mutations', () => {
   // Break caught: a card fetches/mutates stats or loses the persisted disabled-liked semantics.
   const document = new FakeDocument();

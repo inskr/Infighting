@@ -135,7 +135,8 @@
     var settings = options || {};
     var id = post && post.id != null ? String(post.id) : "";
     var card = element(document, "article", "post-card glass-surface");
-    var heading = element(document, "h2");
+    var headingTag = settings.headingLevel === 3 ? "h3" : "h2";
+    var heading = element(document, headingTag);
     var title = element(document, "a", "", post && post.title);
     title.setAttribute("href", "posts/" + encodeURIComponent(id) + ".html");
     heading.appendChild(title);
