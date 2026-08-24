@@ -104,15 +104,19 @@ test('removes raw HTML tags while retaining their visible wrapped text', () => {
       content:
         '**Press <kbd>CTRL_X</kbd> now.**\n\n' +
         '- [ ] Complete `READY_FLAG` validation\n\n' +
-        '```mermaid\nNode["VISIBLE_A<br/>VISIBLE_B"]\n```\n',
+        '```mermaid\nNode["VISIBLE_A<br/>VISIBLE_B"]\n```\n\n' +
+        '```html\n<div class="fixture">CODE_HTML_ID</div>\n```\n\n' +
+        '```c\n#include <linux/module.h>\n```\n',
     },
   ]);
 
   assert.equal(
     document.body,
-    'Press CTRL_X now.\n' +
+      'Press CTRL_X now.\n' +
       'Complete READY_FLAG validation\n' +
-      'Node["VISIBLE_A VISIBLE_B"]'
+      'Node["VISIBLE_A VISIBLE_B"]\n' +
+      'CODE_HTML_ID\n' +
+      '#include <linux/module.h>'
   );
   assert.doesNotMatch(document.body, HTML_TAG_PATTERN);
 });

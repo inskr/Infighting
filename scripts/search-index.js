@@ -2,6 +2,12 @@
 
 const { marked } = require('marked');
 
+const HTML_TAG_PATTERN = /<\/?[A-Za-z][A-Za-z0-9-]*(?:\s[^<>]*?)?\s*\/?>/g;
+
+function stripHtmlTagSyntax(text) {
+  return text.replace(HTML_TAG_PATTERN, ' ');
+}
+
 function markdownToPlainText(markdown) {
   const renderer = new marked.Renderer();
   const inlineRenderer = new marked.TextRenderer();
@@ -17,7 +23,7 @@ function markdownToPlainText(markdown) {
   renderer.hr = () => '\n';
   renderer.heading = ({ tokens }) => `${inlineText(tokens)}\n`;
   renderer.paragraph = ({ tokens }) => `${inlineText(tokens)}\n`;
-  renderer.code = ({ text }) => `${text.replace(/<br\s*\/?>/gi, ' ')}\n`;
+  renderer.code = ({ text }) => `${stripHtmlTagSyntax(text)}\n`;
   renderer.blockquote = ({ tokens }) => renderer.parser.parse(tokens);
   renderer.list = ({ items }) => items.map((item) => renderer.listitem(item)).join('');
   renderer.listitem = ({ tokens }) => renderer.parser.parse(tokens);
