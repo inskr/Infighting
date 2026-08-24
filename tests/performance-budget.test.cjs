@@ -85,22 +85,23 @@ function isWhitespace(character) {
   return character === ' ' || character === '\n' || character === '\r' || character === '\t' || character === '\f';
 }
 
-function isScriptBoundary(character) {
+function isTagBoundary(character) {
   return character === undefined || isWhitespace(character) || character === '/' || character === '>';
 }
 
-function readOpeningScriptTag(html, start) {
+function readOpeningTag(html, start) {
   const nameStart = start + 1;
-  if (html.slice(nameStart, nameStart + 6).toLowerCase() !== 'script') return null;
+  let cursor = nameStart;
+  while (cursor < html.length && !isTagBoundary(html[cursor])) cursor += 1;
+  if (nameStart === cursor) return null;
 
-  let cursor = nameStart + 6;
-  if (!isScriptBoundary(html[cursor])) return null;
-  let source = null;
+  const name = html.slice(nameStart, cursor).toLowerCase();
+  const attributes = new Map();
 
   while (cursor < html.length) {
     while (isWhitespace(html[cursor])) cursor += 1;
-    if (html[cursor] === '>') return { end: cursor + 1, source };
-    if (html[cursor] === '/' && html[cursor + 1] === '>') return { end: cursor + 2, source };
+    if (html[cursor] === '>') return { attributes, end: cursor + 1, name };
+    if (html[cursor] === '/' && html[cursor + 1] === '>') return { attributes, end: cursor + 2, name };
 
     const attributeStart = cursor;
     while (
@@ -132,19 +133,36 @@ function readOpeningScriptTag(html, start) {
       }
     }
 
-    if (attributeName === 'src' && source === null) source = attributeValue;
+    if (!attributes.has(attributeName)) attributes.set(attributeName, attributeValue);
   }
 
   return null;
 }
 
-function readClosingScriptTag(html, start) {
+function readClosingTag(html, start) {
   const nameStart = start + 2;
-  if (html.slice(nameStart, nameStart + 6).toLowerCase() !== 'script') return null;
-  if (!isScriptBoundary(html[nameStart + 6])) return null;
+  let cursor = nameStart;
+  while (cursor < html.length && !isTagBoundary(html[cursor])) cursor += 1;
+  if (nameStart === cursor) return null;
+  const name = html.slice(nameStart, cursor).toLowerCase();
 
   let quote = null;
-  for (let cursor = nameStart + 6; cursor < html.length; cursor += 1) {
+  for (; cursor < html.length; cursor += 1) {
+    const character = html[cursor];
+    if (quote) {
+      if (character === quote) quote = null;
+    } else if (character === '"' || character === "'") {
+      quote = character;
+    } else if (character === '>') {
+      return { end: cursor + 1, name };
+    }
+  }
+  return { end: html.length, name };
+}
+
+function readDeclarationEnd(html, start) {
+  let quote = null;
+  for (let cursor = start + 2; cursor < html.length; cursor += 1) {
     const character = html[cursor];
     if (quote) {
       if (character === quote) quote = null;
@@ -157,9 +175,24 @@ function readClosingScriptTag(html, start) {
   return html.length;
 }
 
+function skipTextContainer(html, start, name) {
+  let cursor = start;
+  while (cursor < html.length) {
+    const closeStart = html.indexOf('<', cursor);
+    if (closeStart === -1) return html.length;
+    const closingTag = html[closeStart + 1] === '/' ? readClosingTag(html, closeStart) : null;
+    if (closingTag && closingTag.name === name) return closingTag.end;
+    cursor = closeStart + 1;
+  }
+  return html.length;
+}
+
 function scriptSources(htmlPath, html) {
   const baseUrl = new URL(`/${htmlPath}`, 'https://resource-budget.invalid');
   const sources = [];
+  const textContainers = new Set([
+    'style', 'textarea', 'title', 'xmp', 'iframe', 'noembed', 'noframes', 'plaintext',
+  ]);
   let cursor = 0;
 
   while (cursor < html.length) {
@@ -171,14 +204,24 @@ function scriptSources(htmlPath, html) {
       continue;
     }
 
-    const openingTag = readOpeningScriptTag(html, tagStart);
+    if (html[tagStart + 1] === '!' || html[tagStart + 1] === '?') {
+      cursor = readDeclarationEnd(html, tagStart);
+      continue;
+    }
+    if (html[tagStart + 1] === '/') {
+      const closingTag = readClosingTag(html, tagStart);
+      cursor = closingTag ? closingTag.end : tagStart + 1;
+      continue;
+    }
+
+    const openingTag = readOpeningTag(html, tagStart);
     if (!openingTag) {
       cursor = tagStart + 1;
       continue;
     }
 
-    if (openingTag.source !== null) {
-      const sourceUrl = new URL(openingTag.source, baseUrl);
+    if (openingTag.name === 'script' && openingTag.attributes.has('src')) {
+      const sourceUrl = new URL(openingTag.attributes.get('src'), baseUrl);
       sources.push(
         sourceUrl.origin === baseUrl.origin
           ? sourceUrl.pathname.replace(/^\//, '')
@@ -186,22 +229,10 @@ function scriptSources(htmlPath, html) {
       );
     }
 
-    const bodyStart = openingTag.end;
-    let bodyCursor = bodyStart;
-    while (bodyCursor < html.length) {
-      const closeStart = html.indexOf('<', bodyCursor);
-      if (closeStart === -1) {
-        bodyCursor = html.length;
-        break;
-      }
-      const closingTag = html[closeStart + 1] === '/' ? readClosingScriptTag(html, closeStart) : null;
-      if (closingTag) {
-        bodyCursor = closingTag;
-        break;
-      }
-      bodyCursor = closeStart + 1;
-    }
-    cursor = bodyCursor;
+    if (openingTag.name === 'plaintext') break;
+    cursor = openingTag.name === 'script' || textContainers.has(openingTag.name)
+      ? skipTextContainer(html, openingTag.end, openingTag.name)
+      : openingTag.end;
   }
 
   return sources;
@@ -443,4 +474,36 @@ test('real forbidden Home src attributes fail the allowlist regardless of other 
       );
     });
   }
+});
+
+test('HTML text containers and comments never turn fake script text into dependencies', () => {
+  // Break caught: a raw-text/RCDATA container is scanned as HTML and lets fake script text affect the dependency map.
+  const containers = ['style', 'textarea', 'title', 'xmp', 'iframe', 'noembed', 'noframes'];
+  const html = [
+    '<!-- <script src=assets/js/search-core.js></script> -->',
+    ...containers.map((container) => (
+      `<${container.toUpperCase()}><script src=assets/js/search-core.js></script></${container.slice(0, 1).toUpperCase()}${container.slice(1)}>`
+    )),
+    '<plaintext><script src=assets/js/article-page.js></script>',
+  ].join('');
+
+  assert.deepEqual(scriptSources('index.html', html), []);
+  assert.doesNotThrow(() => scriptSources(
+    'index.html',
+    '<StYlE><script src=assets/js/article-page.js></script>'
+  ));
+});
+
+test('a real script after a mixed-case text container still fails the Home allowlist', () => {
+  // Break caught: skipping text containers consumes a following real script or enters an endless scan.
+  withFixture(({ fixtureArticleRoute, fixtureRoutes, publicDir }) => {
+    fs.appendFileSync(
+      path.join(publicDir, 'index.html'),
+      '<TeXtArEa><script src=assets/js/home-page.js></script></tExTaReA><script src=assets/js/search-core.js></script>'
+    );
+    assert.throws(
+      () => assertPublishedArtifacts(publicDir, fixtureRoutes, fixtureArticleRoute),
+      /assets\/js\/search-core\.js/
+    );
+  });
 });
