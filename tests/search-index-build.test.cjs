@@ -9,6 +9,8 @@ const { buildSite } = require('../scripts/build-posts');
 const { createSearchIndex } = require('../scripts/search-index');
 const { seedStaticArticleTargets } = require('./helpers/publishing-fixture.cjs');
 
+const HTML_TAG_PATTERN = /<\/?[A-Za-z][A-Za-z0-9-]*(?:\s[^<>]*?)?\s*\/?>/;
+
 test('builds deterministic article-only plain-text search documents', () => {
   const documents = createSearchIndex([
     {
@@ -88,6 +90,31 @@ test('builds deterministic article-only plain-text search documents', () => {
       'uint32_t REG_A = 1;',
   });
   assert.doesNotMatch(documents[1].body, /<[^>]+>|[#*`|]/);
+});
+
+test('removes raw HTML tags while retaining their visible wrapped text', () => {
+  const [document] = createSearchIndex([
+    {
+      id: 'html-fixture',
+      title: 'HTML fixture',
+      summary: 'Plain-text extraction',
+      tags: ['testing'],
+      date: '2026-08-12',
+      type: 'post',
+      content:
+        '**Press <kbd>CTRL_X</kbd> now.**\n\n' +
+        '- [ ] Complete `READY_FLAG` validation\n\n' +
+        '```mermaid\nNode["VISIBLE_A<br/>VISIBLE_B"]\n```\n',
+    },
+  ]);
+
+  assert.equal(
+    document.body,
+    'Press CTRL_X now.\n' +
+      'Complete READY_FLAG validation\n' +
+      'Node["VISIBLE_A VISIBLE_B"]'
+  );
+  assert.doesNotMatch(document.body, HTML_TAG_PATTERN);
 });
 
 test('publishes the search index as compact JSON with the staged site outputs', () => {
