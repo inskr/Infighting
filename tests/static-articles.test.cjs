@@ -100,7 +100,10 @@ test('buildSite emits crawlable article HTML and keeps compatibility JSON', () =
     assert.match(html, /<script defer src="\.\.\/assets\/js\/likes-storage\.js"><\/script>/);
     assert.match(html, /<script defer src="\.\.\/vendor\/highlight\.min\.js"><\/script>/);
     assert.match(html, /<script defer src="\.\.\/assets\/js\/article-page\.js"><\/script>/);
-    assert.doesNotMatch(html, /post-loader\.js|assets\/posts\/alpha\.json/);
+    assert.doesNotMatch(
+      html,
+      /marked(?:\.min)?\.js|posts-index\.js|post-loader\.js|post-view\.js|main\.js|assets\/posts\/alpha\.json/
+    );
     assert.equal(
       (html.match(/<article\b/g) || []).length,
       (html.match(/<\/article>/g) || []).length,

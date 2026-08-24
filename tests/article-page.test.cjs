@@ -96,7 +96,7 @@ test('initializes statistics from the trusted static article marker without load
     },
   };
 
-  assert.equal(await ArticlePage.init(root), true);
+  assert.equal(await ArticlePage.init(root), undefined);
   assert.deepEqual(calls, [['reportView', 'alpha'], ['fetchStats', 'alpha']]);
   assert.equal(viewCount.textContent, '41');
   assert.equal(likeCount.textContent, '7');
@@ -152,7 +152,7 @@ test('initialization restores persisted like state and binds the static button',
     LikesStorage: { hasLiked: (id) => id === 'alpha' },
   };
 
-  assert.equal(await ArticlePage.init(root), true);
+  assert.equal(await ArticlePage.init(root), undefined);
   assert.equal(button.listeners.has('click'), true);
   assert.equal(button.disabled, true);
   assert.equal(button.classList.contains('is-liked'), true);
@@ -189,7 +189,7 @@ test('keeps the static article usable when optional enhancement dependencies fai
     },
   };
 
-  assert.equal(await ArticlePage.init(root), true);
+  assert.equal(await ArticlePage.init(root), undefined);
   assert.equal(viewCount.textContent, '0');
   assert.equal(likeCount.textContent, '0');
   assert.equal(button.disabled, false);
@@ -253,4 +253,144 @@ test('rolls back an optimistic like when statistics reporting fails', async () =
   assert.equal(button.attributes.has('aria-busy'), false);
   assert.deepEqual(marked, []);
   assert.equal(button.classList.contains('is-liked'), false);
+});
+
+test('rejects an untrusted generated article marker before enhancing or reporting it', async () => {
+  const article = {
+    getAttribute: (name) => name === 'data-article-id' ? '../alpha' : null,
+    querySelector() {
+      throw new Error('an untrusted article must not be inspected');
+    },
+  };
+  const root = {
+    document: { querySelector: () => article },
+    Stats: {
+      reportView() {
+        throw new Error('an untrusted article must not report a view');
+      },
+    },
+    fetch() {
+      throw new Error('an article page must never load article JSON');
+    },
+  };
+
+  assert.equal(await ArticlePage.init(root), undefined);
+});
+
+test('renders cached statistics immediately and reports one view across repeated initialization', async () => {
+  const viewCount = { textContent: '0' };
+  const likeCount = { textContent: '0' };
+  const body = { querySelectorAll: () => [] };
+  const article = {
+    getAttribute: (name) => name === 'data-article-id' ? 'alpha' : null,
+    querySelector(selector) {
+      if (selector === '.article-body') return body;
+      if (selector === '.view-count-num') return viewCount;
+      if (selector === '.like-count') return likeCount;
+      return null;
+    },
+  };
+  const reportViewCalls = [];
+  const root = {
+    document: { querySelector: () => article },
+    Stats: {
+      fetchStats: () => Promise.resolve({ viewCount: 40, likeCount: 8 }),
+      formatCount: (count) => String(count),
+      getCache: () => ({ alpha: { viewCount: 39, likeCount: 7 } }),
+      reportView(id) {
+        reportViewCalls.push(id);
+        return Promise.resolve(41);
+      },
+    },
+  };
+
+  const first = ArticlePage.init(root);
+  assert.equal(viewCount.textContent, '39');
+  assert.equal(likeCount.textContent, '7');
+  const second = ArticlePage.init(root);
+
+  await Promise.all([first, second]);
+  assert.deepEqual(reportViewCalls, ['alpha']);
+  assert.equal(viewCount.textContent, '41');
+  assert.equal(likeCount.textContent, '8');
+});
+
+function fakeTocLink(href) {
+  const attributes = new Map([['href', href]]);
+  const classes = new Set();
+  return {
+    classList: {
+      add: (name) => classes.add(name),
+      remove: (name) => classes.delete(name),
+      contains: (name) => classes.has(name),
+    },
+    getAttribute: (name) => attributes.get(name) ?? null,
+    removeAttribute: (name) => attributes.delete(name),
+    setAttribute: (name, value) => attributes.set(name, value),
+  };
+}
+
+test('tracks the current TOC section without rewriting generated heading IDs', async () => {
+  const links = [fakeTocLink('#overview'), fakeTocLink('#setup')];
+  const headings = {
+    overview: { id: 'overview' },
+    setup: { id: 'setup' },
+  };
+  let observerCallback;
+  const observed = [];
+  const article = {
+    getAttribute: (name) => name === 'data-article-id' ? 'alpha' : null,
+    querySelector: (selector) => selector === '.article-body'
+      ? { querySelectorAll: () => [] }
+      : null,
+    querySelectorAll: (selector) => selector === '.article-toc a[href^="#"]' ? links : [],
+  };
+  const root = {
+    document: {
+      getElementById: (id) => headings[id] || null,
+      querySelector: () => article,
+    },
+    IntersectionObserver: function IntersectionObserver(callback) {
+      observerCallback = callback;
+      this.observe = (heading) => observed.push(heading);
+    },
+  };
+
+  await ArticlePage.init(root);
+  assert.deepEqual(observed, [headings.overview, headings.setup]);
+  assert.equal(links[0].getAttribute('aria-current'), 'location');
+  assert.equal(links[0].classList.contains('is-current'), true);
+
+  observerCallback([{ target: headings.setup, isIntersecting: true }]);
+  assert.equal(links[0].getAttribute('aria-current'), null);
+  assert.equal(links[0].classList.contains('is-current'), false);
+  assert.equal(links[1].getAttribute('aria-current'), 'location');
+  assert.equal(links[1].classList.contains('is-current'), true);
+  assert.equal(headings.overview.id, 'overview');
+  assert.equal(headings.setup.id, 'setup');
+});
+
+test('keeps a confirmed like when optional persistence storage fails', async () => {
+  const button = fakeLikeButton();
+  const cache = { alpha: { viewCount: 10, likeCount: 5 } };
+  const root = {
+    LikesStorage: {
+      hasLiked: () => false,
+      markLiked() {
+        throw new Error('storage unavailable');
+      },
+    },
+    Stats: {
+      formatCount: (count) => String(count),
+      getCache: () => cache,
+      reportLike: () => Promise.resolve(6),
+    },
+    setTimeout: (callback) => callback(),
+  };
+
+  assert.equal(await ArticlePage.handleLike(root, button, 'alpha'), true);
+  assert.equal(cache.alpha.likeCount, 6);
+  assert.equal(button.count.textContent, '6');
+  assert.equal(button.classList.contains('is-liked'), true);
+  assert.equal(button.disabled, true);
 });

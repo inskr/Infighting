@@ -28,6 +28,9 @@
 
   var POST_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
   var WINDOWS_RESERVED_BASENAME_PATTERN = /^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
+  var LIKE_BOUND_KEY = "__articlePageLikeBound";
+  var TOC_OBSERVER_KEY = "__articlePageTocObserver";
+  var VIEW_PROMISE_KEY = "__articlePageViewPromise";
 
   function forEachNode(nodes, callback) {
     Array.prototype.forEach.call(nodes || [], callback);
@@ -99,15 +102,38 @@
     return String(count || 0);
   }
 
+  function renderCachedStats(root, stats, id, viewElement, likeElement) {
+    if (typeof stats.getCache !== "function") return;
+
+    try {
+      var cache = stats.getCache();
+      var cached = cache && cache[id];
+      if (!cached) return;
+      if (viewElement && typeof cached.viewCount === "number") {
+        viewElement.textContent = formatCount(root, cached.viewCount);
+      }
+      if (likeElement && typeof cached.likeCount === "number") {
+        likeElement.textContent = formatCount(root, cached.likeCount);
+      }
+    } catch (error) {
+      /* Cached statistics are optional progressive enhancement. */
+    }
+  }
+
   function enhanceStats(root, article, id) {
     var stats = root && root.Stats;
     if (!stats) return Promise.resolve();
 
     var viewElement = article.querySelector(".view-count-num");
     var likeElement = article.querySelector(".like-count");
-    var reportView = typeof stats.reportView === "function"
-      ? Promise.resolve().then(function () { return stats.reportView(id); })
-      : Promise.resolve();
+    renderCachedStats(root, stats, id, viewElement, likeElement);
+
+    var reportView = article[VIEW_PROMISE_KEY];
+    if (!reportView && typeof stats.reportView === "function") {
+      reportView = Promise.resolve().then(function () { return stats.reportView(id); });
+      article[VIEW_PROMISE_KEY] = reportView;
+    }
+    if (!reportView) reportView = Promise.resolve();
     var fetchStats = typeof stats.fetchStats === "function"
       ? Promise.resolve().then(function () { return stats.fetchStats(id); })
       : Promise.resolve();
@@ -130,20 +156,94 @@
     ]);
   }
 
+  function setCurrentTocLink(links, current) {
+    forEachNode(links, function (link) {
+      var isCurrent = link === current;
+      if (isCurrent) {
+        link.setAttribute("aria-current", "location");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+      if (link.classList) {
+        if (isCurrent) link.classList.add("is-current");
+        else link.classList.remove("is-current");
+      }
+    });
+  }
+
+  function initToc(root, article) {
+    if (
+      !article ||
+      article[TOC_OBSERVER_KEY] ||
+      typeof article.querySelectorAll !== "function" ||
+      !root.document ||
+      typeof root.document.getElementById !== "function"
+    ) {
+      return;
+    }
+
+    var links = article.querySelectorAll('.article-toc a[href^="#"]');
+    var sections = [];
+    forEachNode(links, function (link) {
+      var href = link.getAttribute("href");
+      if (!href || href.length < 2) return;
+      var id;
+      try {
+        id = decodeURIComponent(href.slice(1));
+      } catch (error) {
+        return;
+      }
+      var heading = root.document.getElementById(id);
+      if (heading) sections.push({ heading: heading, link: link });
+    });
+    if (sections.length === 0) return;
+
+    setCurrentTocLink(links, sections[0].link);
+    if (typeof root.IntersectionObserver !== "function") return;
+
+    try {
+      var observer = new root.IntersectionObserver(function (entries) {
+        forEachNode(entries, function (entry) {
+          if (!entry || !entry.isIntersecting) return;
+          forEachNode(sections, function (section) {
+            if (section.heading === entry.target) {
+              setCurrentTocLink(links, section.link);
+            }
+          });
+        });
+      }, { rootMargin: "0px 0px -65% 0px" });
+      article[TOC_OBSERVER_KEY] = observer;
+      forEachNode(sections, function (section) {
+        observer.observe(section.heading);
+      });
+    } catch (error) {
+      /* TOC observation is optional; generated anchors remain usable. */
+    }
+  }
+
   function handleLike(root, button, id) {
     var stats = root && root.Stats;
     if (!stats || typeof stats.reportLike !== "function" || !button) {
       return Promise.resolve(false);
     }
-    if (
-      root.LikesStorage &&
-      typeof root.LikesStorage.hasLiked === "function" &&
-      root.LikesStorage.hasLiked(id)
-    ) {
-      return Promise.resolve(false);
+    try {
+      if (
+        root.LikesStorage &&
+        typeof root.LikesStorage.hasLiked === "function" &&
+        root.LikesStorage.hasLiked(id)
+      ) {
+        return Promise.resolve(false);
+      }
+    } catch (error) {
+      /* Storage is optional; the server remains the source of truth. */
     }
 
-    var cache = typeof stats.getCache === "function" ? stats.getCache() : {};
+    var cache = {};
+    try {
+      cache = typeof stats.getCache === "function" ? stats.getCache() || {} : {};
+    } catch (error) {
+      cache = {};
+    }
     var current = cache[id] && typeof cache[id].likeCount === "number"
       ? cache[id].likeCount
       : 0;
@@ -168,7 +268,11 @@
         cache[id].likeCount = count;
         if (countElement) countElement.textContent = formatCount(root, count);
         if (root.LikesStorage && typeof root.LikesStorage.markLiked === "function") {
-          root.LikesStorage.markLiked(id);
+          try {
+            root.LikesStorage.markLiked(id);
+          } catch (error) {
+            /* A confirmed server like must survive optional storage failure. */
+          }
         }
         if (button.classList) button.classList.add("is-liked");
         button.removeAttribute("data-pending");
@@ -214,7 +318,8 @@
       if (button.classList) button.classList.add("is-liked");
     }
 
-    if (typeof button.addEventListener === "function") {
+    if (typeof button.addEventListener === "function" && !button[LIKE_BOUND_KEY]) {
+      button[LIKE_BOUND_KEY] = true;
       button.addEventListener("click", function () {
         if (button.disabled || button.getAttribute("data-pending") === "true") return;
         handleLike(root, button, id);
@@ -224,19 +329,20 @@
 
   function init(root) {
     if (!root || !root.document || typeof root.document.querySelector !== "function") {
-      return Promise.resolve(false);
+      return Promise.resolve();
     }
     var article = root.document.querySelector("[data-article-id]");
     if (!article || typeof article.getAttribute !== "function") {
-      return Promise.resolve(false);
+      return Promise.resolve();
     }
     var id = article.getAttribute("data-article-id");
-    if (!isTrustedArticleId(id)) return Promise.resolve(false);
+    if (!isTrustedArticleId(id)) return Promise.resolve();
 
     var body = article.querySelector(".article-body");
     decorateContent(root, body);
+    initToc(root, article);
     initLike(root, article, id);
-    return enhanceStats(root, article, id).then(function () { return true; });
+    return enhanceStats(root, article, id).then(function () {});
   }
 
   return {
