@@ -50,9 +50,9 @@
         <h1>MPU6050 姿态解算：四元数与卡尔曼滤波实战</h1>
         <div class="post-meta"><span>2025-03-10</span><a class="tag" href="../tags.html?tag=STM32">STM32</a><a class="tag" href="../tags.html?tag=%E4%BC%A0%E6%84%9F%E5%99%A8">传感器</a><a class="tag" href="../tags.html?tag=%E5%A7%BF%E6%80%81%E8%A7%A3%E7%AE%97">姿态解算</a></div>
       </header>
-      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-3"><a href="#硬件链路">硬件链路</a></li><li class="article-toc-level-3"><a href="#四元数姿态更新">四元数姿态更新</a></li><li class="article-toc-level-3"><a href="#卡尔曼滤波降噪">卡尔曼滤波降噪</a></li><li class="article-toc-level-3"><a href="#效果">效果</a></li></ol></nav>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#硬件链路">硬件链路</a></li><li class="article-toc-level-2"><a href="#四元数姿态更新">四元数姿态更新</a></li><li class="article-toc-level-2"><a href="#卡尔曼滤波降噪">卡尔曼滤波降噪</a></li><li class="article-toc-level-2"><a href="#效果">效果</a></li></ol></nav>
       <div class="article-body"><p>姿态解算是飞控的核心。本文记录我在四轴无人机项目中，基于 MPU6050 六轴传感器实现姿态角解算的完整过程，最终姿态角误差稳定在 <strong>±1.5° 以内</strong>。</p>
-<h3 id="硬件链路">硬件链路</h3>
+<h2 id="硬件链路">硬件链路</h2>
 <p>MPU6050 通过 I2C 与 STM32F103 通信，挂载在 I2C1（PB6/PB7），地址 <code>0x68</code>。上电后先做三件事：</p>
 <pre><code class="language-c">void mpu6050_init(void)
 {
@@ -65,7 +65,7 @@
 <blockquote>
 <p><strong>踩坑记录</strong>：DLPF 带宽设太高会把电机振动噪声直接放进来，设太低又会引入相位延迟。44Hz 是悬停稳定性与响应速度之间比较平衡的点。</p>
 </blockquote>
-<h3 id="四元数姿态更新">四元数姿态更新</h3>
+<h2 id="四元数姿态更新">四元数姿态更新</h2>
 <p>直接用欧拉角积分会遇到万向锁，所以采用四元数表示姿态。每次采样后用一阶龙格库塔法更新四元数：</p>
 <pre><code class="language-c">void quaternion_update(quat_t *q, float gx, float gy, float gz, float dt)
 {
@@ -96,7 +96,7 @@ void gyro_calibrate(void)
     for (int j = 0; j &lt; 3; j++) gyro_bias[j] /= 500.0f;
 }
 </code></pre>
-<h3 id="卡尔曼滤波降噪">卡尔曼滤波降噪</h3>
+<h2 id="卡尔曼滤波降噪">卡尔曼滤波降噪</h2>
 <p>单纯积分会漂移，需要用加速度计做观测修正。对每个姿态角建立一维卡尔曼滤波器：</p>
 <pre><code class="language-c">float kalman_update(kalman_t *kf, float angle_measured, float gyro_rate, float dt)
 {
@@ -120,7 +120,7 @@ void gyro_calibrate(void)
 }
 </code></pre>
 <p>调参经验：<code>Q_angle</code> 控制对陀螺仪的信任度，<code>R_measure</code> 控制对加速度计的信任度。振动大的机架需要适当增大 <code>R_measure</code>。</p>
-<h3 id="效果">效果</h3>
+<h2 id="效果">效果</h2>
 <ul>
 <li>静态漂移：&lt; 0.1°/min</li>
 <li>动态误差：&lt; ±1.5°（剧烈机动时）</li>

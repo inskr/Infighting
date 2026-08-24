@@ -109,17 +109,17 @@
         var boards = day.boards || {};
         return (
           '<div class="archive-day glass-surface">' +
-          '<h3 class="archive-date">' +
+          '<h2 class="archive-date">' +
           escapeHtml(day.date) +
-          "</h3>" +
+          "</h2>" +
           '<div class="daily-boards">' +
           '<div class="board board-en glass-surface">' +
-          '<h4 class="board-title"><span class="board-dot"></span>国外 <span class="lang-tag">国外</span></h4>' +
+          '<h3 class="board-title"><span class="board-dot"></span>国外 <span class="lang-tag">国外</span></h3>' +
           boardHtml(root, boards.en, "en") +
           "</div>" +
           '<div class="board-divider" role="separator"></div>' +
           '<div class="board board-zh glass-surface">' +
-          '<h4 class="board-title"><span class="board-dot"></span>国内 <span class="lang-tag">国内</span></h4>' +
+          '<h3 class="board-title"><span class="board-dot"></span>国内 <span class="lang-tag">国内</span></h3>' +
           boardHtml(root, boards.zh, "zh") +
           "</div>" +
           "</div>" +

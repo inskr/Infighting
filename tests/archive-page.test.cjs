@@ -63,6 +63,22 @@ test('renders archive days newest first while excluding the date published on ho
   assert.deepEqual(view.shellCalls, [{ target: view.root, activeNav: 'archive' }]);
 });
 
+test('renders archive day and board headings directly below the page heading', () => {
+  // Break caught: the generated archive outline skips from the page h1 to h3/h4 headings.
+  const view = fixture({
+    feeds: { updatedAt: '2026-08-24T08:00:00.000Z' },
+    archive: {
+      days: [{ date: '2026-08-23', boards: { en: [], zh: [] } }],
+    },
+  });
+
+  api().init(view.root);
+
+  assert.match(view.days.innerHTML, /<h2 class="archive-date">2026-08-23<\/h2>/);
+  assert.equal((view.days.innerHTML.match(/<h3 class="board-title">/g) || []).length, 2);
+  assert.doesNotMatch(view.days.innerHTML, /<h[45] class="(?:archive-date|board-title)">/);
+});
+
 test('renders policy-approved links and language labels without trusting feed markup', () => {
   // Break caught: an unsafe link or hostile title is emitted as executable HTML, or language labels regress.
   const view = fixture({

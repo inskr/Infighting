@@ -26,17 +26,26 @@ function renderArticleContent(content) {
   const headings = [];
   const slugger = createHeadingSlugger();
   const renderer = new marked.Renderer();
+  const tokens = marked.lexer(content);
+  let shallowestDepth = null;
+
+  marked.walkTokens(tokens, (token) => {
+    if (token.type !== 'heading') return;
+    shallowestDepth = shallowestDepth === null
+      ? token.depth
+      : Math.min(shallowestDepth, token.depth);
+  });
 
   renderer.heading = function renderHeading({ tokens, depth }) {
     const rawText = tokens.map((token) => token.raw || token.text || '').join('');
     const id = slugger.slug(rawText);
     const html = this.parser.parseInline(tokens);
-    const outputDepth = Math.min(depth + 1, 6);
+    const outputDepth = Math.min(2 + depth - shallowestDepth, 6);
     headings.push({ depth: outputDepth, id, text: rawText });
     return `<h${outputDepth} id="${id}">${html}</h${outputDepth}>\n`;
   };
 
-  return { articleHtml: marked.parse(content, { renderer }), headings };
+  return { articleHtml: marked.parser(tokens, { renderer }), headings };
 }
 
 function renderToc(headings) {

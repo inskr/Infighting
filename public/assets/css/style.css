@@ -1497,7 +1497,14 @@ a.tag {
   letter-spacing: 0.025em;
 }
 
-.site-footer a { color: inherit; }
+.site-footer a {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
 .site-footer a:hover,
 .site-footer a:focus-visible { color: var(--accent-strong); }
 

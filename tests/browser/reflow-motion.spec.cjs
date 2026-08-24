@@ -85,6 +85,7 @@ async function undersizedTargets(page) {
       '.article-toc a',
       '.article-navigation a',
       '.related-posts a',
+      '.site-footer a',
     ].join(', ');
     return [...document.querySelectorAll(selector)]
       .filter((element) => {

@@ -50,10 +50,10 @@
         <h1>PID 控制从入门到进阶：位置式与增量式的取舍</h1>
         <div class="post-meta"><span>2024-08-12</span><a class="tag" href="../tags.html?tag=%E6%8E%A7%E5%88%B6%E7%AE%97%E6%B3%95">控制算法</a><a class="tag" href="../tags.html?tag=%E9%A3%9E%E6%8E%A7">飞控</a><a class="tag" href="../tags.html?tag=PID">PID</a></div>
       </header>
-      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-3"><a href="#两种实现形式">两种实现形式</a></li><li class="article-toc-level-4"><a href="#位置式-pid">位置式 PID</a></li><li class="article-toc-level-4"><a href="#增量式-pid">增量式 PID</a></li><li class="article-toc-level-3"><a href="#串级双环飞控的正确打开方式">串级双环：飞控的正确打开方式</a></li><li class="article-toc-level-3"><a href="#调参方法论">调参方法论</a></li><li class="article-toc-level-3"><a href="#常见坑">常见坑</a></li></ol></nav>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#两种实现形式">两种实现形式</a></li><li class="article-toc-level-3"><a href="#位置式-pid">位置式 PID</a></li><li class="article-toc-level-3"><a href="#增量式-pid">增量式 PID</a></li><li class="article-toc-level-2"><a href="#串级双环飞控的正确打开方式">串级双环：飞控的正确打开方式</a></li><li class="article-toc-level-2"><a href="#调参方法论">调参方法论</a></li><li class="article-toc-level-2"><a href="#常见坑">常见坑</a></li></ol></nav>
       <div class="article-body"><p>PID 是嵌入式控制里&quot;最简单也最困难&quot;的算法——公式三行就能写完，调参能调一个月。本文结合四轴无人机项目，把 PID 的理论、实现与调参串一遍。</p>
-<h3 id="两种实现形式">两种实现形式</h3>
-<h4 id="位置式-pid">位置式 PID</h4>
+<h2 id="两种实现形式">两种实现形式</h2>
+<h3 id="位置式-pid">位置式 PID</h3>
 <p>输出直接是控制量的绝对值：</p>
 <pre><code class="language-c">float pid_positional(pid_t *pid, float setpoint, float measured, float dt)
 {
@@ -68,7 +68,7 @@
     return pid-&gt;kp * error + pid-&gt;ki * pid-&gt;integral + pid-&gt;kd * derivative;
 }
 </code></pre>
-<h4 id="增量式-pid">增量式 PID</h4>
+<h3 id="增量式-pid">增量式 PID</h3>
 <p>输出是控制量的增量，适合电机类执行器：</p>
 <pre><code class="language-c">float pid_incremental(pid_t *pid, float setpoint, float measured)
 {
@@ -89,7 +89,7 @@
 <li>增量式：积分天然有界，手动/自动切换无扰，适合电机调速</li>
 <li>飞控中我用的是<strong>位置式 + 积分限幅</strong>，因为电机需要的是绝对油门值</li>
 </ul>
-<h3 id="串级双环飞控的正确打开方式">串级双环：飞控的正确打开方式</h3>
+<h2 id="串级双环飞控的正确打开方式">串级双环：飞控的正确打开方式</h2>
 <p>单环 PID 直接控角度，响应慢且容易振荡。工业和飞控的标准做法是<strong>串级控制</strong>：</p>
 <pre><code>角度设定 → [角度环 PID] → 角速度设定 → [角速度环 PID] → 电机输出
               (外环, 慢)                    (内环, 快)
@@ -116,7 +116,7 @@
 }
 </code></pre>
 <p>内环用陀螺仪直接测得的角速度，响应快、抗扰强；外环保证角度精度。这是悬停稳定的关键。</p>
-<h3 id="调参方法论">调参方法论</h3>
+<h2 id="调参方法论">调参方法论</h2>
 <p>我的调参顺序（内环优先）：</p>
 <ol>
 <li><strong>内环 P</strong>：逐渐增大直到机身开始高频振荡，回退到 60%</li>
@@ -127,7 +127,7 @@
 <blockquote>
 <p><strong>经验之谈</strong>：90% 的&quot;PID 调不好&quot;其实是机械问题——机架松动、电机不一致、传感器振动。先检查硬件，再怀疑参数。</p>
 </blockquote>
-<h3 id="常见坑">常见坑</h3>
+<h2 id="常见坑">常见坑</h2>
 <ul>
 <li><strong>积分饱和</strong>：大机动后回正过冲严重 → 加积分限幅或条件积分</li>
 <li><strong>微分噪声</strong>：D 项直接对角度微分会把传感器噪声放大 → 对测量值微分（微分先行）或加低通滤波</li>

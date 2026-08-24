@@ -50,9 +50,9 @@
         <h1>STM32 裸机多任务调度框架设计与实践</h1>
         <div class="post-meta"><span>2025-04-18</span><a class="tag" href="../tags.html?tag=STM32">STM32</a><a class="tag" href="../tags.html?tag=%E8%A3%B8%E6%9C%BA%E5%BC%80%E5%8F%91">裸机开发</a><a class="tag" href="../tags.html?tag=%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6">任务调度</a></div>
       </header>
-      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-3"><a href="#为什么需要调度框架">为什么需要调度框架</a></li><li class="article-toc-level-3"><a href="#任务表设计">任务表设计</a></li><li class="article-toc-level-3"><a href="#调度循环与耗时统计">调度循环与耗时统计</a></li><li class="article-toc-level-3"><a href="#实测数据与结论">实测数据与结论</a></li></ol></nav>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#为什么需要调度框架">为什么需要调度框架</a></li><li class="article-toc-level-2"><a href="#任务表设计">任务表设计</a></li><li class="article-toc-level-2"><a href="#调度循环与耗时统计">调度循环与耗时统计</a></li><li class="article-toc-level-2"><a href="#实测数据与结论">实测数据与结论</a></li></ol></nav>
       <div class="article-body"><p>在四轴无人机飞控项目中，我选择基于 STM32F103 裸机开发，而不是直接上 FreeRTOS。原因有两个：一是飞控任务数量少且实时性要求明确，裸机调度足够；二是想彻底搞清楚&quot;操作系统到底在干什么&quot;。</p>
-<h3 id="为什么需要调度框架">为什么需要调度框架</h3>
+<h2 id="为什么需要调度框架">为什么需要调度框架</h2>
 <p>裸机开发最常见的问题是 <code>while(1)</code> 大循环里堆满各种功能：传感器采集、姿态解算、PID 控制、无线通信……一旦某个任务耗时变长，其他任务全部被阻塞，飞控直接失控。</p>
 <p>一个最小可用的调度框架需要解决三件事：</p>
 <ol>
@@ -60,7 +60,7 @@
 <li><strong>任务之间互不阻塞</strong>（单个任务超时可以被检出）</li>
 <li><strong>CPU 负载可观测</strong>（知道还剩多少余量）</li>
 </ol>
-<h3 id="任务表设计">任务表设计</h3>
+<h2 id="任务表设计">任务表设计</h2>
 <p>核心思路是&quot;函数指针 + 周期计数&quot;，用结构体数组描述所有任务：</p>
 <pre><code class="language-c">typedef struct {
     void (*task_func)(void);  // 任务入口
@@ -80,7 +80,7 @@ static task_t task_table[] = {
 
 #define TASK_NUM (sizeof(task_table) / sizeof(task_t))
 </code></pre>
-<h3 id="调度循环与耗时统计">调度循环与耗时统计</h3>
+<h2 id="调度循环与耗时统计">调度循环与耗时统计</h2>
 <p>主循环遍历任务表，到期的任务立即执行，并用 DWT 周期计数器统计耗时：</p>
 <pre><code class="language-c">void scheduler_run(void)
 {
@@ -108,7 +108,7 @@ static task_t task_table[] = {
     DWT-&gt;CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 }
 </code></pre>
-<h3 id="实测数据与结论">实测数据与结论</h3>
+<h2 id="实测数据与结论">实测数据与结论</h2>
 <p>在 72MHz 的 STM32F103 上实测：</p>
 <table>
 <thead>

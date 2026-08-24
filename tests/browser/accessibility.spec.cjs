@@ -96,6 +96,19 @@ test('archive page has no serious or critical axe violations', async ({ page }, 
   await analyzeStableState(page, testInfo, 'archive — /archive.html');
 });
 
+test('archive generated headings preserve the page, day, and board hierarchy', async ({ page }) => {
+  // Break caught: real archive DOM skips directly from its page h1 to generated h3/h4 headings.
+  await page.goto('/archive.html');
+  await expect(page.locator('#archive-days .archive-day').first()).toBeVisible();
+  const levels = await page.locator('main h1, main h2, main h3, main h4, main h5, main h6')
+    .evaluateAll((headings) => headings.map((heading) => Number(heading.tagName.slice(1))));
+
+  expect(levels[0]).toBe(1);
+  expect(levels.slice(1)).toContain(2);
+  expect(levels.slice(1)).toContain(3);
+  expect(levels.every((level, index) => index === 0 || level <= levels[index - 1] + 1)).toBe(true);
+});
+
 test('legacy invalid-id error has no serious or critical axe violations', async ({ page }, testInfo) => {
   // Break caught: the client-rendered legacy recovery state is missing valid, usable semantics.
   await page.goto('/post.html?id=does-not-exist');
