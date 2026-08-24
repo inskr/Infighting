@@ -7,6 +7,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { renderRss, renderSitemap } = require('../scripts/discovery-output');
 const { buildSite } = require('../scripts/content-publisher');
+const { seedStaticArticleTargets } = require('./helpers/publishing-fixture.cjs');
 
 const SITE_URL = 'https://inskr.github.io/Infighting/';
 
@@ -16,6 +17,7 @@ const POSTS = [
     title: 'Beta',
     summary: 'Second article',
     date: '2026-08-10',
+    tags: ['guides'],
     type: 'post',
   },
   {
@@ -23,6 +25,7 @@ const POSTS = [
     title: 'Alpha <script>alert(1)</script> & \"quoted\"',
     summary: 'First <b>article</b> & details',
     date: '2026-08-11',
+    tags: ['testing', 'C & C++ <tips>'],
     type: 'post',
   },
   {
@@ -30,6 +33,7 @@ const POSTS = [
     title: 'Gamma',
     summary: 'Same day article',
     date: '2026-08-11',
+    tags: [],
     type: 'post',
   },
   {
@@ -37,6 +41,7 @@ const POSTS = [
     title: 'Feed news must not be syndicated',
     summary: 'External item',
     date: '2026-08-12',
+    tags: ['news'],
     type: 'feed-news',
   },
 ];
@@ -45,10 +50,17 @@ test('renderSitemap publishes canonical article URLs in deterministic order', ()
   const sitemap = renderSitemap({ posts: POSTS, siteUrl: SITE_URL });
 
   assert.match(sitemap, /https:\/\/inskr\.github\.io\/Infighting\/posts\/alpha\.html/);
+  assert.match(sitemap, /<loc>https:\/\/inskr\.github\.io\/Infighting\/<\/loc>/);
+  assert.match(sitemap, /<loc>https:\/\/inskr\.github\.io\/Infighting\/tags\.html<\/loc>/);
+  assert.match(sitemap, /<loc>https:\/\/inskr\.github\.io\/Infighting\/archive\.html<\/loc>/);
+  assert.doesNotMatch(sitemap, /search\.html/);
   assert.doesNotMatch(sitemap, /post\.html\?id=/);
   assert.doesNotMatch(sitemap, /news-item/);
   assert.match(sitemap, /<lastmod>2026-08-11<\/lastmod>/);
   assert.ok(
+    sitemap.indexOf('<loc>' + SITE_URL + '</loc>') < sitemap.indexOf('/tags.html') &&
+      sitemap.indexOf('/tags.html') < sitemap.indexOf('/archive.html') &&
+      sitemap.indexOf('/archive.html') < sitemap.indexOf('/posts/alpha.html') &&
     sitemap.indexOf('/posts/alpha.html') < sitemap.indexOf('/posts/gamma.html') &&
       sitemap.indexOf('/posts/gamma.html') < sitemap.indexOf('/posts/beta.html'),
     'articles should be ordered by source date descending then ID ascending'
@@ -64,6 +76,9 @@ test('renderRss uses canonical GUIDs and escapes only static articles', () => {
   );
   assert.match(rss, /<title>Alpha &lt;script&gt;alert\(1\)&lt;\/script&gt; &amp; &quot;quoted&quot;<\/title>/);
   assert.match(rss, /<description>First &lt;b&gt;article&lt;\/b&gt; &amp; details<\/description>/);
+  assert.match(rss, /<category>testing<\/category>/);
+  assert.match(rss, /<category>C &amp; C\+\+ &lt;tips&gt;<\/category>/);
+  assert.equal((rss.match(/<category>/g) || []).length, 3);
   assert.doesNotMatch(rss, /Feed news must not be syndicated/);
   assert.ok(
     rss.indexOf('<title>Alpha ') < rss.indexOf('<title>Gamma</title>') &&
@@ -78,6 +93,7 @@ test('buildSite writes sitemap and RSS beside the published article pages', () =
   const publicDir = path.join(root, 'public');
 
   try {
+    seedStaticArticleTargets(publicDir);
     fs.mkdirSync(postsDir, { recursive: true });
     fs.writeFileSync(
       path.join(postsDir, 'alpha.md'),

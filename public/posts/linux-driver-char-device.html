@@ -19,6 +19,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"嵌入式 Linux 驱动开发入门：从字符设备到设备树","description":"以 RK3588 开发板为例，梳理 Linux 字符设备驱动的骨架：file_operations、自动创建设备节点、设备树匹配与 GPIO 资源获取，附完整可编译示例。","url":"https://inskr.github.io/Infighting/posts/linux-driver-char-device.html","mainEntityOfPage":"https://inskr.github.io/Infighting/posts/linux-driver-char-device.html","datePublished":"2025-06-08","dateModified":"2025-06-08","keywords":["嵌入式Linux","RK3588","驱动开发"]}</script>
   <script src="../assets/js/theme.js"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -42,14 +43,14 @@
   </header>
   <main class="container">
     <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
-    <article class="article glass-surface">
+    <article class="article glass-surface" data-article-id="linux-driver-char-device">
       <header class="article-header">
         <h1>嵌入式 Linux 驱动开发入门：从字符设备到设备树</h1>
         <div class="post-meta"><span>2025-06-08</span><a class="tag" href="../tags.html?tag=%E5%B5%8C%E5%85%A5%E5%BC%8FLinux">嵌入式Linux</a><a class="tag" href="../tags.html?tag=RK3588">RK3588</a><a class="tag" href="../tags.html?tag=%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91">驱动开发</a></div>
       </header>
-      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#最小字符设备骨架">最小字符设备骨架</a></li><li class="article-toc-level-2"><a href="#设备树硬件描述与驱动分离">设备树：硬件描述与驱动分离</a></li><li class="article-toc-level-2"><a href="#调试技巧">调试技巧</a></li><li class="article-toc-level-2"><a href="#单片机思维-vs-linux-思维">单片机思维 vs Linux 思维</a></li></ol></nav>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-3"><a href="#最小字符设备骨架">最小字符设备骨架</a></li><li class="article-toc-level-3"><a href="#设备树硬件描述与驱动分离">设备树：硬件描述与驱动分离</a></li><li class="article-toc-level-3"><a href="#调试技巧">调试技巧</a></li><li class="article-toc-level-3"><a href="#单片机思维-vs-linux-思维">单片机思维 vs Linux 思维</a></li></ol></nav>
       <div class="article-body"><p>最近在学 RK3588 平台的 Linux 驱动开发。相比单片机直接操作寄存器，Linux 驱动多了一层&quot;规矩&quot;，但这层规矩让硬件管理变得可维护。本文用最小例子走通字符设备全流程。</p>
-<h2 id="最小字符设备骨架">最小字符设备骨架</h2>
+<h3 id="最小字符设备骨架">最小字符设备骨架</h3>
 <pre><code class="language-c">#include &lt;linux/module.h&gt;
 #include &lt;linux/fs.h&gt;
 #include &lt;linux/cdev.h&gt;
@@ -118,7 +119,7 @@ PWD  := $(shell pwd)
 all:
 	make -C $(KDIR) M=$(PWD) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules
 </code></pre>
-<h2 id="设备树硬件描述与驱动分离">设备树：硬件描述与驱动分离</h2>
+<h3 id="设备树硬件描述与驱动分离">设备树：硬件描述与驱动分离</h3>
 <p>驱动里不应硬编码 GPIO 编号，资源由设备树描述：</p>
 <pre><code class="language-dts">myedge {
     compatible = &quot;shiyikun,myedge&quot;;
@@ -150,19 +151,33 @@ static const struct of_device_id my_of_match[] = {
 MODULE_DEVICE_TABLE(of, my_of_match);
 </code></pre>
 <p><code>compatible</code> 字符串是设备树节点与驱动匹配的唯一纽带——这个名字必须两边完全一致。</p>
-<h2 id="调试技巧">调试技巧</h2>
+<h3 id="调试技巧">调试技巧</h3>
 <ul>
 <li><code>dmesg -w</code> 实时看 <code>pr_info</code> 输出</li>
 <li><code>cat /proc/device-tree/myedge/status</code> 确认节点已启用</li>
 <li><code>ls /sys/class/myedge_dev</code> 确认 class 创建成功</li>
 </ul>
-<h2 id="单片机思维-vs-linux-思维">单片机思维 vs Linux 思维</h2>
+<h3 id="单片机思维-vs-linux-思维">单片机思维 vs Linux 思维</h3>
 <p>最大的转变是：单片机里&quot;我的程序拥有整个硬件&quot;，Linux 里&quot;内核统一管理硬件，驱动只是服务员&quot;。理解了这层边界，pinmux、时钟、电源域这些概念就都顺了。下一步计划写一个 I2C 子系统下的传感器驱动。</p>
 </div>
+      <div class="stats-bar" aria-label="文章统计">
+        <button class="like-btn" data-id="linux-driver-char-device" type="button" aria-label="点赞">
+          <svg class="icon-heart" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10-9.2C.4 8.9 1.6 5.3 4.8 4.6c1.9-.4 3.7.6 4.8 2 1.1-1.4 2.9-2.4 4.8-2 3.2.7 4.4 4.3 2.8 7.2C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="like-count">0</span>
+        </button>
+        <span class="stat view-count" aria-label="浏览数">
+          <svg class="icon-eye" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M1 12.5C2.7 8.1 7 5 12 5s9.3 3.1 11 7.5C21.3 16.9 17 20 12 20S2.7 16.9 1 12.5z"/><circle cx="12" cy="12.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="view-count-num">0</span>
+        </span>
+      </div>
       <nav class="article-navigation" aria-label="文章导航"><a href="../posts/radar-principles-study-summary.html">上一篇：雷达原理两书学习总结（零基础详细版）</a><a href="../posts/stm32-baremetal-scheduler.html">下一篇：STM32 裸机多任务调度框架设计与实践</a></nav>
       <nav class="related-posts" aria-label="相关文章"><ol><li><a href="../posts/embedded-robotics-learning-roadmap.html">嵌入式与机器人学习路线</a></li></ol></nav>
     </article>
   </main>
   <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+  <script defer src="../assets/js/stats.js"></script>
+  <script defer src="../assets/js/likes-storage.js"></script>
+  <script defer src="../vendor/highlight.min.js"></script>
+  <script defer src="../assets/js/article-page.js"></script>
 </body>
 </html>

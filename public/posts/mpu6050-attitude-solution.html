@@ -19,6 +19,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"MPU6050 姿态解算：四元数与卡尔曼滤波实战","description":"从 I2C 原始数据到稳定的欧拉角输出：介绍 MPU6050 数据读取、四元数姿态更新、卡尔曼滤波降噪的完整链路，最终实现姿态角误差小于 ±1.5°。","url":"https://inskr.github.io/Infighting/posts/mpu6050-attitude-solution.html","mainEntityOfPage":"https://inskr.github.io/Infighting/posts/mpu6050-attitude-solution.html","datePublished":"2025-03-10","dateModified":"2025-03-10","keywords":["STM32","传感器","姿态解算"]}</script>
   <script src="../assets/js/theme.js"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -42,14 +43,14 @@
   </header>
   <main class="container">
     <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
-    <article class="article glass-surface">
+    <article class="article glass-surface" data-article-id="mpu6050-attitude-solution">
       <header class="article-header">
         <h1>MPU6050 姿态解算：四元数与卡尔曼滤波实战</h1>
         <div class="post-meta"><span>2025-03-10</span><a class="tag" href="../tags.html?tag=STM32">STM32</a><a class="tag" href="../tags.html?tag=%E4%BC%A0%E6%84%9F%E5%99%A8">传感器</a><a class="tag" href="../tags.html?tag=%E5%A7%BF%E6%80%81%E8%A7%A3%E7%AE%97">姿态解算</a></div>
       </header>
-      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#硬件链路">硬件链路</a></li><li class="article-toc-level-2"><a href="#四元数姿态更新">四元数姿态更新</a></li><li class="article-toc-level-2"><a href="#卡尔曼滤波降噪">卡尔曼滤波降噪</a></li><li class="article-toc-level-2"><a href="#效果">效果</a></li></ol></nav>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-3"><a href="#硬件链路">硬件链路</a></li><li class="article-toc-level-3"><a href="#四元数姿态更新">四元数姿态更新</a></li><li class="article-toc-level-3"><a href="#卡尔曼滤波降噪">卡尔曼滤波降噪</a></li><li class="article-toc-level-3"><a href="#效果">效果</a></li></ol></nav>
       <div class="article-body"><p>姿态解算是飞控的核心。本文记录我在四轴无人机项目中，基于 MPU6050 六轴传感器实现姿态角解算的完整过程，最终姿态角误差稳定在 <strong>±1.5° 以内</strong>。</p>
-<h2 id="硬件链路">硬件链路</h2>
+<h3 id="硬件链路">硬件链路</h3>
 <p>MPU6050 通过 I2C 与 STM32F103 通信，挂载在 I2C1（PB6/PB7），地址 <code>0x68</code>。上电后先做三件事：</p>
 <pre><code class="language-c">void mpu6050_init(void)
 {
@@ -62,7 +63,7 @@
 <blockquote>
 <p><strong>踩坑记录</strong>：DLPF 带宽设太高会把电机振动噪声直接放进来，设太低又会引入相位延迟。44Hz 是悬停稳定性与响应速度之间比较平衡的点。</p>
 </blockquote>
-<h2 id="四元数姿态更新">四元数姿态更新</h2>
+<h3 id="四元数姿态更新">四元数姿态更新</h3>
 <p>直接用欧拉角积分会遇到万向锁，所以采用四元数表示姿态。每次采样后用一阶龙格库塔法更新四元数：</p>
 <pre><code class="language-c">void quaternion_update(quat_t *q, float gx, float gy, float gz, float dt)
 {
@@ -93,7 +94,7 @@ void gyro_calibrate(void)
     for (int j = 0; j &lt; 3; j++) gyro_bias[j] /= 500.0f;
 }
 </code></pre>
-<h2 id="卡尔曼滤波降噪">卡尔曼滤波降噪</h2>
+<h3 id="卡尔曼滤波降噪">卡尔曼滤波降噪</h3>
 <p>单纯积分会漂移，需要用加速度计做观测修正。对每个姿态角建立一维卡尔曼滤波器：</p>
 <pre><code class="language-c">float kalman_update(kalman_t *kf, float angle_measured, float gyro_rate, float dt)
 {
@@ -117,7 +118,7 @@ void gyro_calibrate(void)
 }
 </code></pre>
 <p>调参经验：<code>Q_angle</code> 控制对陀螺仪的信任度，<code>R_measure</code> 控制对加速度计的信任度。振动大的机架需要适当增大 <code>R_measure</code>。</p>
-<h2 id="效果">效果</h2>
+<h3 id="效果">效果</h3>
 <ul>
 <li>静态漂移：&lt; 0.1°/min</li>
 <li>动态误差：&lt; ±1.5°（剧烈机动时）</li>
@@ -125,10 +126,24 @@ void gyro_calibrate(void)
 </ul>
 <p>下篇文章会讲基于这个姿态数据的双环 PID 控制器设计。</p>
 </div>
+      <div class="stats-bar" aria-label="文章统计">
+        <button class="like-btn" data-id="mpu6050-attitude-solution" type="button" aria-label="点赞">
+          <svg class="icon-heart" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10-9.2C.4 8.9 1.6 5.3 4.8 4.6c1.9-.4 3.7.6 4.8 2 1.1-1.4 2.9-2.4 4.8-2 3.2.7 4.4 4.3 2.8 7.2C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="like-count">0</span>
+        </button>
+        <span class="stat view-count" aria-label="浏览数">
+          <svg class="icon-eye" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M1 12.5C2.7 8.1 7 5 12 5s9.3 3.1 11 7.5C21.3 16.9 17 20 12 20S2.7 16.9 1 12.5z"/><circle cx="12" cy="12.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="view-count-num">0</span>
+        </span>
+      </div>
       <nav class="article-navigation" aria-label="文章导航"><a href="../posts/stm32-baremetal-scheduler.html">上一篇：STM32 裸机多任务调度框架设计与实践</a><a href="../posts/esp32s3-lvgl-smartwatch.html">下一篇：在 ESP32-S3 上用 LVGL 构建流畅的智能手表 UI</a></nav>
       <nav class="related-posts" aria-label="相关文章"><ol><li><a href="../posts/embedded-robotics-learning-roadmap.html">嵌入式与机器人学习路线</a></li><li><a href="../posts/stm32-baremetal-scheduler.html">STM32 裸机多任务调度框架设计与实践</a></li><li><a href="../posts/nrf24l01-low-latency-protocol.html">NRF24L01 2.4GHz 低延迟通信协议设计笔记</a></li></ol></nav>
     </article>
   </main>
   <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+  <script defer src="../assets/js/stats.js"></script>
+  <script defer src="../assets/js/likes-storage.js"></script>
+  <script defer src="../vendor/highlight.min.js"></script>
+  <script defer src="../assets/js/article-page.js"></script>
 </body>
 </html>

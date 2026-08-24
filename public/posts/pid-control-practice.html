@@ -19,6 +19,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"PID 控制从入门到进阶：位置式与增量式的取舍","description":"从公式到代码：对比位置式与增量式 PID 的实现差异，介绍双环串级控制（角度环+角速度环）在四轴无人机悬停稳定性中的应用与调参方法论。","url":"https://inskr.github.io/Infighting/posts/pid-control-practice.html","mainEntityOfPage":"https://inskr.github.io/Infighting/posts/pid-control-practice.html","datePublished":"2024-08-12","dateModified":"2024-08-12","keywords":["控制算法","飞控","PID"]}</script>
   <script src="../assets/js/theme.js"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -42,15 +43,15 @@
   </header>
   <main class="container">
     <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
-    <article class="article glass-surface">
+    <article class="article glass-surface" data-article-id="pid-control-practice">
       <header class="article-header">
         <h1>PID 控制从入门到进阶：位置式与增量式的取舍</h1>
         <div class="post-meta"><span>2024-08-12</span><a class="tag" href="../tags.html?tag=%E6%8E%A7%E5%88%B6%E7%AE%97%E6%B3%95">控制算法</a><a class="tag" href="../tags.html?tag=%E9%A3%9E%E6%8E%A7">飞控</a><a class="tag" href="../tags.html?tag=PID">PID</a></div>
       </header>
-      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#两种实现形式">两种实现形式</a></li><li class="article-toc-level-3"><a href="#位置式-pid">位置式 PID</a></li><li class="article-toc-level-3"><a href="#增量式-pid">增量式 PID</a></li><li class="article-toc-level-2"><a href="#串级双环飞控的正确打开方式">串级双环：飞控的正确打开方式</a></li><li class="article-toc-level-2"><a href="#调参方法论">调参方法论</a></li><li class="article-toc-level-2"><a href="#常见坑">常见坑</a></li></ol></nav>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-3"><a href="#两种实现形式">两种实现形式</a></li><li class="article-toc-level-4"><a href="#位置式-pid">位置式 PID</a></li><li class="article-toc-level-4"><a href="#增量式-pid">增量式 PID</a></li><li class="article-toc-level-3"><a href="#串级双环飞控的正确打开方式">串级双环：飞控的正确打开方式</a></li><li class="article-toc-level-3"><a href="#调参方法论">调参方法论</a></li><li class="article-toc-level-3"><a href="#常见坑">常见坑</a></li></ol></nav>
       <div class="article-body"><p>PID 是嵌入式控制里&quot;最简单也最困难&quot;的算法——公式三行就能写完，调参能调一个月。本文结合四轴无人机项目，把 PID 的理论、实现与调参串一遍。</p>
-<h2 id="两种实现形式">两种实现形式</h2>
-<h3 id="位置式-pid">位置式 PID</h3>
+<h3 id="两种实现形式">两种实现形式</h3>
+<h4 id="位置式-pid">位置式 PID</h4>
 <p>输出直接是控制量的绝对值：</p>
 <pre><code class="language-c">float pid_positional(pid_t *pid, float setpoint, float measured, float dt)
 {
@@ -65,7 +66,7 @@
     return pid-&gt;kp * error + pid-&gt;ki * pid-&gt;integral + pid-&gt;kd * derivative;
 }
 </code></pre>
-<h3 id="增量式-pid">增量式 PID</h3>
+<h4 id="增量式-pid">增量式 PID</h4>
 <p>输出是控制量的增量，适合电机类执行器：</p>
 <pre><code class="language-c">float pid_incremental(pid_t *pid, float setpoint, float measured)
 {
@@ -86,7 +87,7 @@
 <li>增量式：积分天然有界，手动/自动切换无扰，适合电机调速</li>
 <li>飞控中我用的是<strong>位置式 + 积分限幅</strong>，因为电机需要的是绝对油门值</li>
 </ul>
-<h2 id="串级双环飞控的正确打开方式">串级双环：飞控的正确打开方式</h2>
+<h3 id="串级双环飞控的正确打开方式">串级双环：飞控的正确打开方式</h3>
 <p>单环 PID 直接控角度，响应慢且容易振荡。工业和飞控的标准做法是<strong>串级控制</strong>：</p>
 <pre><code>角度设定 → [角度环 PID] → 角速度设定 → [角速度环 PID] → 电机输出
               (外环, 慢)                    (内环, 快)
@@ -113,7 +114,7 @@
 }
 </code></pre>
 <p>内环用陀螺仪直接测得的角速度，响应快、抗扰强；外环保证角度精度。这是悬停稳定的关键。</p>
-<h2 id="调参方法论">调参方法论</h2>
+<h3 id="调参方法论">调参方法论</h3>
 <p>我的调参顺序（内环优先）：</p>
 <ol>
 <li><strong>内环 P</strong>：逐渐增大直到机身开始高频振荡，回退到 60%</li>
@@ -124,7 +125,7 @@
 <blockquote>
 <p><strong>经验之谈</strong>：90% 的&quot;PID 调不好&quot;其实是机械问题——机架松动、电机不一致、传感器振动。先检查硬件，再怀疑参数。</p>
 </blockquote>
-<h2 id="常见坑">常见坑</h2>
+<h3 id="常见坑">常见坑</h3>
 <ul>
 <li><strong>积分饱和</strong>：大机动后回正过冲严重 → 加积分限幅或条件积分</li>
 <li><strong>微分噪声</strong>：D 项直接对角度微分会把传感器噪声放大 → 对测量值微分（微分先行）或加低通滤波</li>
@@ -132,10 +133,24 @@
 </ul>
 <p>PID 本身只是起点，后续可以探索 LQR、ADRC，但先把这套经典串级玩透，手感就建立起来了。</p>
 </div>
+      <div class="stats-bar" aria-label="文章统计">
+        <button class="like-btn" data-id="pid-control-practice" type="button" aria-label="点赞">
+          <svg class="icon-heart" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10-9.2C.4 8.9 1.6 5.3 4.8 4.6c1.9-.4 3.7.6 4.8 2 1.1-1.4 2.9-2.4 4.8-2 3.2.7 4.4 4.3 2.8 7.2C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="like-count">0</span>
+        </button>
+        <span class="stat view-count" aria-label="浏览数">
+          <svg class="icon-eye" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M1 12.5C2.7 8.1 7 5 12 5s9.3 3.1 11 7.5C21.3 16.9 17 20 12 20S2.7 16.9 1 12.5z"/><circle cx="12" cy="12.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="view-count-num">0</span>
+        </span>
+      </div>
       <nav class="article-navigation" aria-label="文章导航"><a href="../posts/nrf24l01-low-latency-protocol.html">上一篇：NRF24L01 2.4GHz 低延迟通信协议设计笔记</a><a href="../posts/edge-nn-stm32h7.html">下一篇：边缘端神经网络部署：从模型压缩到 STM32H7 推理优化</a></nav>
       <nav class="related-posts" aria-label="相关文章"><ol><li><a href="../posts/nrf24l01-low-latency-protocol.html">NRF24L01 2.4GHz 低延迟通信协议设计笔记</a></li></ol></nav>
     </article>
   </main>
   <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+  <script defer src="../assets/js/stats.js"></script>
+  <script defer src="../assets/js/likes-storage.js"></script>
+  <script defer src="../vendor/highlight.min.js"></script>
+  <script defer src="../assets/js/article-page.js"></script>
 </body>
 </html>

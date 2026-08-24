@@ -19,6 +19,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"在 ESP32-S3 上用 LVGL 构建流畅的智能手表 UI","description":"基于 ESP32-S3 的智能手表项目复盘：LVGL 图形库移植、事件驱动的界面导航架构、WiFi 数据通道，以及针对内存瓶颈的字体与图片资源优化技巧。","url":"https://inskr.github.io/Infighting/posts/esp32s3-lvgl-smartwatch.html","mainEntityOfPage":"https://inskr.github.io/Infighting/posts/esp32s3-lvgl-smartwatch.html","datePublished":"2024-12-20","dateModified":"2024-12-20","keywords":["ESP32","LVGL","物联网"]}</script>
   <script src="../assets/js/theme.js"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -42,14 +43,14 @@
   </header>
   <main class="container">
     <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
-    <article class="article glass-surface">
+    <article class="article glass-surface" data-article-id="esp32s3-lvgl-smartwatch">
       <header class="article-header">
         <h1>在 ESP32-S3 上用 LVGL 构建流畅的智能手表 UI</h1>
         <div class="post-meta"><span>2024-12-20</span><a class="tag" href="../tags.html?tag=ESP32">ESP32</a><a class="tag" href="../tags.html?tag=LVGL">LVGL</a><a class="tag" href="../tags.html?tag=%E7%89%A9%E8%81%94%E7%BD%91">物联网</a></div>
       </header>
-      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#为什么是-lvgl">为什么是 LVGL</a></li><li class="article-toc-level-2"><a href="#事件驱动的界面导航">事件驱动的界面导航</a></li><li class="article-toc-level-2"><a href="#内存优化最痛的一课">内存优化：最痛的一课</a></li><li class="article-toc-level-2"><a href="#wifi-数据通道">WiFi 数据通道</a></li><li class="article-toc-level-2"><a href="#总结">总结</a></li></ol></nav>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-3"><a href="#为什么是-lvgl">为什么是 LVGL</a></li><li class="article-toc-level-3"><a href="#事件驱动的界面导航">事件驱动的界面导航</a></li><li class="article-toc-level-3"><a href="#内存优化最痛的一课">内存优化：最痛的一课</a></li><li class="article-toc-level-3"><a href="#wifi-数据通道">WiFi 数据通道</a></li><li class="article-toc-level-3"><a href="#总结">总结</a></li></ol></nav>
       <div class="article-body"><p>这是我大三上学期的项目：一块基于 ESP32-S3 的多功能智能手表，支持数字时钟、消息通知、天气显示。本文复盘其中最有价值的几个技术决策。</p>
-<h2 id="为什么是-lvgl">为什么是 LVGL</h2>
+<h3 id="为什么是-lvgl">为什么是 LVGL</h3>
 <p> ESP32-S3 没有强大的 GPU，但 LVGL（Light and Versatile Graphics Library）在 MCU 上的表现足够好：</p>
 <ul>
 <li>纯 C 编写，移植只需要实现一个 flush 回调</li>
@@ -79,7 +80,7 @@ void lvgl_port_init(void)
     lv_disp_drv_register(&amp;disp_drv);
 }
 </code></pre>
-<h2 id="事件驱动的界面导航">事件驱动的界面导航</h2>
+<h3 id="事件驱动的界面导航">事件驱动的界面导航</h3>
 <p>手表有多个界面（表盘、通知、天气、设置），用裸 if-else 管理会迅速失控。我设计了一个简单的页面栈：</p>
 <pre><code class="language-c">typedef struct {
     void (*create)(lv_obj_t *parent);
@@ -104,7 +105,7 @@ void page_pop(void)
 }
 </code></pre>
 <p>配合 LVGL 的手势事件，左右滑动切换页面、下滑返回，导航逻辑非常清晰。</p>
-<h2 id="内存优化最痛的一课">内存优化：最痛的一课</h2>
+<h3 id="内存优化最痛的一课">内存优化：最痛的一课</h3>
 <p>ESP32-S3 的 SRAM 只有 512KB，中文全字库根本放不下。优化手段：</p>
 <ol>
 <li><strong>字体裁剪</strong>：用 LVGL 官方的 font converter，只导出界面实际用到的 200 多个汉字，从 2MB 压到 60KB</li>
@@ -117,17 +118,31 @@ lv_font_t my_font_cn = {
     // 通过 range + glyph_id 映射裁剪后的字形
 };
 </code></pre>
-<h2 id="wifi-数据通道">WiFi 数据通道</h2>
+<h3 id="wifi-数据通道">WiFi 数据通道</h3>
 <p>手表通过 WiFi 连接上位机，接收消息通知和天气数据，协议用简单的 JSON over TCP：</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;weather&quot;, &quot;temp&quot;: 26, &quot;icon&quot;: &quot;sunny&quot;, &quot;city&quot;: &quot;太原&quot;}
 </code></pre>
 <p>接收任务用 FreeRTOS 独立任务运行（ESP-IDF 环境），收到数据后通过 <code>lv_port_sem</code> 保护地更新 UI。</p>
-<h2 id="总结">总结</h2>
+<h3 id="总结">总结</h3>
 <p>这个项目让我深刻理解：<strong>资源受限环境下的 UI 开发，本质上是一场内存与性能的权衡艺术</strong>。LVGL 的事件驱动架构值得学习，这套页面栈模式后来也被我用到了其他项目中。</p>
 </div>
+      <div class="stats-bar" aria-label="文章统计">
+        <button class="like-btn" data-id="esp32s3-lvgl-smartwatch" type="button" aria-label="点赞">
+          <svg class="icon-heart" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10-9.2C.4 8.9 1.6 5.3 4.8 4.6c1.9-.4 3.7.6 4.8 2 1.1-1.4 2.9-2.4 4.8-2 3.2.7 4.4 4.3 2.8 7.2C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="like-count">0</span>
+        </button>
+        <span class="stat view-count" aria-label="浏览数">
+          <svg class="icon-eye" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M1 12.5C2.7 8.1 7 5 12 5s9.3 3.1 11 7.5C21.3 16.9 17 20 12 20S2.7 16.9 1 12.5z"/><circle cx="12" cy="12.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="view-count-num">0</span>
+        </span>
+      </div>
       <nav class="article-navigation" aria-label="文章导航"><a href="../posts/mpu6050-attitude-solution.html">上一篇：MPU6050 姿态解算：四元数与卡尔曼滤波实战</a><a href="../posts/nrf24l01-low-latency-protocol.html">下一篇：NRF24L01 2.4GHz 低延迟通信协议设计笔记</a></nav>
     </article>
   </main>
   <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+  <script defer src="../assets/js/stats.js"></script>
+  <script defer src="../assets/js/likes-storage.js"></script>
+  <script defer src="../vendor/highlight.min.js"></script>
+  <script defer src="../assets/js/article-page.js"></script>
 </body>
 </html>

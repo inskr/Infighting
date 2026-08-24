@@ -19,6 +19,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"STM32 裸机多任务调度框架设计与实践","description":"在四轴无人机飞控项目中，没有 RTOS 的裸机环境如何组织多任务？本文介绍一个基于时间片轮询的轻量级调度框架，涵盖任务表设计、SysTick 时基与负载评估。","url":"https://inskr.github.io/Infighting/posts/stm32-baremetal-scheduler.html","mainEntityOfPage":"https://inskr.github.io/Infighting/posts/stm32-baremetal-scheduler.html","datePublished":"2025-04-18","dateModified":"2025-04-18","keywords":["STM32","裸机开发","任务调度"]}</script>
   <script src="../assets/js/theme.js"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -42,14 +43,14 @@
   </header>
   <main class="container">
     <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
-    <article class="article glass-surface">
+    <article class="article glass-surface" data-article-id="stm32-baremetal-scheduler">
       <header class="article-header">
         <h1>STM32 裸机多任务调度框架设计与实践</h1>
         <div class="post-meta"><span>2025-04-18</span><a class="tag" href="../tags.html?tag=STM32">STM32</a><a class="tag" href="../tags.html?tag=%E8%A3%B8%E6%9C%BA%E5%BC%80%E5%8F%91">裸机开发</a><a class="tag" href="../tags.html?tag=%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6">任务调度</a></div>
       </header>
-      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#为什么需要调度框架">为什么需要调度框架</a></li><li class="article-toc-level-2"><a href="#任务表设计">任务表设计</a></li><li class="article-toc-level-2"><a href="#调度循环与耗时统计">调度循环与耗时统计</a></li><li class="article-toc-level-2"><a href="#实测数据与结论">实测数据与结论</a></li></ol></nav>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-3"><a href="#为什么需要调度框架">为什么需要调度框架</a></li><li class="article-toc-level-3"><a href="#任务表设计">任务表设计</a></li><li class="article-toc-level-3"><a href="#调度循环与耗时统计">调度循环与耗时统计</a></li><li class="article-toc-level-3"><a href="#实测数据与结论">实测数据与结论</a></li></ol></nav>
       <div class="article-body"><p>在四轴无人机飞控项目中，我选择基于 STM32F103 裸机开发，而不是直接上 FreeRTOS。原因有两个：一是飞控任务数量少且实时性要求明确，裸机调度足够；二是想彻底搞清楚&quot;操作系统到底在干什么&quot;。</p>
-<h2 id="为什么需要调度框架">为什么需要调度框架</h2>
+<h3 id="为什么需要调度框架">为什么需要调度框架</h3>
 <p>裸机开发最常见的问题是 <code>while(1)</code> 大循环里堆满各种功能：传感器采集、姿态解算、PID 控制、无线通信……一旦某个任务耗时变长，其他任务全部被阻塞，飞控直接失控。</p>
 <p>一个最小可用的调度框架需要解决三件事：</p>
 <ol>
@@ -57,7 +58,7 @@
 <li><strong>任务之间互不阻塞</strong>（单个任务超时可以被检出）</li>
 <li><strong>CPU 负载可观测</strong>（知道还剩多少余量）</li>
 </ol>
-<h2 id="任务表设计">任务表设计</h2>
+<h3 id="任务表设计">任务表设计</h3>
 <p>核心思路是&quot;函数指针 + 周期计数&quot;，用结构体数组描述所有任务：</p>
 <pre><code class="language-c">typedef struct {
     void (*task_func)(void);  // 任务入口
@@ -77,7 +78,7 @@ static task_t task_table[] = {
 
 #define TASK_NUM (sizeof(task_table) / sizeof(task_t))
 </code></pre>
-<h2 id="调度循环与耗时统计">调度循环与耗时统计</h2>
+<h3 id="调度循环与耗时统计">调度循环与耗时统计</h3>
 <p>主循环遍历任务表，到期的任务立即执行，并用 DWT 周期计数器统计耗时：</p>
 <pre><code class="language-c">void scheduler_run(void)
 {
@@ -105,7 +106,7 @@ static task_t task_table[] = {
     DWT-&gt;CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 }
 </code></pre>
-<h2 id="实测数据与结论">实测数据与结论</h2>
+<h3 id="实测数据与结论">实测数据与结论</h3>
 <p>在 72MHz 的 STM32F103 上实测：</p>
 <table>
 <thead>
@@ -137,10 +138,24 @@ static task_t task_table[] = {
 </tbody></table>
 <p>总负载约 15%，余量充足。<strong>关键经验</strong>：周期任务的单次耗时必须远小于周期，否则要考虑拆分状态机或上 RTOS。这套框架后来也被我复用到了智能手表项目中，配合 LVGL 的 <code>lv_timer_handler</code> 一起工作得很好。</p>
 </div>
+      <div class="stats-bar" aria-label="文章统计">
+        <button class="like-btn" data-id="stm32-baremetal-scheduler" type="button" aria-label="点赞">
+          <svg class="icon-heart" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10-9.2C.4 8.9 1.6 5.3 4.8 4.6c1.9-.4 3.7.6 4.8 2 1.1-1.4 2.9-2.4 4.8-2 3.2.7 4.4 4.3 2.8 7.2C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="like-count">0</span>
+        </button>
+        <span class="stat view-count" aria-label="浏览数">
+          <svg class="icon-eye" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M1 12.5C2.7 8.1 7 5 12 5s9.3 3.1 11 7.5C21.3 16.9 17 20 12 20S2.7 16.9 1 12.5z"/><circle cx="12" cy="12.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="view-count-num">0</span>
+        </span>
+      </div>
       <nav class="article-navigation" aria-label="文章导航"><a href="../posts/linux-driver-char-device.html">上一篇：嵌入式 Linux 驱动开发入门：从字符设备到设备树</a><a href="../posts/mpu6050-attitude-solution.html">下一篇：MPU6050 姿态解算：四元数与卡尔曼滤波实战</a></nav>
       <nav class="related-posts" aria-label="相关文章"><ol><li><a href="../posts/embedded-robotics-learning-roadmap.html">嵌入式与机器人学习路线</a></li><li><a href="../posts/mpu6050-attitude-solution.html">MPU6050 姿态解算：四元数与卡尔曼滤波实战</a></li><li><a href="../posts/nrf24l01-low-latency-protocol.html">NRF24L01 2.4GHz 低延迟通信协议设计笔记</a></li></ol></nav>
     </article>
   </main>
   <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+  <script defer src="../assets/js/stats.js"></script>
+  <script defer src="../assets/js/likes-storage.js"></script>
+  <script defer src="../vendor/highlight.min.js"></script>
+  <script defer src="../assets/js/article-page.js"></script>
 </body>
 </html>

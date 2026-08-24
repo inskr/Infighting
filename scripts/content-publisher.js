@@ -19,6 +19,26 @@ const MANAGED_OUTPUTS = [
   { relativePath: path.join('assets', 'js', 'posts-data.js'), staged: false },
 ];
 
+function normalizeSiteUrl(siteUrl) {
+  let parsed;
+  try {
+    parsed = new URL(String(siteUrl));
+  } catch (error) {
+    throw new Error('Invalid siteUrl: expected an absolute HTTP(S) site root');
+  }
+  if (
+    !/^https?:$/.test(parsed.protocol) ||
+    parsed.username ||
+    parsed.password ||
+    parsed.search ||
+    parsed.hash
+  ) {
+    throw new Error('Invalid siteUrl: expected an absolute credential-free HTTP(S) site root');
+  }
+  if (!parsed.pathname.endsWith('/')) parsed.pathname += '/';
+  return parsed.toString();
+}
+
 function parseFrontmatter(raw) {
   const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!match) return { meta: {}, content: raw };
@@ -42,6 +62,15 @@ function parseFrontmatter(raw) {
   return { meta, content: match[2] };
 }
 
+function isCanonicalCalendarDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  if (year < 1 || month < 1 || month > 12 || day < 1) return false;
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day <= daysInMonth[month - 1];
+}
+
 function readAndValidatePosts(postsDir) {
   const posts = fs
     .readdirSync(postsDir)
@@ -52,7 +81,7 @@ function readAndValidatePosts(postsDir) {
       return {
         id: meta.id || file.replace(/\.md$/, ''),
         title: meta.title || '未命名',
-        date: meta.date || '1970-01-01',
+        date: meta.date,
         tags: Array.isArray(meta.tags) ? meta.tags : [],
         summary: meta.summary || '',
         type: meta.type || 'post',
@@ -68,6 +97,12 @@ function readAndValidatePosts(postsDir) {
 
   const seenIds = new Map();
   for (const post of posts) {
+    if (!isCanonicalCalendarDate(post.date)) {
+      throw new Error(
+        `Invalid post date for '${post.id}': ${post.date || '<missing>'}. ` +
+          'Use an explicit YYYY-MM-DD real calendar date.'
+      );
+    }
     if (!isValidContentId(post.id)) {
       throw new Error(
         "Invalid post id '" +
@@ -208,7 +243,135 @@ function parseXmlDocument(source) {
   return { rootName };
 }
 
-function validateStagedOutputs(stagedPublicDir, posts) {
+function decodeHtmlAttribute(value) {
+  return String(value)
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&#(\d+);/g, (match, decimal) => String.fromCodePoint(Number(decimal)))
+    .replace(/&#x([0-9a-f]+);/gi, (match, hex) => String.fromCodePoint(Number.parseInt(hex, 16)));
+}
+
+function htmlIds(source) {
+  const ids = new Set();
+  const pattern = /\bid\s*=\s*(["'])(.*?)\1/gi;
+  let match;
+  while ((match = pattern.exec(source)) !== null) ids.add(decodeHtmlAttribute(match[2]));
+  return ids;
+}
+
+function existingTarget(stagedPublicDir, publicDir, relativePath, allowPublishedTarget) {
+  const roots = allowPublishedTarget ? [stagedPublicDir, publicDir] : [stagedPublicDir];
+  for (const root of roots) {
+    const candidate = path.join(root, relativePath);
+    if (!fs.existsSync(candidate)) continue;
+    if (fs.statSync(candidate).isDirectory()) {
+      const indexFile = path.join(candidate, 'index.html');
+      if (fs.existsSync(indexFile) && fs.statSync(indexFile).isFile()) return indexFile;
+      continue;
+    }
+    return candidate;
+  }
+  return null;
+}
+
+function validateArticleTargets(stagedPublicDir, publicDir, posts, siteUrl) {
+  const stagedRoot = path.resolve(stagedPublicDir);
+  const sitePath = new URL(siteUrl).pathname.replace(/^\/+|\/+$/g, '');
+  const generatedArticlePaths = new Set(
+    [...readPublishedPostIds(publicDir), ...posts.map((post) => post.id)].map((id) =>
+      path.normalize(path.join('posts', `${id}.html`))
+    )
+  );
+
+  for (const post of posts) {
+    const sourceRelativePath = path.join('posts', `${post.id}.html`);
+    const sourcePath = path.join(stagedRoot, sourceRelativePath);
+    const source = fs.readFileSync(sourcePath, 'utf8');
+    const sourceIds = htmlIds(source);
+    const attributePattern = /\b(href|src)\s*=\s*(["'])(.*?)\2/gi;
+    let match;
+
+    while ((match = attributePattern.exec(source)) !== null) {
+      const attribute = match[1].toLowerCase();
+      const target = decodeHtmlAttribute(match[3]).trim();
+      if (!target) continue;
+      if (target.startsWith('//')) continue;
+
+      const schemeMatch = target.match(/^([A-Za-z][A-Za-z0-9+.-]*):/);
+      if (schemeMatch) {
+        const scheme = schemeMatch[1].toLowerCase();
+        const approved =
+          scheme === 'http' ||
+          scheme === 'https' ||
+          (attribute === 'href' && (scheme === 'mailto' || scheme === 'tel')) ||
+          (attribute === 'src' && scheme === 'data');
+        if (approved) continue;
+        throw new Error(
+          `Unsupported ${attribute} scheme in ${sourceRelativePath}: ${target}`
+        );
+      }
+
+      if (target.startsWith('#')) {
+        const fragment = decodeURIComponent(target.slice(1));
+        if (fragment && !sourceIds.has(fragment)) {
+          throw new Error(
+            `Broken internal ${attribute} in ${sourceRelativePath}: ${target}`
+          );
+        }
+        continue;
+      }
+
+      const hashIndex = target.indexOf('#');
+      const queryIndex = target.indexOf('?');
+      const pathEnd = [hashIndex, queryIndex]
+        .filter((index) => index >= 0)
+        .reduce((lowest, index) => Math.min(lowest, index), target.length);
+      let targetPath = target.slice(0, pathEnd);
+      let decodedTargetPath;
+      try {
+        decodedTargetPath = decodeURIComponent(targetPath);
+      } catch (error) {
+        throw new Error(`Broken internal ${attribute} in ${sourceRelativePath}: ${target}`);
+      }
+      if (decodedTargetPath.includes('\\') || decodedTargetPath.includes('\0')) {
+        throw new Error(`Broken internal ${attribute} in ${sourceRelativePath}: ${target}`);
+      }
+
+      if (decodedTargetPath.startsWith('/')) {
+        decodedTargetPath = decodedTargetPath.replace(/^\/+/, '');
+        if (sitePath && decodedTargetPath.startsWith(`${sitePath}/`)) {
+          decodedTargetPath = decodedTargetPath.slice(sitePath.length + 1);
+        }
+      } else {
+        decodedTargetPath = path.join(path.dirname(sourceRelativePath), decodedTargetPath);
+      }
+      const resolvedTarget = path.resolve(stagedRoot, decodedTargetPath);
+      if (resolvedTarget !== stagedRoot && !resolvedTarget.startsWith(`${stagedRoot}${path.sep}`)) {
+        throw new Error(`Broken internal ${attribute} in ${sourceRelativePath}: ${target}`);
+      }
+      const relativeTarget = path.relative(stagedRoot, resolvedTarget);
+      const targetFile = existingTarget(
+        stagedRoot,
+        publicDir,
+        relativeTarget,
+        !generatedArticlePaths.has(path.normalize(relativeTarget))
+      );
+      if (!targetFile) {
+        throw new Error(`Broken internal ${attribute} in ${sourceRelativePath}: ${target}`);
+      }
+
+      if (hashIndex >= 0 && targetFile.endsWith('.html')) {
+        const fragment = decodeURIComponent(target.slice(hashIndex + 1));
+        if (fragment && !htmlIds(fs.readFileSync(targetFile, 'utf8')).has(fragment)) {
+          throw new Error(`Broken internal ${attribute} in ${sourceRelativePath}: ${target}`);
+        }
+      }
+    }
+  }
+}
+
+function validateStagedOutputs(stagedPublicDir, publicDir, posts, siteUrl) {
   const articleNames = posts.map((post) => `${post.id}.html`);
   const jsonNames = posts.map((post) => `${post.id}.json`);
   const stagedArticlesDir = path.join(stagedPublicDir, 'posts');
@@ -238,6 +401,7 @@ function validateStagedOutputs(stagedPublicDir, posts) {
   if (sitemap.rootName !== 'urlset' || rss.rootName !== 'rss') {
     throw new Error('Invalid staged discovery document root');
   }
+  validateArticleTargets(stagedPublicDir, publicDir, posts, siteUrl);
 }
 
 function readPublishedPostIds(publicDir) {
@@ -330,6 +494,7 @@ function replaceManagedOutputs(stagedPublicDir, publicDir, backupDir) {
 }
 
 function buildSite({ postsDir, publicDir, siteUrl, renderArticle = renderArticlePage }) {
+  const normalizedSiteUrl = normalizeSiteUrl(siteUrl);
   const posts = readAndValidatePosts(postsDir);
   const resolvedPublicDir = path.resolve(publicDir);
   const publicParent = path.dirname(resolvedPublicDir);
@@ -343,9 +508,9 @@ function buildSite({ postsDir, publicDir, siteUrl, renderArticle = renderArticle
   try {
     writePostIndex(stagedPublicDir, posts);
     writeCompatibilityDocuments(stagedPublicDir, posts);
-    writeArticlePages(stagedPublicDir, posts, siteUrl, renderArticle);
-    writeDiscoveryOutputs(stagedPublicDir, posts, siteUrl);
-    validateStagedOutputs(stagedPublicDir, posts);
+    writeArticlePages(stagedPublicDir, posts, normalizedSiteUrl, renderArticle);
+    writeDiscoveryOutputs(stagedPublicDir, posts, normalizedSiteUrl);
+    validateStagedOutputs(stagedPublicDir, resolvedPublicDir, posts, normalizedSiteUrl);
     preserveUnmanagedEntries(stagedPublicDir, resolvedPublicDir, posts);
     replaceManagedOutputs(stagedPublicDir, resolvedPublicDir, backupDir);
     return posts.map(({ content, ...entry }) => entry);

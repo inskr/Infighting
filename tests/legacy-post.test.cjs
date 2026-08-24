@@ -41,3 +41,20 @@ test('redirects only validated published IDs and keeps an invalid URL recoverabl
   assert.match(status.innerHTML, /文章不存在/);
   assert.match(status.innerHTML, /href="index\.html"/);
 });
+
+test('redirect returns and replaces exactly once for a valid published legacy ID', () => {
+  const redirects = [];
+  const root = {
+    POSTS: [{ id: 'alpha' }],
+    document: { getElementById: () => null },
+    location: {
+      search: '?id=alpha',
+      replace(target) {
+        redirects.push(target);
+      },
+    },
+  };
+
+  assert.equal(LegacyPost.redirect(root), 'posts/alpha.html');
+  assert.deepEqual(redirects, ['posts/alpha.html']);
+});

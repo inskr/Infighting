@@ -2,12 +2,8 @@
 
 const { escapeXml } = require('./output-encoding');
 
-function normalizeSiteUrl(siteUrl) {
-  return String(siteUrl).endsWith('/') ? String(siteUrl) : `${siteUrl}/`;
-}
-
 function articleUrl(siteUrl, id) {
-  return `${normalizeSiteUrl(siteUrl)}posts/${encodeURIComponent(id)}.html`;
+  return `${siteUrl}posts/${encodeURIComponent(id)}.html`;
 }
 
 function comparePostsByDiscoveryOrder(a, b) {
@@ -26,26 +22,33 @@ function rssDate(date) {
 }
 
 function renderSitemap({ posts, siteUrl }) {
-  const urls = staticPosts(posts)
+  const pageUrls = ['', 'tags.html', 'archive.html']
+    .map(
+      (relativePath) =>
+        `  <url>\n    <loc>${escapeXml(`${siteUrl}${relativePath}`)}</loc>\n  </url>`
+    );
+  const articleUrls = staticPosts(posts)
     .map(
       (post) =>
         `  <url>\n    <loc>${escapeXml(articleUrl(siteUrl, post.id))}</loc>\n    <lastmod>${escapeXml(post.date)}</lastmod>\n  </url>`
-    )
-    .join('\n');
+    );
+  const urls = pageUrls.concat(articleUrls).join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
 
 function renderRss({ posts, siteUrl }) {
-  const normalizedSiteUrl = normalizeSiteUrl(siteUrl);
   const items = staticPosts(posts)
     .map((post) => {
-      const url = articleUrl(normalizedSiteUrl, post.id);
-      return `    <item>\n      <title>${escapeXml(post.title)}</title>\n      <link>${escapeXml(url)}</link>\n      <guid isPermaLink="true">${escapeXml(url)}</guid>\n      <pubDate>${escapeXml(rssDate(post.date))}</pubDate>\n      <description>${escapeXml(post.summary || post.title)}</description>\n    </item>`;
+      const url = articleUrl(siteUrl, post.id);
+      const categories = (Array.isArray(post.tags) ? post.tags : [])
+        .map((tag) => `      <category>${escapeXml(tag)}</category>`)
+        .join('\n');
+      return `    <item>\n      <title>${escapeXml(post.title)}</title>\n      <link>${escapeXml(url)}</link>\n      <guid isPermaLink="true">${escapeXml(url)}</guid>\n      <pubDate>${escapeXml(rssDate(post.date))}</pubDate>\n      <description>${escapeXml(post.summary || post.title)}</description>${categories ? `\n${categories}` : ''}\n    </item>`;
     })
     .join('\n');
 
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0">\n  <channel>\n    <title>Infighting</title>\n    <link>${escapeXml(normalizedSiteUrl)}</link>\n    <description>嵌入式与边缘计算开发笔记</description>\n${items}\n  </channel>\n</rss>\n`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0">\n  <channel>\n    <title>Infighting</title>\n    <link>${escapeXml(siteUrl)}</link>\n    <description>嵌入式与边缘计算开发笔记</description>\n${items}\n  </channel>\n</rss>\n`;
 }
 
 module.exports = { renderRss, renderSitemap };

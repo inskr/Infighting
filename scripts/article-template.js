@@ -31,8 +31,9 @@ function renderArticleContent(content) {
     const rawText = tokens.map((token) => token.raw || token.text || '').join('');
     const id = slugger.slug(rawText);
     const html = this.parser.parseInline(tokens);
-    if (depth >= 2) headings.push({ depth, id, text: rawText });
-    return `<h${depth} id="${id}">${html}</h${depth}>\n`;
+    const outputDepth = Math.min(depth + 1, 6);
+    headings.push({ depth: outputDepth, id, text: rawText });
+    return `<h${outputDepth} id="${id}">${html}</h${outputDepth}>\n`;
   };
 
   return { articleHtml: marked.parse(content, { renderer }), headings };
@@ -99,6 +100,19 @@ function renderRelatedPosts(post, posts) {
   return `<nav class="related-posts" aria-label="相关文章"><ol>${links}</ol></nav>`;
 }
 
+function renderArticleStats(post) {
+  return `<div class="stats-bar" aria-label="文章统计">
+        <button class="like-btn" data-id="${escapeHtml(post.id)}" type="button" aria-label="点赞">
+          <svg class="icon-heart" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10-9.2C.4 8.9 1.6 5.3 4.8 4.6c1.9-.4 3.7.6 4.8 2 1.1-1.4 2.9-2.4 4.8-2 3.2.7 4.4 4.3 2.8 7.2C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="like-count">0</span>
+        </button>
+        <span class="stat view-count" aria-label="浏览数">
+          <svg class="icon-eye" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M1 12.5C2.7 8.1 7 5 12 5s9.3 3.1 11 7.5C21.3 16.9 17 20 12 20S2.7 16.9 1 12.5z"/><circle cx="12" cy="12.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="view-count-num">0</span>
+        </span>
+      </div>`;
+}
+
 function renderArticlePage({ post, posts, siteUrl }) {
   const articleUrl = `${siteUrl}posts/${encodeURIComponent(post.id)}.html`;
   const description = post.summary || post.title;
@@ -124,6 +138,7 @@ function renderArticlePage({ post, posts, siteUrl }) {
   const readingNavigation = renderReadingNavigation(post, posts);
   const relatedPosts = renderRelatedPosts(post, posts);
   const articleNavigation = [readingNavigation, relatedPosts].filter(Boolean).join('\n      ');
+  const articleStats = renderArticleStats(post);
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -146,6 +161,7 @@ function renderArticlePage({ post, posts, siteUrl }) {
   <script type="application/ld+json">${jsonLd}</script>
   <script src="../assets/js/theme.js"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -169,16 +185,21 @@ function renderArticlePage({ post, posts, siteUrl }) {
   </header>
   <main class="container">
     <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
-    <article class="article glass-surface">
+    <article class="article glass-surface" data-article-id="${escapeHtml(post.id)}">
       <header class="article-header">
         <h1>${escapeHtml(post.title)}</h1>
         <div class="post-meta"><span>${escapeHtml(post.date)}</span>${tags}</div>
       </header>
       ${toc}
       <div class="article-body">${articleHtml}</div>
+      ${articleStats}
 ${articleNavigation ? `      ${articleNavigation}\n` : ''}    </article>
   </main>
   <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+  <script defer src="../assets/js/stats.js"></script>
+  <script defer src="../assets/js/likes-storage.js"></script>
+  <script defer src="../vendor/highlight.min.js"></script>
+  <script defer src="../assets/js/article-page.js"></script>
 </body>
 </html>
 `;

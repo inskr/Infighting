@@ -7,6 +7,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { buildSite } = require('../scripts/content-publisher');
 const { renderArticlePage } = require('../scripts/article-template');
+const { seedStaticArticleTargets } = require('./helpers/publishing-fixture.cjs');
 
 const SITE_URL = 'https://inskr.github.io/Infighting/';
 
@@ -16,6 +17,7 @@ function withSiteFixture(callback) {
   const publicDir = path.join(root, 'public');
 
   try {
+    seedStaticArticleTargets(publicDir);
     fs.mkdirSync(postsDir, { recursive: true });
     fs.writeFileSync(
       path.join(postsDir, 'alpha.md'),
@@ -27,6 +29,7 @@ function withSiteFixture(callback) {
         'summary: First post\n' +
         'type: post\n' +
         '---\n' +
+        '# Overview\n\n' +
         '## Setup\n\n' +
         '## Setup\n',
       'utf8'
@@ -85,14 +88,25 @@ test('buildSite emits crawlable article HTML and keeps compatibility JSON', () =
     );
 
     assert.equal(result[0].id, 'delta');
+    assert.equal((html.match(/<h1\b/g) || []).length, 1);
     assert.match(html, /<h1>Alpha<\/h1>/);
-    assert.match(html, /<div class="article-body">[\s\S]*<h2 id="setup">Setup<\/h2>/);
+    assert.match(html, /<div class="article-body">[\s\S]*<h2 id="overview">Overview<\/h2>/);
+    assert.match(html, /<h3 id="setup">Setup<\/h3>/);
+    assert.match(html, /<article class="article glass-surface" data-article-id="alpha">/);
+    assert.match(html, /<button class="like-btn" data-id="alpha"/);
+    assert.match(html, /<span class="view-count-num">0<\/span>/);
+    assert.match(html, /<link rel="stylesheet" href="\.\.\/vendor\/highlight-theme\.css">/);
+    assert.match(html, /<script defer src="\.\.\/assets\/js\/stats\.js"><\/script>/);
+    assert.match(html, /<script defer src="\.\.\/assets\/js\/likes-storage\.js"><\/script>/);
+    assert.match(html, /<script defer src="\.\.\/vendor\/highlight\.min\.js"><\/script>/);
+    assert.match(html, /<script defer src="\.\.\/assets\/js\/article-page\.js"><\/script>/);
+    assert.doesNotMatch(html, /post-loader\.js|assets\/posts\/alpha\.json/);
     assert.equal(
       (html.match(/<article\b/g) || []).length,
       (html.match(/<\/article>/g) || []).length,
       'article markup is balanced'
     );
-    assert.equal(json.content, '## Setup\n\n## Setup');
+    assert.equal(json.content, '# Overview\n\n## Setup\n\n## Setup');
   });
 });
 
@@ -102,9 +116,11 @@ test('article pages contain stable headings and canonical reading paths', () => 
     const html = fs.readFileSync(path.join(publicDir, 'posts', 'alpha.html'), 'utf8');
 
     assert.match(html, /<nav class="article-toc" aria-label="文章目录">/);
+    assert.match(html, /<a href="#overview">Overview<\/a>/);
     assert.match(html, /<a href="#setup">Setup<\/a>/);
-    assert.match(html, /<h2 id="setup">Setup<\/h2>/);
-    assert.match(html, /<h2 id="setup-2">Setup<\/h2>/);
+    assert.match(html, /<h2 id="overview">Overview<\/h2>/);
+    assert.match(html, /<h3 id="setup">Setup<\/h3>/);
+    assert.match(html, /<h3 id="setup-2">Setup<\/h3>/);
     assert.match(html, /<a href="\.\.\/posts\/gamma\.html">上一篇：Gamma<\/a>/);
     assert.match(html, /<a href="\.\.\/posts\/beta\.html">下一篇：Beta<\/a>/);
     assert.match(html, /href="\.\.\/tags\.html\?tag=testing"/);
@@ -138,12 +154,16 @@ test('renderArticlePage renders Markdown from its public post contract', () => {
       title: 'Alpha',
       date: '2026-08-11',
       tags: [],
-      content: '## Body',
+      content: '# Body\n\n###### Deep',
     },
     posts: [],
     siteUrl: SITE_URL,
   });
 
   assert.match(html, /<h1>Alpha<\/h1>/);
+  assert.equal((html.match(/<h1\b/g) || []).length, 1);
   assert.match(html, /<div class="article-body">[\s\S]*<h2 id="body">Body<\/h2>/);
+  assert.match(html, /<h6 id="deep">Deep<\/h6>/);
+  assert.match(html, /<a href="#body">Body<\/a>/);
+  assert.match(html, /<a href="#deep">Deep<\/a>/);
 });

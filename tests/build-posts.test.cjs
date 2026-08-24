@@ -8,19 +8,20 @@ const test = require('node:test');
 const { buildPosts, buildSite } = require('../scripts/build-posts');
 const { renderArticlePage } = require('../scripts/article-template');
 const { loadContentIds } = require('../src/content-catalog');
+const { seedStaticArticleTargets } = require('./helpers/publishing-fixture.cjs');
 
 const SITE_URL = 'https://inskr.github.io/Infighting/';
 
 function writePost(postsDir, filename, fields = {}) {
   const id = fields.id ?? filename.replace(/\.md$/, '');
   const title = fields.title ?? id;
-  const date = fields.date ?? '2026-08-11';
+  const dateLine = fields.date === null ? '' : `date: ${fields.date ?? '2026-08-11'}\n`;
   fs.writeFileSync(
     path.join(postsDir, filename),
     '---\n' +
       `id: ${id}\n` +
       `title: ${title}\n` +
-      `date: ${date}\n` +
+      dateLine +
       'tags: [testing]\n' +
       'summary: Fixture post\n' +
       'type: post\n' +
@@ -79,6 +80,29 @@ function withPaths(callback) {
     callback(paths);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+function snapshotFiles(directory) {
+  const snapshot = new Map();
+  const visit = (current) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const absolutePath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        visit(absolutePath);
+      } else {
+        snapshot.set(path.relative(directory, absolutePath), fs.readFileSync(absolutePath));
+      }
+    }
+  };
+  if (fs.existsSync(directory)) visit(directory);
+  return snapshot;
+}
+
+function assertSnapshotsEqual(actual, expected) {
+  assert.deepEqual([...actual.keys()].sort(), [...expected.keys()].sort());
+  for (const [relativePath, bytes] of expected) {
+    assert.deepEqual(actual.get(relativePath), bytes, relativePath);
   }
 }
 
@@ -193,6 +217,123 @@ test('backend catalog applies the same portable and case-folded ID rules', () =>
   });
 });
 
+test('requires an explicit canonical real calendar date for every publishable article', () => {
+  withPaths((paths) => {
+    for (const date of [null, '2026-8-01', '2026-02-30', '2025-02-29']) {
+      writePost(paths.postsDir, 'alpha.md', { date });
+      assert.throws(
+        () => buildPosts(paths),
+        /Invalid post date.*YYYY-MM-DD.*real calendar date/i,
+        String(date)
+      );
+    }
+  });
+});
+
+test('date validation failure preserves the previous publication byte for byte', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'publisher-invalid-date-'));
+  const postsDir = path.join(root, 'posts');
+  const publicDir = path.join(root, 'public');
+
+  try {
+    fs.mkdirSync(postsDir, { recursive: true });
+    writePost(postsDir, 'alpha.md');
+    seedStaticArticleTargets(publicDir);
+    fs.writeFileSync(path.join(publicDir, 'robots.txt'), 'User-agent: *\nAllow: /\n', 'utf8');
+    buildSite({ postsDir, publicDir, siteUrl: SITE_URL });
+    const before = snapshotFiles(publicDir);
+
+    writePost(postsDir, 'alpha.md', { date: '2026-02-30' });
+    assert.throws(
+      () => buildSite({ postsDir, publicDir, siteUrl: SITE_URL }),
+      /Invalid post date/
+    );
+
+    assertSnapshotsEqual(snapshotFiles(publicDir), before);
+    assert.deepEqual(
+      fs.readdirSync(root).filter((name) => name.startsWith('.public-publish-')),
+      []
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('broken generated internal targets fail before replacing the previous publication', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'publisher-broken-link-'));
+  const postsDir = path.join(root, 'posts');
+  const publicDir = path.join(root, 'public');
+
+  try {
+    fs.mkdirSync(postsDir, { recursive: true });
+    seedStaticArticleTargets(publicDir);
+    writePost(postsDir, 'alpha.md');
+    buildSite({ postsDir, publicDir, siteUrl: SITE_URL });
+    const before = snapshotFiles(publicDir);
+
+    fs.writeFileSync(
+      path.join(postsDir, 'beta.md'),
+      '---\nid: beta\ntitle: Beta\ndate: 2026-08-12\ntags: [testing]\n' +
+        'summary: Broken fixture\ntype: post\n---\n[missing](../missing.html)\n',
+      'utf8'
+    );
+    assert.throws(
+      () => buildSite({ postsDir, publicDir, siteUrl: SITE_URL }),
+      /Broken internal href.*beta\.html.*missing\.html/i
+    );
+
+    fs.writeFileSync(
+      path.join(postsDir, 'beta.md'),
+      '---\nid: beta\ntitle: Beta\ndate: 2026-08-12\ntags: [testing]\n' +
+        'summary: Broken fixture\ntype: post\n---\n![missing](../missing.png)\n',
+      'utf8'
+    );
+    assert.throws(
+      () => buildSite({ postsDir, publicDir, siteUrl: SITE_URL }),
+      /Broken internal src.*beta\.html.*missing\.png/i
+    );
+
+    assertSnapshotsEqual(snapshotFiles(publicDir), before);
+    assert.deepEqual(
+      fs.readdirSync(root).filter((name) => name.startsWith('.public-publish-')),
+      []
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a staged article cannot rely on a generated route being retired by the same publication', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'publisher-retired-route-'));
+  const postsDir = path.join(root, 'posts');
+  const publicDir = path.join(root, 'public');
+
+  try {
+    fs.mkdirSync(postsDir, { recursive: true });
+    seedStaticArticleTargets(publicDir);
+    writePost(postsDir, 'alpha.md');
+    writePost(postsDir, 'beta.md', { date: '2026-08-10' });
+    buildSite({ postsDir, publicDir, siteUrl: SITE_URL });
+    const before = snapshotFiles(publicDir);
+
+    fs.rmSync(path.join(postsDir, 'beta.md'));
+    fs.writeFileSync(
+      path.join(postsDir, 'alpha.md'),
+      '---\nid: alpha\ntitle: Alpha\ndate: 2026-08-11\ntags: [testing]\n' +
+        'summary: Fixture post\ntype: post\n---\n[retired](../posts/beta.html)\n',
+      'utf8'
+    );
+    assert.throws(
+      () => buildSite({ postsDir, publicDir, siteUrl: SITE_URL }),
+      /Broken internal href.*beta\.html/i
+    );
+
+    assertSnapshotsEqual(snapshotFiles(publicDir), before);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('keeps every managed output unchanged when an article render fails', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'staged-publisher-'));
   const postsDir = path.join(root, 'posts');
@@ -208,7 +349,7 @@ test('keeps every managed output unchanged when an article render fails', () => 
 
   try {
     fs.mkdirSync(postsDir, { recursive: true });
-    fs.mkdirSync(publicDir, { recursive: true });
+    seedStaticArticleTargets(publicDir);
     writePost(postsDir, 'alpha.md');
     fs.writeFileSync(handAuthoredFile, 'User-agent: *\nAllow: /\n', 'utf8');
 
@@ -250,6 +391,58 @@ test('keeps every managed output unchanged when an article render fails', () => 
   }
 });
 
+test('replacement failure after live paths move restores managed and unrelated outputs', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'publisher-replacement-rollback-'));
+  const postsDir = path.join(root, 'posts');
+  const publicDir = path.join(root, 'public');
+  const originalRename = fs.renameSync;
+  let movedLivePaths = 0;
+  let injected = false;
+
+  try {
+    fs.mkdirSync(postsDir, { recursive: true });
+    seedStaticArticleTargets(publicDir);
+    writePost(postsDir, 'alpha.md');
+    fs.writeFileSync(path.join(publicDir, 'unrelated.txt'), 'keep me', 'utf8');
+    buildSite({ postsDir, publicDir, siteUrl: SITE_URL });
+    const before = snapshotFiles(publicDir);
+
+    writePost(postsDir, 'beta.md', { date: '2026-08-12' });
+    const secondManagedLivePath = path.resolve(publicDir, 'assets', 'posts');
+    fs.renameSync = function injectedRename(source, target) {
+      const result = originalRename.call(fs, source, target);
+      const resolvedSource = path.resolve(source);
+      const resolvedTarget = path.resolve(target);
+      if (
+        resolvedSource.startsWith(path.resolve(publicDir) + path.sep) &&
+        resolvedTarget.includes(path.sep + 'previous' + path.sep)
+      ) {
+        movedLivePaths += 1;
+      }
+      if (!injected && resolvedSource === secondManagedLivePath) {
+        injected = true;
+        throw new Error('fixture replacement failure after move');
+      }
+      return result;
+    };
+
+    assert.throws(
+      () => buildSite({ postsDir, publicDir, siteUrl: SITE_URL }),
+      /fixture replacement failure after move/
+    );
+    assert.equal(injected, true);
+    assert.ok(movedLivePaths >= 2, 'fault must occur after an earlier live managed move');
+    assertSnapshotsEqual(snapshotFiles(publicDir), before);
+    assert.deepEqual(
+      fs.readdirSync(root).filter((name) => name.startsWith('.public-publish-')),
+      []
+    );
+  } finally {
+    fs.renameSync = originalRename;
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('successful publication preserves entries not owned by the generated post catalogs', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'publisher-sentinels-'));
   const postsDir = path.join(root, 'posts');
@@ -266,6 +459,7 @@ test('successful publication preserves entries not owned by the generated post c
   try {
     fs.mkdirSync(postsDir, { recursive: true });
     writePost(postsDir, 'alpha.md');
+    seedStaticArticleTargets(publicDir);
     for (const [relativePath, content] of sentinels) {
       const target = path.join(publicDir, relativePath);
       fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -291,6 +485,7 @@ test('configured full suite includes every Phase 1 publishing contract test', ()
   const configuredCommands = new Set(packageJson.scripts.test.split(/\s+/));
 
   for (const testFile of [
+    'tests/article-page.test.cjs',
     'tests/discovery-output.test.cjs',
     'tests/seo-output.test.cjs',
     'tests/legacy-post.test.cjs',

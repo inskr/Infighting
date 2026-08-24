@@ -19,6 +19,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"边缘端神经网络部署：从模型压缩到 STM32H7 推理优化","description":"在 480MHz 的 STM32H743 上跑图像分类网络：OV7670 采集、DMA 零拷贝传输、模型部署到 FLASH+SDRAM 的完整方案，附软硬件协同优化经验。","url":"https://inskr.github.io/Infighting/posts/edge-nn-stm32h7.html","mainEntityOfPage":"https://inskr.github.io/Infighting/posts/edge-nn-stm32h7.html","datePublished":"2024-05-25","dateModified":"2024-05-25","keywords":["边缘计算","神经网络","STM32"]}</script>
   <script src="../assets/js/theme.js"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -42,21 +43,21 @@
   </header>
   <main class="container">
     <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
-    <article class="article glass-surface">
+    <article class="article glass-surface" data-article-id="edge-nn-stm32h7">
       <header class="article-header">
         <h1>边缘端神经网络部署：从模型压缩到 STM32H7 推理优化</h1>
         <div class="post-meta"><span>2024-05-25</span><a class="tag" href="../tags.html?tag=%E8%BE%B9%E7%BC%98%E8%AE%A1%E7%AE%97">边缘计算</a><a class="tag" href="../tags.html?tag=%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C">神经网络</a><a class="tag" href="../tags.html?tag=STM32">STM32</a></div>
       </header>
-      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#系统组成">系统组成</a></li><li class="article-toc-level-2"><a href="#零拷贝图像采集">零拷贝图像采集</a></li><li class="article-toc-level-2"><a href="#模型部署flash-不够怎么办">模型部署：FLASH 不够怎么办</a></li><li class="article-toc-level-2"><a href="#推理优化">推理优化</a></li><li class="article-toc-level-2"><a href="#拓展板设计">拓展板设计</a></li><li class="article-toc-level-2"><a href="#结语">结语</a></li></ol></nav>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-3"><a href="#系统组成">系统组成</a></li><li class="article-toc-level-3"><a href="#零拷贝图像采集">零拷贝图像采集</a></li><li class="article-toc-level-3"><a href="#模型部署flash-不够怎么办">模型部署：FLASH 不够怎么办</a></li><li class="article-toc-level-3"><a href="#推理优化">推理优化</a></li><li class="article-toc-level-3"><a href="#拓展板设计">拓展板设计</a></li><li class="article-toc-level-3"><a href="#结语">结语</a></li></ol></nav>
       <div class="article-body"><p>这个项目的目标是证明一件事：<strong>神经网络推理不是高端芯片的专利，一颗 Cortex-M7 也能做边缘视觉识别</strong>。最终系统在 STM32H743 上实现了摄像头图像的实时分类。</p>
-<h2 id="系统组成">系统组成</h2>
+<h3 id="系统组成">系统组成</h3>
 <ul>
 <li><strong>主控</strong>：STM32H743IITx（480MHz Cortex-M7，2MB FLASH，1MB SRAM）</li>
 <li><strong>采集</strong>：OV7670 摄像头（QVGA 320×240）</li>
 <li><strong>显示</strong>：LCD 触摸屏实时显示识别结果</li>
 <li><strong>扩展</strong>：SDRAM 扩展存储（存放帧缓冲与模型中间特征图）</li>
 </ul>
-<h2 id="零拷贝图像采集">零拷贝图像采集</h2>
+<h3 id="零拷贝图像采集">零拷贝图像采集</h3>
 <p>OV7670 的数据流如果让 CPU 逐字节搬运，帧率会惨不忍睹。正确姿势是 <strong>DCMI + DMA</strong>：</p>
 <pre><code class="language-c">void camera_start_capture(uint8_t *frame_buf)
 {
@@ -74,7 +75,7 @@
 <blockquote>
 <p><strong>核心思想</strong>：充分利用 DMA 控制器、硬件加速器和中断系统，让数据&quot;自己流&quot;，CPU 只做计算。</p>
 </blockquote>
-<h2 id="模型部署flash-不够怎么办">模型部署：FLASH 不够怎么办</h2>
+<h3 id="模型部署flash-不够怎么办">模型部署：FLASH 不够怎么办</h3>
 <p>量化后的 int8 模型约 800KB，加上特征图，内部存储明显不够。策略：</p>
 <ol>
 <li><strong>权重放内部 FLASH</strong>（只读，XIP 直接执行读取）</li>
@@ -88,22 +89,36 @@ const int8_t model_weights[800 * 1024] = { ... };
 // 工作区指向 SDRAM
 #define WORK_ARENA_ADDR 0xC0000000
 </code></pre>
-<h2 id="推理优化">推理优化</h2>
+<h3 id="推理优化">推理优化</h3>
 <ul>
 <li><strong>算子融合</strong>：Conv + BN + ReLU 融合为单算子，减少中间张量</li>
 <li><strong>CMSIS-NN</strong>：卷积用 <code>arm_convolve_s8</code>，利用 M 核的 SIMD 指令</li>
 <li><strong>输入降采样</strong>：320×240 → 96×96，精度损失可接受，算力需求降 8 倍</li>
 </ul>
 <p>最终单次推理约 180ms，配合 DMA 流水线，系统达到约 5fps 的端到端识别速度，满足演示场景需求。</p>
-<h2 id="拓展板设计">拓展板设计</h2>
+<h3 id="拓展板设计">拓展板设计</h3>
 <p>为提高稳定性，我设计了主板扩展板，将摄像头和触摸屏集成到同一核心板上，FPC 排线替代杜邦线，通信故障率显著下降。这也让我完整走了一遍&quot;原理图 → PCB 两层板 → 焊接调试&quot;的流程。</p>
-<h2 id="结语">结语</h2>
+<h3 id="结语">结语</h3>
 <p>边缘 AI 的精髓不在于模型多大，而在于<strong>在算力、内存、功耗的紧约束下把系统跑起来</strong>。这个项目中 DMA 零拷贝和内存分层规划的经验，对我理解更高端的 RK3588 NPU 开发也有很大帮助。</p>
 </div>
+      <div class="stats-bar" aria-label="文章统计">
+        <button class="like-btn" data-id="edge-nn-stm32h7" type="button" aria-label="点赞">
+          <svg class="icon-heart" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10-9.2C.4 8.9 1.6 5.3 4.8 4.6c1.9-.4 3.7.6 4.8 2 1.1-1.4 2.9-2.4 4.8-2 3.2.7 4.4 4.3 2.8 7.2C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="like-count">0</span>
+        </button>
+        <span class="stat view-count" aria-label="浏览数">
+          <svg class="icon-eye" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M1 12.5C2.7 8.1 7 5 12 5s9.3 3.1 11 7.5C21.3 16.9 17 20 12 20S2.7 16.9 1 12.5z"/><circle cx="12" cy="12.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="view-count-num">0</span>
+        </span>
+      </div>
       <nav class="article-navigation" aria-label="文章导航"><a href="../posts/pid-control-practice.html">上一篇：PID 控制从入门到进阶：位置式与增量式的取舍</a></nav>
       <nav class="related-posts" aria-label="相关文章"><ol><li><a href="../posts/embedded-robotics-learning-roadmap.html">嵌入式与机器人学习路线</a></li><li><a href="../posts/stm32-baremetal-scheduler.html">STM32 裸机多任务调度框架设计与实践</a></li><li><a href="../posts/mpu6050-attitude-solution.html">MPU6050 姿态解算：四元数与卡尔曼滤波实战</a></li></ol></nav>
     </article>
   </main>
   <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+  <script defer src="../assets/js/stats.js"></script>
+  <script defer src="../assets/js/likes-storage.js"></script>
+  <script defer src="../vendor/highlight.min.js"></script>
+  <script defer src="../assets/js/article-page.js"></script>
 </body>
 </html>

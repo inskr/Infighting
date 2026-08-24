@@ -19,6 +19,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"雷达原理两书学习总结（零基础详细版）","description":"面向零基础读者，系统梳理《雷达原理》和 Principles of Modern Radar，覆盖预备知识、逐章笔记、公式速查、术语表、学习路线与常见误区。","url":"https://inskr.github.io/Infighting/posts/radar-principles-study-summary.html","mainEntityOfPage":"https://inskr.github.io/Infighting/posts/radar-principles-study-summary.html","datePublished":"2026-07-20","dateModified":"2026-07-20","keywords":["雷达","雷达原理","信号处理"]}</script>
   <script src="../assets/js/theme.js"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -42,13 +43,13 @@
   </header>
   <main class="container">
     <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
-    <article class="article glass-surface">
+    <article class="article glass-surface" data-article-id="radar-principles-study-summary">
       <header class="article-header">
         <h1>雷达原理两书学习总结（零基础详细版）</h1>
         <div class="post-meta"><span>2026-07-20</span><a class="tag" href="../tags.html?tag=%E9%9B%B7%E8%BE%BE">雷达</a><a class="tag" href="../tags.html?tag=%E9%9B%B7%E8%BE%BE%E5%8E%9F%E7%90%86">雷达原理</a><a class="tag" href="../tags.html?tag=%E4%BF%A1%E5%8F%B7%E5%A4%84%E7%90%86">信号处理</a></div>
       </header>
-      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#这份文件怎么用">这份文件怎么用</a></li><li class="article-toc-level-2"><a href="#01-雷达是什么黑夜里听回声的人">0.1 雷达是什么：黑夜里听回声的人</a></li><li class="article-toc-level-2"><a href="#02-雷达能测四样东西">0.2 雷达能测四样东西</a></li><li class="article-toc-level-2"><a href="#03-一部脉冲雷达里有什么整机巡游">0.3 一部脉冲雷达里有什么（整机巡游）</a></li><li class="article-toc-level-2"><a href="#04-分贝db雷达工程师的汇率">0.4 分贝（dB）：雷达工程师的&quot;汇率&quot;</a></li><li class="article-toc-level-2"><a href="#05-噪声与信噪比snr雷达的视力表">0.5 噪声与信噪比（SNR）：雷达的&quot;视力表&quot;</a></li><li class="article-toc-level-2"><a href="#06-多普勒效应让动目标无处遁形">0.6 多普勒效应：让动目标无处遁形</a></li><li class="article-toc-level-2"><a href="#07-相参coherent全雷达听同一个节拍器">0.7 相参（Coherent）：全雷达听同一个&quot;节拍器&quot;</a></li><li class="article-toc-level-2"><a href="#08-雷达频段与字母代号">0.8 雷达频段与字母代号</a></li><li class="article-toc-level-2"><a href="#09-脉冲压缩与时宽带宽积鱼和熊掌兼得">0.9 脉冲压缩与&quot;时宽带宽积&quot;：鱼和熊掌兼得</a></li><li class="article-toc-level-2"><a href="#010-前置数学其实只需要三样">0.10 前置数学：其实只需要三样</a></li><li class="article-toc-level-3"><a href="#第1章-绪论">第1章 绪论</a></li><li class="article-toc-level-4"><a href="#1-雷达是什么定义与任务">1. 雷达是什么：定义与任务</a></li><li class="article-toc-level-4"><a href="#2-目标位置怎么表示球坐标与圆柱坐标">2. 目标位置怎么表示：球坐标与圆柱坐标</a></li><li class="article-toc-level-4"><a href="#3-脉冲雷达由哪几部分组成组成框图">3. 脉冲雷达由哪几部分组成（组成框图）</a></li><li class="article-toc-level-4"><a href="#4-雷达怎么测距离r-ctr2">4. 雷达怎么测距离：R = c·t_R/2</a></li><li class="article-toc-level-4"><a href="#5-雷达怎么测速度多普勒频移-fd-2vrλ">5. 雷达怎么测速度：多普勒频移 f_d = 2v_r/λ</a></li><li class="article-toc-level-4"><a href="#6-雷达怎么测角度天线方向性">6. 雷达怎么测角度：天线方向性</a></li><li class="article-toc-level-4"><a href="#7-基本雷达方程初步印象">7. 基本雷达方程（初步印象）</a></li><li class="article-toc-level-4"><a href="#8-电子战与军用雷达的对抗关系">8. 电子战与军用雷达的对抗关系</a></li><li class="article-toc-level-3"><a href="#第2章-雷达发射机">第2章 雷达发射机</a></li><li class="article-toc-level-4"><a href="#1-发射机的任务">1. 发射机的任务</a></li><li class="article-toc-level-4"><a href="#2-两种基本体制单级振荡式-vs-主振放大式">2. 两种基本体制：单级振荡式 vs 主振放大式</a></li><li class="article-toc-level-4"><a href="#3-相参coherent本章最重要的概念">3. 相参（coherent）——本章最重要的概念</a></li><li class="article-toc-level-4"><a href="#4-为什么-mti-需要全相参">4. 为什么 MTI 需要全相参</a></li><li class="article-toc-level-4"><a href="#5-发射机的主要质量指标">5. 发射机的主要质量指标</a></li><li class="article-toc-level-4"><a href="#6-主要射频器件各自的特点">6. 主要射频器件各自的特点</a></li><li class="article-toc-level-4"><a href="#7-tr-组件">7. T/R 组件</a></li><li class="article-toc-level-4"><a href="#8-脉冲调制器的作用">8. 脉冲调制器的作用</a></li><li class="article-toc-level-3"><a href="#第3章-雷达接收机">第3章 雷达接收机</a></li><li class="article-toc-level-4"><a href="#1-超外差原理接收机的总架构">1. 超外差原理：接收机的总架构</a></li><li class="article-toc-level-4"><a href="#2-接收机前端各环节信号进门顺序">2. 接收机前端各环节（信号进门顺序）</a></li><li class="article-toc-level-4"><a href="#3-噪声系数-fn接收机的体检指标">3. 噪声系数 F_n：接收机的&quot;体检指标&quot;</a></li><li class="article-toc-level-4"><a href="#4-灵敏度与动态范围">4. 灵敏度与动态范围</a></li><li class="article-toc-level-4"><a href="#5-stc-与-agc两种自动调增益">5. STC 与 AGC：两种自动调增益</a></li><li class="article-toc-level-4"><a href="#6-afc自动频率控制">6. AFC：自动频率控制</a></li><li class="article-toc-level-4"><a href="#7-匹配滤波器为什么它能让信噪比最大">7. 匹配滤波器：为什么它能让信噪比最大</a></li><li class="article-toc-level-4"><a href="#8-对数放大器">8. 对数放大器</a></li><li class="article-toc-level-4"><a href="#9-iq-正交鉴相把相位信息留下来">9. I/Q 正交鉴相：把相位信息留下来</a></li><li class="article-toc-level-4"><a href="#10-中频采样与数字下变频">10. 中频采样与数字下变频</a></li><li class="article-toc-level-4"><a href="#11-stalo-与-coho全相参雷达的两块表">11. STALO 与 COHO：全相参雷达的两块&quot;表&quot;</a></li><li class="article-toc-level-4"><a href="#12-数字阵列接收机与软件无线电">12. 数字阵列接收机与软件无线电</a></li><li class="article-toc-level-3"><a href="#第4章-雷达终端">第4章 雷达终端</a></li><li class="article-toc-level-4"><a href="#1-终端干什么录取处理显示">1. 终端干什么：录取、处理、显示</a></li><li class="article-toc-level-4"><a href="#2-传统显示器大家族按显示内容分类">2. 传统显示器大家族（按显示内容分类）</a></li><li class="article-toc-level-4"><a href="#3-显示器的质量指标">3. 显示器的质量指标</a></li><li class="article-toc-level-4"><a href="#4-点迹录取从一片亮到一个点">4. 点迹录取：从&quot;一片亮&quot;到&quot;一个点&quot;</a></li><li class="article-toc-level-4"><a href="#5-数据处理与航迹入门">5. 数据处理与航迹入门</a></li><li class="article-toc-level-4"><a href="#6-显示器件crt-vs-平板">6. 显示器件：CRT vs 平板</a></li><li class="article-toc-level-4"><a href="#7-随机扫描-vs-光栅扫描">7. 随机扫描 vs 光栅扫描</a></li><li class="article-toc-level-3"><a href="#第5章-雷达作用距离">第5章 雷达作用距离</a></li><li class="article-toc-level-4"><a href="#1-雷达方程推导链四步走每步都有物理直觉">1. 雷达方程推导链：四步走，每步都有物理直觉</a></li><li class="article-toc-level-4"><a href="#2-雷达截面积-σ目标的等效反射面积">2. 雷达截面积 σ：目标的&quot;等效反射面积&quot;</a></li><li class="article-toc-level-4"><a href="#3-四次方根关系雷达工程最扎心的规律">3. 四次方根关系：雷达工程最&quot;扎心&quot;的规律</a></li><li class="article-toc-level-4"><a href="#4-噪声系数与最小可检测信号">4. 噪声系数与最小可检测信号</a></li><li class="article-toc-level-4"><a href="#5-检测是统计游戏发现概率与虚警概率">5. 检测是统计游戏：发现概率与虚警概率</a></li><li class="article-toc-level-4"><a href="#6-脉冲积累攒多次回波换信噪比">6. 脉冲积累：攒多次回波换信噪比</a></li><li class="article-toc-level-4"><a href="#7-目标起伏">7. 目标起伏</a></li><li class="article-toc-level-4"><a href="#8-系统损耗-l账本上的苛捐杂税">8. 系统损耗 L：账本上的&quot;苛捐杂税&quot;</a></li><li class="article-toc-level-4"><a href="#9-传播影响">9. 传播影响</a></li><li class="article-toc-level-4"><a href="#10-雷达方程的各种变体形式">10. 雷达方程的各种变体形式</a></li><li class="article-toc-level-3"><a href="#第6章-目标距离的测量">第6章 目标距离的测量</a></li><li class="article-toc-level-4"><a href="#1-测距基本原理与常用写法">1. 测距基本原理与常用写法</a></li><li class="article-toc-level-4"><a href="#2-回波到达时刻怎么定义前沿-vs-中心">2. 回波到达时刻怎么定义：前沿 vs 中心</a></li><li class="article-toc-level-4"><a href="#3-测距误差的全微分式误差从哪来">3. 测距误差的全微分式：误差从哪来</a></li><li class="article-toc-level-4"><a href="#4-系统误差-vs-随机误差">4. 系统误差 vs 随机误差</a></li><li class="article-toc-level-4"><a href="#5-大气折射修正">5. 大气折射修正</a></li><li class="article-toc-level-4"><a href="#6-距离分辨力两个目标多近还能分开">6. 距离分辨力：两个目标多近还能分开</a></li><li class="article-toc-level-4"><a href="#7-距离模糊与解模糊">7. 距离模糊与解模糊</a></li><li class="article-toc-level-4"><a href="#8-距离跟踪跟着目标跑的距离波门">8. 距离跟踪：跟着目标跑的距离波门</a></li><li class="article-toc-level-3"><a href="#第7章-角度测量">第7章 角度测量</a></li><li class="article-toc-level-4"><a href="#1-测角的物理基础">1. 测角的物理基础</a></li><li class="article-toc-level-4"><a href="#2-天线方向图的关键指标">2. 天线方向图的关键指标</a></li><li class="article-toc-level-4"><a href="#3-相位法测角用两根天线比相位">3. 相位法测角：用两根天线&quot;比相位&quot;</a></li><li class="article-toc-level-4"><a href="#4-振幅法测角看回波强弱">4. 振幅法测角：看回波强弱</a></li><li class="article-toc-level-4"><a href="#5-波束扫描的三种方式">5. 波束扫描的三种方式</a></li><li class="article-toc-level-4"><a href="#6-相控阵原理用广场舞方阵理解电扫描">6. 相控阵原理：用&quot;广场舞方阵&quot;理解电扫描</a></li><li class="article-toc-level-4"><a href="#7-数字阵列雷达dar">7. 数字阵列雷达（DAR）</a></li><li class="article-toc-level-4"><a href="#8-三坐标雷达3d-radar">8. 三坐标雷达（3D Radar）</a></li><li class="article-toc-level-4"><a href="#9-圆锥扫描-vs-单脉冲两种自动角跟踪体制">9. 圆锥扫描 vs 单脉冲：两种自动角跟踪体制</a></li><li class="article-toc-level-4"><a href="#10-角跟踪精度的影响因素">10. 角跟踪精度的影响因素</a></li><li class="article-toc-level-3"><a href="#第8章-运动目标检测">第8章 运动目标检测</a></li><li class="article-toc-level-4"><a href="#1-多普勒效应的严格推导直觉往返相位怎么变">1. 多普勒效应的严格推导直觉：往返相位怎么变</a></li><li class="article-toc-level-4"><a href="#2-杂波与动目标在频谱上的区别">2. 杂波与动目标在频谱上的区别</a></li><li class="article-toc-level-4"><a href="#3-mti-原理延迟对消器两张照片找不同">3. MTI 原理：延迟对消器——&quot;两张照片找不同&quot;</a></li><li class="article-toc-level-4"><a href="#4-盲速与盲相">4. 盲速与盲相</a></li><li class="article-toc-level-4"><a href="#5-改善因子mti-的成绩单">5. 改善因子：MTI 的成绩单</a></li><li class="article-toc-level-4"><a href="#6-mti-的数字实现">6. MTI 的数字实现</a></li><li class="article-toc-level-4"><a href="#7-mtd从对消升级到滤波器组">7. MTD：从&quot;对消&quot;升级到&quot;滤波器组&quot;</a></li><li class="article-toc-level-4"><a href="#8-自适应-mti">8. 自适应 MTI</a></li><li class="article-toc-level-4"><a href="#9-脉冲多普勒雷达pd-radar">9. 脉冲多普勒雷达（PD Radar）</a></li><li class="article-toc-level-4"><a href="#10-测速方法">10. 测速方法</a></li><li class="article-toc-level-3"><a href="#第9章-高分辨力雷达">第9章 高分辨力雷达</a></li><li class="article-toc-level-4"><a href="#1-分辨力雷达的眼神锐度">1. 分辨力：雷达的&quot;眼神锐度&quot;</a></li><li class="article-toc-level-4"><a href="#2-用什么数学尺子量可分辨程度均方差准则">2. 用什么数学尺子量&quot;可分辨程度&quot;：均方差准则</a></li><li class="article-toc-level-4"><a href="#3-模糊函数-yτ信号的自己自己相似度">3. 模糊函数 y(τ)：信号的&quot;自己—自己相似度&quot;</a></li><li class="article-toc-level-4"><a href="#4-匹配滤波器输出的几种典型形态">4. 匹配滤波器输出的几种典型形态</a></li><li class="article-toc-level-4"><a href="#5-时宽带宽积-bτ能量与分辨力解耦的钥匙">5. 时宽带宽积 Bτ：能量与分辨力&quot;解耦&quot;的钥匙</a></li><li class="article-toc-level-4"><a href="#6-线性调频脉冲压缩长脉冲存能量压缩后变细">6. 线性调频脉冲压缩：&quot;长脉冲存能量、压缩后变细&quot;</a></li><li class="article-toc-level-4"><a href="#7-相位编码信号巴克码">7. 相位编码信号：巴克码</a></li><li class="article-toc-level-4"><a href="#8-sar用小天线飞出大天线">8. SAR：用小天线&quot;飞出&quot;大天线</a></li><li class="article-toc-level-4"><a href="#9-isar目标自己转身配合成像">9. ISAR：目标自己&quot;转身&quot;配合成像</a></li><li class="article-toc-level-4"><a href="#10-角度超分辨">10. 角度超分辨</a></li><li class="article-toc-level-2"><a href="#全书知识链回顾">全书知识链回顾</a></li><li class="article-toc-level-2"><a href="#part-i-概览overview">Part I 概览（Overview）</a></li><li class="article-toc-level-3"><a href="#第1章-绪论与雷达概览introduction-and-radar-overview">第1章 绪论与雷达概览（Introduction and Radar Overview）</a></li><li class="article-toc-level-4"><a href="#雷达是什么">雷达是什么</a></li><li class="article-toc-level-4"><a href="#测距公式-rcδt2">测距公式 R=cΔT/2</a></li><li class="article-toc-level-4"><a href="#电磁波与-λfc">电磁波与 λf=c</a></li><li class="article-toc-level-4"><a href="#雷达频段划分">雷达频段划分</a></li><li class="article-toc-level-4"><a href="#极化polarization">极化（polarization）</a></li><li class="article-toc-level-4"><a href="#单基地与双基地monostatic-bistatic">单基地与双基地（monostatic / bistatic）</a></li><li class="article-toc-level-4"><a href="#cw-与脉冲波形">CW 与脉冲波形</a></li><li class="article-toc-level-4"><a href="#检测三指标初识pdpfasnr">检测三指标初识：P_D、P_FA、SNR</a></li><li class="article-toc-level-4"><a href="#距离分辨率-δrcτ2">距离分辨率 ΔR=cτ/2</a></li><li class="article-toc-level-4"><a href="#三大功能搜索跟踪成像">三大功能：搜索、跟踪、成像</a></li><li class="article-toc-level-3"><a href="#第2章-雷达距离方程the-radar-range-equation">第2章 雷达距离方程（The Radar Range Equation）</a></li><li class="article-toc-level-4"><a href="#推导链一步步来">推导链（一步步来）</a></li><li class="article-toc-level-4"><a href="#热噪声与-snr-形式">热噪声与 SNR 形式</a></li><li class="article-toc-level-4"><a href="#db-形式手把手做一次预算">dB 形式（手把手做一次预算）</a></li><li class="article-toc-level-4"><a href="#平均功率能量形式">平均功率/能量形式</a></li><li class="article-toc-level-4"><a href="#脉压形式">脉压形式</a></li><li class="article-toc-level-4"><a href="#其他常用变体">其他常用变体</a></li><li class="article-toc-level-3"><a href="#第3章-雷达搜索与干扰中检测概览radar-search-and-overview-of-detection-in-interference">第3章 雷达搜索与干扰中检测概览（Radar Search and Overview of Detection in Interference）</a></li><li class="article-toc-level-4"><a href="#搜索空域与驻留">搜索空域与驻留</a></li><li class="article-toc-level-4"><a href="#rayleigh-噪声与-pfa">Rayleigh 噪声与 P_FA</a></li><li class="article-toc-level-4"><a href="#rician-分布marcum-q-与-pd">Rician 分布、Marcum Q 与 P_D</a></li><li class="article-toc-level-4"><a href="#roc-曲线怎么读">ROC 曲线怎么读</a></li><li class="article-toc-level-4"><a href="#swerling-04-起伏模型">Swerling 0~4 起伏模型</a></li><li class="article-toc-level-4"><a href="#各模型所需-snr-量级">各模型所需 SNR 量级</a></li><li class="article-toc-level-4"><a href="#确认驻留与-m-of-n-积累">确认驻留与 m-of-n 积累</a></li><li class="article-toc-level-4"><a href="#albersheim-公式">Albersheim 公式</a></li><li class="article-toc-level-4"><a href="#antpq-3637-例子">AN/TPQ-36/37 例子</a></li><li class="article-toc-level-2"><a href="#part-ii-外部因素external-factors">Part II 外部因素（External Factors）</a></li><li class="article-toc-level-3"><a href="#第4章-传播效应与机理propagation-effects-and-mechanisms">第4章 传播效应与机理（Propagation Effects and Mechanisms）</a></li><li class="article-toc-level-4"><a href="#传播因子-f">传播因子 F</a></li><li class="article-toc-level-4"><a href="#大气衰减与吸收">大气衰减与吸收</a></li><li class="article-toc-level-4"><a href="#折射与波导ducting">折射与波导（ducting）</a></li><li class="article-toc-level-4"><a href="#湍流电离层与-oth">湍流、电离层与 OTH</a></li><li class="article-toc-level-4"><a href="#衍射与多径">衍射与多径</a></li><li class="article-toc-level-4"><a href="#趋肤深度与穿墙">趋肤深度与穿墙</a></li><li class="article-toc-level-3"><a href="#第5章-杂波特性characteristics-of-clutter">第5章 杂波特性（Characteristics of Clutter）</a></li><li class="article-toc-level-4"><a href="#杂波-vs-噪声对比表">杂波 vs 噪声对比表</a></li><li class="article-toc-level-4"><a href="#σ⁰-与-η">σ⁰ 与 η</a></li><li class="article-toc-level-4"><a href="#照射面积与杂波随-r²">照射面积与&quot;杂波随 R⁻²&quot;</a></li><li class="article-toc-level-4"><a href="#长尾分布的含义">长尾分布的含义</a></li><li class="article-toc-level-4"><a href="#gtri-地杂波模型">GTRI 地杂波模型</a></li><li class="article-toc-level-4"><a href="#海杂波与-nathanson-数据表">海杂波与 Nathanson 数据表</a></li><li class="article-toc-level-3"><a href="#第6章-目标反射率target-reflectivity">第6章 目标反射率（Target Reflectivity）</a></li><li class="article-toc-level-4"><a href="#散射物理感应电流再辐射">散射物理：感应电流再辐射</a></li><li class="article-toc-level-4"><a href="#rcs-正式定义">RCS 正式定义</a></li><li class="article-toc-level-4"><a href="#三个散射区按尺寸波长">三个散射区（按尺寸/波长）</a></li><li class="article-toc-level-4"><a href="#镜面散射与多散射中心">镜面散射与多散射中心</a></li><li class="article-toc-level-3"><a href="#第7章-目标起伏模型target-fluctuation-models">第7章 目标起伏模型（Target Fluctuation Models）</a></li><li class="article-toc-level-4"><a href="#定标基准导电球与角反射器">定标基准：导电球与角反射器</a></li><li class="article-toc-level-4"><a href="#dumbbell-模型看懂起伏">dumbbell 模型：看懂起伏</a></li><li class="article-toc-level-4"><a href="#统计模型族">统计模型族</a></li><li class="article-toc-level-4"><a href="#去相关角度与频率">去相关：角度与频率</a></li><li class="article-toc-level-3"><a href="#第8章-doppler-现象与数据采集doppler-phenomenology-and-data-acquisition">第8章 Doppler 现象与数据采集（Doppler Phenomenology and Data Acquisition）</a></li><li class="article-toc-level-4"><a href="#doppler-频移-fd2vλ">Doppler 频移 f_d=2v/λ</a></li><li class="article-toc-level-4"><a href="#四个时间尺度-四个频率尺度时频互展">四个时间尺度 ↔ 四个频率尺度（时频互展）</a></li><li class="article-toc-level-4"><a href="#快时间慢时间数据矩阵">快时间/慢时间数据矩阵</a></li><li class="article-toc-level-4"><a href="#iq-采集">I/Q 采集</a></li><li class="article-toc-level-4"><a href="#range-doppler-谱与运动平台问题">range-Doppler 谱与运动平台问题</a></li><li class="article-toc-level-2"><a href="#part-iii-子系统subsystems">Part III 子系统（Subsystems）</a></li><li class="article-toc-level-3"><a href="#第9章-雷达天线radar-antennas">第9章 雷达天线（Radar Antennas）</a></li><li class="article-toc-level-4"><a href="#从各向同性源到方向图">从各向同性源到方向图</a></li><li class="article-toc-level-4"><a href="#波束宽度-θ₃αλl">波束宽度 θ₃=αλ/L</a></li><li class="article-toc-level-4"><a href="#增益-dη4πaλ²">增益 D=η·4πA/λ²</a></li><li class="article-toc-level-4"><a href="#孔径加权与副瓣">孔径加权与副瓣</a></li><li class="article-toc-level-4"><a href="#单脉冲monopulse">单脉冲（monopulse）</a></li><li class="article-toc-level-4"><a href="#反射面天线">反射面天线</a></li><li class="article-toc-level-4"><a href="#相控阵phased-array">相控阵（phased array）</a></li><li class="article-toc-level-3"><a href="#第10章-雷达发射机radar-transmitters">第10章 雷达发射机（Radar Transmitters）</a></li><li class="article-toc-level-4"><a href="#发射机三要素">发射机三要素</a></li><li class="article-toc-level-4"><a href="#磁控管-vs-mopa">磁控管 vs MOPA</a></li><li class="article-toc-level-4"><a href="#固态与-tr-组件">固态与 T/R 组件</a></li><li class="article-toc-level-4"><a href="#功率孔径积与-pag">功率孔径积与 PAG</a></li><li class="article-toc-level-4"><a href="#频谱管理与可靠性">频谱管理与可靠性</a></li><li class="article-toc-level-3"><a href="#第11章-雷达接收机radar-receivers">第11章 雷达接收机（Radar Receivers）</a></li><li class="article-toc-level-4"><a href="#七类接收机">七类接收机</a></li><li class="article-toc-level-4"><a href="#超外差链上的关键件">超外差链上的关键件</a></li><li class="article-toc-level-4"><a href="#解调包络-vs-iq">解调：包络 vs I/Q</a></li><li class="article-toc-level-4"><a href="#噪声系数与动态范围">噪声系数与动态范围</a></li><li class="article-toc-level-3"><a href="#第12章-雷达激励器radar-exciters">第12章 雷达激励器（Radar Exciters）</a></li><li class="article-toc-level-4"><a href="#激励器是什么">激励器是什么</a></li><li class="article-toc-level-4"><a href="#相参coherence的含义">相参（coherence）的含义</a></li><li class="article-toc-level-4"><a href="#iq-信号模型">I/Q 信号模型</a></li><li class="article-toc-level-4"><a href="#频率漂移ppm">频率漂移（ppm）</a></li><li class="article-toc-level-4"><a href="#ssb-相位噪声dbchz">SSB 相位噪声（dBc/Hz）</a></li><li class="article-toc-level-4"><a href="#定时抖动与杂散">定时抖动与杂散</a></li><li class="article-toc-level-3"><a href="#第13章-雷达信号处理机the-radar-signal-processor">第13章 雷达信号处理机（The Radar Signal Processor）</a></li><li class="article-toc-level-4"><a href="#模拟-vs-数字处理">模拟 vs 数字处理</a></li><li class="article-toc-level-4"><a href="#处理机结构streaming-前端-后端">处理机结构：streaming 前端 + 后端</a></li><li class="article-toc-level-4"><a href="#度量体系">度量体系</a></li><li class="article-toc-level-4"><a href="#flops-计数估算处理器规模">FLOPs 计数（估算处理器规模）</a></li><li class="article-toc-level-4"><a href="#实现载体与数制">实现载体与数制</a></li><li class="article-toc-level-2"><a href="#part-iv-信号与数据处理signal-and-data-processing">Part IV 信号与数据处理（Signal and Data Processing）</a></li><li class="article-toc-level-3"><a href="#第14章-雷达数字信号处理基础dsp-fundamentals-for-radar">第14章 雷达数字信号处理基础（DSP Fundamentals for Radar）</a></li><li class="article-toc-level-4"><a href="#雷达-dsp-的独特性">雷达 DSP 的独特性</a></li><li class="article-toc-level-4"><a href="#nyquist-采样与欠采样">Nyquist 采样与欠采样</a></li><li class="article-toc-level-4"><a href="#量化">量化</a></li><li class="article-toc-level-4"><a href="#dftfft-与加窗">DFT/FFT 与加窗</a></li><li class="article-toc-level-4"><a href="#z-变换与-firiir">z 变换与 FIR/IIR</a></li><li class="article-toc-level-4"><a href="#随机信号与-psd">随机信号与 PSD</a></li><li class="article-toc-level-4"><a href="#积累增益相干-n-vs-非相干-nn">积累增益：相干 N vs 非相干 √N~N</a></li><li class="article-toc-level-4"><a href="#相关与匹配滤波">相关与匹配滤波</a></li><li class="article-toc-level-3"><a href="#第15章-雷达目标门限检测threshold-detection-of-radar-targets">第15章 雷达目标门限检测（Threshold Detection of Radar Targets）</a></li><li class="article-toc-level-4"><a href="#积累策略对比">积累策略对比</a></li><li class="article-toc-level-4"><a href="#假设检验与-neyman-pearson-准则">假设检验与 Neyman-Pearson 准则</a></li><li class="article-toc-level-4"><a href="#似然比导出门限">似然比导出门限</a></li><li class="article-toc-level-4"><a href="#各类目标的检测性能">各类目标的检测性能</a></li><li class="article-toc-level-4"><a href="#albersheim-与-shnidman-公式">Albersheim 与 Shnidman 公式</a></li><li class="article-toc-level-3"><a href="#第16章-恒虚警率检测器constant-false-alarm-rate-detectors">第16章 恒虚警率检测器（Constant False Alarm Rate Detectors）</a></li><li class="article-toc-level-4"><a href="#为什么固定门限失效">为什么固定门限失效</a></li><li class="article-toc-level-4"><a href="#cfar-思想">CFAR 思想</a></li><li class="article-toc-level-4"><a href="#ca-cfar-与门限-tασ²">CA-CFAR 与门限 T=α·σ̂²</a></li><li class="article-toc-level-4"><a href="#杂波边缘与目标遮蔽">杂波边缘与目标遮蔽</a></li><li class="article-toc-level-4"><a href="#鲁棒变体">鲁棒变体</a></li><li class="article-toc-level-3"><a href="#第17章-doppler-处理doppler-processing">第17章 Doppler 处理（Doppler Processing）</a></li><li class="article-toc-level-4"><a href="#mti-与两脉冲对消器">MTI 与两脉冲对消器</a></li><li class="article-toc-level-4"><a href="#改善因子improvement-factor">改善因子（improvement factor）</a></li><li class="article-toc-level-4"><a href="#盲速与参差-prf">盲速与参差 PRF</a></li><li class="article-toc-level-4"><a href="#pulse-doppler慢时间-dft">pulse-Doppler：慢时间 DFT</a></li><li class="article-toc-level-4"><a href="#距离-速度模糊与解模糊">距离-速度模糊与解模糊</a></li><li class="article-toc-level-4"><a href="#杂波图mtd-与-pulse-pair">杂波图、MTD 与 pulse pair</a></li><li class="article-toc-level-3"><a href="#第18章-雷达测量radar-measurements">第18章 雷达测量（Radar Measurements）</a></li><li class="article-toc-level-4"><a href="#accuracy-vs-precision">accuracy vs precision</a></li><li class="article-toc-level-4"><a href="#crlb-直觉">CRLB 直觉</a></li><li class="article-toc-level-4"><a href="#各参数测量方法">各参数测量方法</a></li><li class="article-toc-level-3"><a href="#第19章-雷达跟踪算法radar-tracking-algorithms">第19章 雷达跟踪算法（Radar Tracking Algorithms）</a></li><li class="article-toc-level-4"><a href="#跟踪-滤波-数据关联">跟踪 = 滤波 + 数据关联</a></li><li class="article-toc-level-4"><a href="#α-β-滤波器">α-β 滤波器</a></li><li class="article-toc-level-4"><a href="#kalman-滤波蒙眼猜位置类比">Kalman 滤波：蒙眼猜位置类比</a></li><li class="article-toc-level-4"><a href="#门控与关联算法">门控与关联算法</a></li><li class="article-toc-level-4"><a href="#航迹管理">航迹管理</a></li><li class="article-toc-level-4"><a href="#性能评估">性能评估</a></li><li class="article-toc-level-3"><a href="#第20章-脉冲压缩波形基础fundamentals-of-pulse-compression-waveforms">第20章 脉冲压缩波形基础（Fundamentals of Pulse Compression Waveforms）</a></li><li class="article-toc-level-4"><a href="#匹配滤波器-htaxt">匹配滤波器 h(t)=a·x*(−t)</a></li><li class="article-toc-level-4"><a href="#时宽带宽积-τβ-解耦能量与分辨率">时宽带宽积 τβ 解耦能量与分辨率</a></li><li class="article-toc-level-4"><a href="#lfmchirp波形">LFM（chirp）波形</a></li><li class="article-toc-level-4"><a href="#模糊函数ambiguity-function">模糊函数（ambiguity function）</a></li><li class="article-toc-level-4"><a href="#相位编码波形">相位编码波形</a></li><li class="article-toc-level-3"><a href="#第21章-雷达成像概览an-overview-of-radar-imaging">第21章 雷达成像概览（An Overview of Radar Imaging）</a></li><li class="article-toc-level-4"><a href="#sar-相对光学成像的优势">SAR 相对光学成像的优势</a></li><li class="article-toc-level-4"><a href="#三种理解范式">三种理解范式</a></li><li class="article-toc-level-4"><a href="#核心分辨率公式">核心分辨率公式</a></li><li class="article-toc-level-4"><a href="#prf-采样约束">PRF 采样约束</a></li><li class="article-toc-level-4"><a href="#图像形成dbs-vs-backprojection">图像形成：DBS vs backprojection</a></li><li class="article-toc-level-4"><a href="#sar-特有现象学">SAR 特有现象学</a></li><li class="article-toc-level-4"><a href="#图像质量指标">图像质量指标</a></li><li class="article-toc-level-2"><a href="#全书学习路径建议">全书学习路径建议</a></li><li class="article-toc-level-2"><a href="#附录-a-核心公式速查表">附录 A  核心公式速查表</a></li><li class="article-toc-level-2"><a href="#附录-b-术语中英对照表">附录 B  术语中英对照表</a></li><li class="article-toc-level-2"><a href="#附录-c-两书对照学习路线建议-8-周">附录 C  两书对照学习路线（建议 8 周）</a></li><li class="article-toc-level-2"><a href="#附录-d-小白避坑清单十大高频误区">附录 D  小白避坑清单（十大高频误区）</a></li></ol></nav>
-      <div class="article-body"><h1 id="雷达原理两书学习总结零基础详细版">雷达原理两书学习总结（零基础详细版）</h1>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#雷达原理两书学习总结零基础详细版">雷达原理两书学习总结（零基础详细版）</a></li><li class="article-toc-level-3"><a href="#这份文件怎么用">这份文件怎么用</a></li><li class="article-toc-level-2"><a href="#第零部分-零基础预备知识先修扫盲">第零部分  零基础预备知识（先修扫盲）</a></li><li class="article-toc-level-3"><a href="#01-雷达是什么黑夜里听回声的人">0.1 雷达是什么：黑夜里听回声的人</a></li><li class="article-toc-level-3"><a href="#02-雷达能测四样东西">0.2 雷达能测四样东西</a></li><li class="article-toc-level-3"><a href="#03-一部脉冲雷达里有什么整机巡游">0.3 一部脉冲雷达里有什么（整机巡游）</a></li><li class="article-toc-level-3"><a href="#04-分贝db雷达工程师的汇率">0.4 分贝（dB）：雷达工程师的&quot;汇率&quot;</a></li><li class="article-toc-level-3"><a href="#05-噪声与信噪比snr雷达的视力表">0.5 噪声与信噪比（SNR）：雷达的&quot;视力表&quot;</a></li><li class="article-toc-level-3"><a href="#06-多普勒效应让动目标无处遁形">0.6 多普勒效应：让动目标无处遁形</a></li><li class="article-toc-level-3"><a href="#07-相参coherent全雷达听同一个节拍器">0.7 相参（Coherent）：全雷达听同一个&quot;节拍器&quot;</a></li><li class="article-toc-level-3"><a href="#08-雷达频段与字母代号">0.8 雷达频段与字母代号</a></li><li class="article-toc-level-3"><a href="#09-脉冲压缩与时宽带宽积鱼和熊掌兼得">0.9 脉冲压缩与&quot;时宽带宽积&quot;：鱼和熊掌兼得</a></li><li class="article-toc-level-3"><a href="#010-前置数学其实只需要三样">0.10 前置数学：其实只需要三样</a></li><li class="article-toc-level-2"><a href="#第一部分-雷达原理第5版逐章详细笔记">第一部分  《雷达原理》（第5版）逐章详细笔记</a></li><li class="article-toc-level-4"><a href="#第1章-绪论">第1章 绪论</a></li><li class="article-toc-level-5"><a href="#1-雷达是什么定义与任务">1. 雷达是什么：定义与任务</a></li><li class="article-toc-level-5"><a href="#2-目标位置怎么表示球坐标与圆柱坐标">2. 目标位置怎么表示：球坐标与圆柱坐标</a></li><li class="article-toc-level-5"><a href="#3-脉冲雷达由哪几部分组成组成框图">3. 脉冲雷达由哪几部分组成（组成框图）</a></li><li class="article-toc-level-5"><a href="#4-雷达怎么测距离r-ctr2">4. 雷达怎么测距离：R = c·t_R/2</a></li><li class="article-toc-level-5"><a href="#5-雷达怎么测速度多普勒频移-fd-2vrλ">5. 雷达怎么测速度：多普勒频移 f_d = 2v_r/λ</a></li><li class="article-toc-level-5"><a href="#6-雷达怎么测角度天线方向性">6. 雷达怎么测角度：天线方向性</a></li><li class="article-toc-level-5"><a href="#7-基本雷达方程初步印象">7. 基本雷达方程（初步印象）</a></li><li class="article-toc-level-5"><a href="#8-电子战与军用雷达的对抗关系">8. 电子战与军用雷达的对抗关系</a></li><li class="article-toc-level-4"><a href="#第2章-雷达发射机">第2章 雷达发射机</a></li><li class="article-toc-level-5"><a href="#1-发射机的任务">1. 发射机的任务</a></li><li class="article-toc-level-5"><a href="#2-两种基本体制单级振荡式-vs-主振放大式">2. 两种基本体制：单级振荡式 vs 主振放大式</a></li><li class="article-toc-level-5"><a href="#3-相参coherent本章最重要的概念">3. 相参（coherent）——本章最重要的概念</a></li><li class="article-toc-level-5"><a href="#4-为什么-mti-需要全相参">4. 为什么 MTI 需要全相参</a></li><li class="article-toc-level-5"><a href="#5-发射机的主要质量指标">5. 发射机的主要质量指标</a></li><li class="article-toc-level-5"><a href="#6-主要射频器件各自的特点">6. 主要射频器件各自的特点</a></li><li class="article-toc-level-5"><a href="#7-tr-组件">7. T/R 组件</a></li><li class="article-toc-level-5"><a href="#8-脉冲调制器的作用">8. 脉冲调制器的作用</a></li><li class="article-toc-level-4"><a href="#第3章-雷达接收机">第3章 雷达接收机</a></li><li class="article-toc-level-5"><a href="#1-超外差原理接收机的总架构">1. 超外差原理：接收机的总架构</a></li><li class="article-toc-level-5"><a href="#2-接收机前端各环节信号进门顺序">2. 接收机前端各环节（信号进门顺序）</a></li><li class="article-toc-level-5"><a href="#3-噪声系数-fn接收机的体检指标">3. 噪声系数 F_n：接收机的&quot;体检指标&quot;</a></li><li class="article-toc-level-5"><a href="#4-灵敏度与动态范围">4. 灵敏度与动态范围</a></li><li class="article-toc-level-5"><a href="#5-stc-与-agc两种自动调增益">5. STC 与 AGC：两种自动调增益</a></li><li class="article-toc-level-5"><a href="#6-afc自动频率控制">6. AFC：自动频率控制</a></li><li class="article-toc-level-5"><a href="#7-匹配滤波器为什么它能让信噪比最大">7. 匹配滤波器：为什么它能让信噪比最大</a></li><li class="article-toc-level-5"><a href="#8-对数放大器">8. 对数放大器</a></li><li class="article-toc-level-5"><a href="#9-iq-正交鉴相把相位信息留下来">9. I/Q 正交鉴相：把相位信息留下来</a></li><li class="article-toc-level-5"><a href="#10-中频采样与数字下变频">10. 中频采样与数字下变频</a></li><li class="article-toc-level-5"><a href="#11-stalo-与-coho全相参雷达的两块表">11. STALO 与 COHO：全相参雷达的两块&quot;表&quot;</a></li><li class="article-toc-level-5"><a href="#12-数字阵列接收机与软件无线电">12. 数字阵列接收机与软件无线电</a></li><li class="article-toc-level-4"><a href="#第4章-雷达终端">第4章 雷达终端</a></li><li class="article-toc-level-5"><a href="#1-终端干什么录取处理显示">1. 终端干什么：录取、处理、显示</a></li><li class="article-toc-level-5"><a href="#2-传统显示器大家族按显示内容分类">2. 传统显示器大家族（按显示内容分类）</a></li><li class="article-toc-level-5"><a href="#3-显示器的质量指标">3. 显示器的质量指标</a></li><li class="article-toc-level-5"><a href="#4-点迹录取从一片亮到一个点">4. 点迹录取：从&quot;一片亮&quot;到&quot;一个点&quot;</a></li><li class="article-toc-level-5"><a href="#5-数据处理与航迹入门">5. 数据处理与航迹入门</a></li><li class="article-toc-level-5"><a href="#6-显示器件crt-vs-平板">6. 显示器件：CRT vs 平板</a></li><li class="article-toc-level-5"><a href="#7-随机扫描-vs-光栅扫描">7. 随机扫描 vs 光栅扫描</a></li><li class="article-toc-level-4"><a href="#第5章-雷达作用距离">第5章 雷达作用距离</a></li><li class="article-toc-level-5"><a href="#1-雷达方程推导链四步走每步都有物理直觉">1. 雷达方程推导链：四步走，每步都有物理直觉</a></li><li class="article-toc-level-5"><a href="#2-雷达截面积-σ目标的等效反射面积">2. 雷达截面积 σ：目标的&quot;等效反射面积&quot;</a></li><li class="article-toc-level-5"><a href="#3-四次方根关系雷达工程最扎心的规律">3. 四次方根关系：雷达工程最&quot;扎心&quot;的规律</a></li><li class="article-toc-level-5"><a href="#4-噪声系数与最小可检测信号">4. 噪声系数与最小可检测信号</a></li><li class="article-toc-level-5"><a href="#5-检测是统计游戏发现概率与虚警概率">5. 检测是统计游戏：发现概率与虚警概率</a></li><li class="article-toc-level-5"><a href="#6-脉冲积累攒多次回波换信噪比">6. 脉冲积累：攒多次回波换信噪比</a></li><li class="article-toc-level-5"><a href="#7-目标起伏">7. 目标起伏</a></li><li class="article-toc-level-5"><a href="#8-系统损耗-l账本上的苛捐杂税">8. 系统损耗 L：账本上的&quot;苛捐杂税&quot;</a></li><li class="article-toc-level-5"><a href="#9-传播影响">9. 传播影响</a></li><li class="article-toc-level-5"><a href="#10-雷达方程的各种变体形式">10. 雷达方程的各种变体形式</a></li><li class="article-toc-level-4"><a href="#第6章-目标距离的测量">第6章 目标距离的测量</a></li><li class="article-toc-level-5"><a href="#1-测距基本原理与常用写法">1. 测距基本原理与常用写法</a></li><li class="article-toc-level-5"><a href="#2-回波到达时刻怎么定义前沿-vs-中心">2. 回波到达时刻怎么定义：前沿 vs 中心</a></li><li class="article-toc-level-5"><a href="#3-测距误差的全微分式误差从哪来">3. 测距误差的全微分式：误差从哪来</a></li><li class="article-toc-level-5"><a href="#4-系统误差-vs-随机误差">4. 系统误差 vs 随机误差</a></li><li class="article-toc-level-5"><a href="#5-大气折射修正">5. 大气折射修正</a></li><li class="article-toc-level-5"><a href="#6-距离分辨力两个目标多近还能分开">6. 距离分辨力：两个目标多近还能分开</a></li><li class="article-toc-level-5"><a href="#7-距离模糊与解模糊">7. 距离模糊与解模糊</a></li><li class="article-toc-level-5"><a href="#8-距离跟踪跟着目标跑的距离波门">8. 距离跟踪：跟着目标跑的距离波门</a></li><li class="article-toc-level-4"><a href="#第7章-角度测量">第7章 角度测量</a></li><li class="article-toc-level-5"><a href="#1-测角的物理基础">1. 测角的物理基础</a></li><li class="article-toc-level-5"><a href="#2-天线方向图的关键指标">2. 天线方向图的关键指标</a></li><li class="article-toc-level-5"><a href="#3-相位法测角用两根天线比相位">3. 相位法测角：用两根天线&quot;比相位&quot;</a></li><li class="article-toc-level-5"><a href="#4-振幅法测角看回波强弱">4. 振幅法测角：看回波强弱</a></li><li class="article-toc-level-5"><a href="#5-波束扫描的三种方式">5. 波束扫描的三种方式</a></li><li class="article-toc-level-5"><a href="#6-相控阵原理用广场舞方阵理解电扫描">6. 相控阵原理：用&quot;广场舞方阵&quot;理解电扫描</a></li><li class="article-toc-level-5"><a href="#7-数字阵列雷达dar">7. 数字阵列雷达（DAR）</a></li><li class="article-toc-level-5"><a href="#8-三坐标雷达3d-radar">8. 三坐标雷达（3D Radar）</a></li><li class="article-toc-level-5"><a href="#9-圆锥扫描-vs-单脉冲两种自动角跟踪体制">9. 圆锥扫描 vs 单脉冲：两种自动角跟踪体制</a></li><li class="article-toc-level-5"><a href="#10-角跟踪精度的影响因素">10. 角跟踪精度的影响因素</a></li><li class="article-toc-level-4"><a href="#第8章-运动目标检测">第8章 运动目标检测</a></li><li class="article-toc-level-5"><a href="#1-多普勒效应的严格推导直觉往返相位怎么变">1. 多普勒效应的严格推导直觉：往返相位怎么变</a></li><li class="article-toc-level-5"><a href="#2-杂波与动目标在频谱上的区别">2. 杂波与动目标在频谱上的区别</a></li><li class="article-toc-level-5"><a href="#3-mti-原理延迟对消器两张照片找不同">3. MTI 原理：延迟对消器——&quot;两张照片找不同&quot;</a></li><li class="article-toc-level-5"><a href="#4-盲速与盲相">4. 盲速与盲相</a></li><li class="article-toc-level-5"><a href="#5-改善因子mti-的成绩单">5. 改善因子：MTI 的成绩单</a></li><li class="article-toc-level-5"><a href="#6-mti-的数字实现">6. MTI 的数字实现</a></li><li class="article-toc-level-5"><a href="#7-mtd从对消升级到滤波器组">7. MTD：从&quot;对消&quot;升级到&quot;滤波器组&quot;</a></li><li class="article-toc-level-5"><a href="#8-自适应-mti">8. 自适应 MTI</a></li><li class="article-toc-level-5"><a href="#9-脉冲多普勒雷达pd-radar">9. 脉冲多普勒雷达（PD Radar）</a></li><li class="article-toc-level-5"><a href="#10-测速方法">10. 测速方法</a></li><li class="article-toc-level-4"><a href="#第9章-高分辨力雷达">第9章 高分辨力雷达</a></li><li class="article-toc-level-5"><a href="#1-分辨力雷达的眼神锐度">1. 分辨力：雷达的&quot;眼神锐度&quot;</a></li><li class="article-toc-level-5"><a href="#2-用什么数学尺子量可分辨程度均方差准则">2. 用什么数学尺子量&quot;可分辨程度&quot;：均方差准则</a></li><li class="article-toc-level-5"><a href="#3-模糊函数-yτ信号的自己自己相似度">3. 模糊函数 y(τ)：信号的&quot;自己—自己相似度&quot;</a></li><li class="article-toc-level-5"><a href="#4-匹配滤波器输出的几种典型形态">4. 匹配滤波器输出的几种典型形态</a></li><li class="article-toc-level-5"><a href="#5-时宽带宽积-bτ能量与分辨力解耦的钥匙">5. 时宽带宽积 Bτ：能量与分辨力&quot;解耦&quot;的钥匙</a></li><li class="article-toc-level-5"><a href="#6-线性调频脉冲压缩长脉冲存能量压缩后变细">6. 线性调频脉冲压缩：&quot;长脉冲存能量、压缩后变细&quot;</a></li><li class="article-toc-level-5"><a href="#7-相位编码信号巴克码">7. 相位编码信号：巴克码</a></li><li class="article-toc-level-5"><a href="#8-sar用小天线飞出大天线">8. SAR：用小天线&quot;飞出&quot;大天线</a></li><li class="article-toc-level-5"><a href="#9-isar目标自己转身配合成像">9. ISAR：目标自己&quot;转身&quot;配合成像</a></li><li class="article-toc-level-5"><a href="#10-角度超分辨">10. 角度超分辨</a></li><li class="article-toc-level-3"><a href="#全书知识链回顾">全书知识链回顾</a></li><li class="article-toc-level-2"><a href="#第二部分-pomrprinciples-of-modern-radar-basic-principles逐章详细笔记">第二部分  POMR（Principles of Modern Radar: Basic Principles）逐章详细笔记</a></li><li class="article-toc-level-3"><a href="#part-i-概览overview">Part I 概览（Overview）</a></li><li class="article-toc-level-4"><a href="#第1章-绪论与雷达概览introduction-and-radar-overview">第1章 绪论与雷达概览（Introduction and Radar Overview）</a></li><li class="article-toc-level-5"><a href="#雷达是什么">雷达是什么</a></li><li class="article-toc-level-5"><a href="#测距公式-rcδt2">测距公式 R=cΔT/2</a></li><li class="article-toc-level-5"><a href="#电磁波与-λfc">电磁波与 λf=c</a></li><li class="article-toc-level-5"><a href="#雷达频段划分">雷达频段划分</a></li><li class="article-toc-level-5"><a href="#极化polarization">极化（polarization）</a></li><li class="article-toc-level-5"><a href="#单基地与双基地monostatic-bistatic">单基地与双基地（monostatic / bistatic）</a></li><li class="article-toc-level-5"><a href="#cw-与脉冲波形">CW 与脉冲波形</a></li><li class="article-toc-level-5"><a href="#检测三指标初识pdpfasnr">检测三指标初识：P_D、P_FA、SNR</a></li><li class="article-toc-level-5"><a href="#距离分辨率-δrcτ2">距离分辨率 ΔR=cτ/2</a></li><li class="article-toc-level-5"><a href="#三大功能搜索跟踪成像">三大功能：搜索、跟踪、成像</a></li><li class="article-toc-level-4"><a href="#第2章-雷达距离方程the-radar-range-equation">第2章 雷达距离方程（The Radar Range Equation）</a></li><li class="article-toc-level-5"><a href="#推导链一步步来">推导链（一步步来）</a></li><li class="article-toc-level-5"><a href="#热噪声与-snr-形式">热噪声与 SNR 形式</a></li><li class="article-toc-level-5"><a href="#db-形式手把手做一次预算">dB 形式（手把手做一次预算）</a></li><li class="article-toc-level-5"><a href="#平均功率能量形式">平均功率/能量形式</a></li><li class="article-toc-level-5"><a href="#脉压形式">脉压形式</a></li><li class="article-toc-level-5"><a href="#其他常用变体">其他常用变体</a></li><li class="article-toc-level-4"><a href="#第3章-雷达搜索与干扰中检测概览radar-search-and-overview-of-detection-in-interference">第3章 雷达搜索与干扰中检测概览（Radar Search and Overview of Detection in Interference）</a></li><li class="article-toc-level-5"><a href="#搜索空域与驻留">搜索空域与驻留</a></li><li class="article-toc-level-5"><a href="#rayleigh-噪声与-pfa">Rayleigh 噪声与 P_FA</a></li><li class="article-toc-level-5"><a href="#rician-分布marcum-q-与-pd">Rician 分布、Marcum Q 与 P_D</a></li><li class="article-toc-level-5"><a href="#roc-曲线怎么读">ROC 曲线怎么读</a></li><li class="article-toc-level-5"><a href="#swerling-04-起伏模型">Swerling 0~4 起伏模型</a></li><li class="article-toc-level-5"><a href="#各模型所需-snr-量级">各模型所需 SNR 量级</a></li><li class="article-toc-level-5"><a href="#确认驻留与-m-of-n-积累">确认驻留与 m-of-n 积累</a></li><li class="article-toc-level-5"><a href="#albersheim-公式">Albersheim 公式</a></li><li class="article-toc-level-5"><a href="#antpq-3637-例子">AN/TPQ-36/37 例子</a></li><li class="article-toc-level-3"><a href="#part-ii-外部因素external-factors">Part II 外部因素（External Factors）</a></li><li class="article-toc-level-4"><a href="#第4章-传播效应与机理propagation-effects-and-mechanisms">第4章 传播效应与机理（Propagation Effects and Mechanisms）</a></li><li class="article-toc-level-5"><a href="#传播因子-f">传播因子 F</a></li><li class="article-toc-level-5"><a href="#大气衰减与吸收">大气衰减与吸收</a></li><li class="article-toc-level-5"><a href="#折射与波导ducting">折射与波导（ducting）</a></li><li class="article-toc-level-5"><a href="#湍流电离层与-oth">湍流、电离层与 OTH</a></li><li class="article-toc-level-5"><a href="#衍射与多径">衍射与多径</a></li><li class="article-toc-level-5"><a href="#趋肤深度与穿墙">趋肤深度与穿墙</a></li><li class="article-toc-level-4"><a href="#第5章-杂波特性characteristics-of-clutter">第5章 杂波特性（Characteristics of Clutter）</a></li><li class="article-toc-level-5"><a href="#杂波-vs-噪声对比表">杂波 vs 噪声对比表</a></li><li class="article-toc-level-5"><a href="#σ⁰-与-η">σ⁰ 与 η</a></li><li class="article-toc-level-5"><a href="#照射面积与杂波随-r²">照射面积与&quot;杂波随 R⁻²&quot;</a></li><li class="article-toc-level-5"><a href="#长尾分布的含义">长尾分布的含义</a></li><li class="article-toc-level-5"><a href="#gtri-地杂波模型">GTRI 地杂波模型</a></li><li class="article-toc-level-5"><a href="#海杂波与-nathanson-数据表">海杂波与 Nathanson 数据表</a></li><li class="article-toc-level-4"><a href="#第6章-目标反射率target-reflectivity">第6章 目标反射率（Target Reflectivity）</a></li><li class="article-toc-level-5"><a href="#散射物理感应电流再辐射">散射物理：感应电流再辐射</a></li><li class="article-toc-level-5"><a href="#rcs-正式定义">RCS 正式定义</a></li><li class="article-toc-level-5"><a href="#三个散射区按尺寸波长">三个散射区（按尺寸/波长）</a></li><li class="article-toc-level-5"><a href="#镜面散射与多散射中心">镜面散射与多散射中心</a></li><li class="article-toc-level-4"><a href="#第7章-目标起伏模型target-fluctuation-models">第7章 目标起伏模型（Target Fluctuation Models）</a></li><li class="article-toc-level-5"><a href="#定标基准导电球与角反射器">定标基准：导电球与角反射器</a></li><li class="article-toc-level-5"><a href="#dumbbell-模型看懂起伏">dumbbell 模型：看懂起伏</a></li><li class="article-toc-level-5"><a href="#统计模型族">统计模型族</a></li><li class="article-toc-level-5"><a href="#去相关角度与频率">去相关：角度与频率</a></li><li class="article-toc-level-4"><a href="#第8章-doppler-现象与数据采集doppler-phenomenology-and-data-acquisition">第8章 Doppler 现象与数据采集（Doppler Phenomenology and Data Acquisition）</a></li><li class="article-toc-level-5"><a href="#doppler-频移-fd2vλ">Doppler 频移 f_d=2v/λ</a></li><li class="article-toc-level-5"><a href="#四个时间尺度-四个频率尺度时频互展">四个时间尺度 ↔ 四个频率尺度（时频互展）</a></li><li class="article-toc-level-5"><a href="#快时间慢时间数据矩阵">快时间/慢时间数据矩阵</a></li><li class="article-toc-level-5"><a href="#iq-采集">I/Q 采集</a></li><li class="article-toc-level-5"><a href="#range-doppler-谱与运动平台问题">range-Doppler 谱与运动平台问题</a></li><li class="article-toc-level-3"><a href="#part-iii-子系统subsystems">Part III 子系统（Subsystems）</a></li><li class="article-toc-level-4"><a href="#第9章-雷达天线radar-antennas">第9章 雷达天线（Radar Antennas）</a></li><li class="article-toc-level-5"><a href="#从各向同性源到方向图">从各向同性源到方向图</a></li><li class="article-toc-level-5"><a href="#波束宽度-θ₃αλl">波束宽度 θ₃=αλ/L</a></li><li class="article-toc-level-5"><a href="#增益-dη4πaλ²">增益 D=η·4πA/λ²</a></li><li class="article-toc-level-5"><a href="#孔径加权与副瓣">孔径加权与副瓣</a></li><li class="article-toc-level-5"><a href="#单脉冲monopulse">单脉冲（monopulse）</a></li><li class="article-toc-level-5"><a href="#反射面天线">反射面天线</a></li><li class="article-toc-level-5"><a href="#相控阵phased-array">相控阵（phased array）</a></li><li class="article-toc-level-4"><a href="#第10章-雷达发射机radar-transmitters">第10章 雷达发射机（Radar Transmitters）</a></li><li class="article-toc-level-5"><a href="#发射机三要素">发射机三要素</a></li><li class="article-toc-level-5"><a href="#磁控管-vs-mopa">磁控管 vs MOPA</a></li><li class="article-toc-level-5"><a href="#固态与-tr-组件">固态与 T/R 组件</a></li><li class="article-toc-level-5"><a href="#功率孔径积与-pag">功率孔径积与 PAG</a></li><li class="article-toc-level-5"><a href="#频谱管理与可靠性">频谱管理与可靠性</a></li><li class="article-toc-level-4"><a href="#第11章-雷达接收机radar-receivers">第11章 雷达接收机（Radar Receivers）</a></li><li class="article-toc-level-5"><a href="#七类接收机">七类接收机</a></li><li class="article-toc-level-5"><a href="#超外差链上的关键件">超外差链上的关键件</a></li><li class="article-toc-level-5"><a href="#解调包络-vs-iq">解调：包络 vs I/Q</a></li><li class="article-toc-level-5"><a href="#噪声系数与动态范围">噪声系数与动态范围</a></li><li class="article-toc-level-4"><a href="#第12章-雷达激励器radar-exciters">第12章 雷达激励器（Radar Exciters）</a></li><li class="article-toc-level-5"><a href="#激励器是什么">激励器是什么</a></li><li class="article-toc-level-5"><a href="#相参coherence的含义">相参（coherence）的含义</a></li><li class="article-toc-level-5"><a href="#iq-信号模型">I/Q 信号模型</a></li><li class="article-toc-level-5"><a href="#频率漂移ppm">频率漂移（ppm）</a></li><li class="article-toc-level-5"><a href="#ssb-相位噪声dbchz">SSB 相位噪声（dBc/Hz）</a></li><li class="article-toc-level-5"><a href="#定时抖动与杂散">定时抖动与杂散</a></li><li class="article-toc-level-4"><a href="#第13章-雷达信号处理机the-radar-signal-processor">第13章 雷达信号处理机（The Radar Signal Processor）</a></li><li class="article-toc-level-5"><a href="#模拟-vs-数字处理">模拟 vs 数字处理</a></li><li class="article-toc-level-5"><a href="#处理机结构streaming-前端-后端">处理机结构：streaming 前端 + 后端</a></li><li class="article-toc-level-5"><a href="#度量体系">度量体系</a></li><li class="article-toc-level-5"><a href="#flops-计数估算处理器规模">FLOPs 计数（估算处理器规模）</a></li><li class="article-toc-level-5"><a href="#实现载体与数制">实现载体与数制</a></li><li class="article-toc-level-3"><a href="#part-iv-信号与数据处理signal-and-data-processing">Part IV 信号与数据处理（Signal and Data Processing）</a></li><li class="article-toc-level-4"><a href="#第14章-雷达数字信号处理基础dsp-fundamentals-for-radar">第14章 雷达数字信号处理基础（DSP Fundamentals for Radar）</a></li><li class="article-toc-level-5"><a href="#雷达-dsp-的独特性">雷达 DSP 的独特性</a></li><li class="article-toc-level-5"><a href="#nyquist-采样与欠采样">Nyquist 采样与欠采样</a></li><li class="article-toc-level-5"><a href="#量化">量化</a></li><li class="article-toc-level-5"><a href="#dftfft-与加窗">DFT/FFT 与加窗</a></li><li class="article-toc-level-5"><a href="#z-变换与-firiir">z 变换与 FIR/IIR</a></li><li class="article-toc-level-5"><a href="#随机信号与-psd">随机信号与 PSD</a></li><li class="article-toc-level-5"><a href="#积累增益相干-n-vs-非相干-nn">积累增益：相干 N vs 非相干 √N~N</a></li><li class="article-toc-level-5"><a href="#相关与匹配滤波">相关与匹配滤波</a></li><li class="article-toc-level-4"><a href="#第15章-雷达目标门限检测threshold-detection-of-radar-targets">第15章 雷达目标门限检测（Threshold Detection of Radar Targets）</a></li><li class="article-toc-level-5"><a href="#积累策略对比">积累策略对比</a></li><li class="article-toc-level-5"><a href="#假设检验与-neyman-pearson-准则">假设检验与 Neyman-Pearson 准则</a></li><li class="article-toc-level-5"><a href="#似然比导出门限">似然比导出门限</a></li><li class="article-toc-level-5"><a href="#各类目标的检测性能">各类目标的检测性能</a></li><li class="article-toc-level-5"><a href="#albersheim-与-shnidman-公式">Albersheim 与 Shnidman 公式</a></li><li class="article-toc-level-4"><a href="#第16章-恒虚警率检测器constant-false-alarm-rate-detectors">第16章 恒虚警率检测器（Constant False Alarm Rate Detectors）</a></li><li class="article-toc-level-5"><a href="#为什么固定门限失效">为什么固定门限失效</a></li><li class="article-toc-level-5"><a href="#cfar-思想">CFAR 思想</a></li><li class="article-toc-level-5"><a href="#ca-cfar-与门限-tασ²">CA-CFAR 与门限 T=α·σ̂²</a></li><li class="article-toc-level-5"><a href="#杂波边缘与目标遮蔽">杂波边缘与目标遮蔽</a></li><li class="article-toc-level-5"><a href="#鲁棒变体">鲁棒变体</a></li><li class="article-toc-level-4"><a href="#第17章-doppler-处理doppler-processing">第17章 Doppler 处理（Doppler Processing）</a></li><li class="article-toc-level-5"><a href="#mti-与两脉冲对消器">MTI 与两脉冲对消器</a></li><li class="article-toc-level-5"><a href="#改善因子improvement-factor">改善因子（improvement factor）</a></li><li class="article-toc-level-5"><a href="#盲速与参差-prf">盲速与参差 PRF</a></li><li class="article-toc-level-5"><a href="#pulse-doppler慢时间-dft">pulse-Doppler：慢时间 DFT</a></li><li class="article-toc-level-5"><a href="#距离-速度模糊与解模糊">距离-速度模糊与解模糊</a></li><li class="article-toc-level-5"><a href="#杂波图mtd-与-pulse-pair">杂波图、MTD 与 pulse pair</a></li><li class="article-toc-level-4"><a href="#第18章-雷达测量radar-measurements">第18章 雷达测量（Radar Measurements）</a></li><li class="article-toc-level-5"><a href="#accuracy-vs-precision">accuracy vs precision</a></li><li class="article-toc-level-5"><a href="#crlb-直觉">CRLB 直觉</a></li><li class="article-toc-level-5"><a href="#各参数测量方法">各参数测量方法</a></li><li class="article-toc-level-4"><a href="#第19章-雷达跟踪算法radar-tracking-algorithms">第19章 雷达跟踪算法（Radar Tracking Algorithms）</a></li><li class="article-toc-level-5"><a href="#跟踪-滤波-数据关联">跟踪 = 滤波 + 数据关联</a></li><li class="article-toc-level-5"><a href="#α-β-滤波器">α-β 滤波器</a></li><li class="article-toc-level-5"><a href="#kalman-滤波蒙眼猜位置类比">Kalman 滤波：蒙眼猜位置类比</a></li><li class="article-toc-level-5"><a href="#门控与关联算法">门控与关联算法</a></li><li class="article-toc-level-5"><a href="#航迹管理">航迹管理</a></li><li class="article-toc-level-5"><a href="#性能评估">性能评估</a></li><li class="article-toc-level-4"><a href="#第20章-脉冲压缩波形基础fundamentals-of-pulse-compression-waveforms">第20章 脉冲压缩波形基础（Fundamentals of Pulse Compression Waveforms）</a></li><li class="article-toc-level-5"><a href="#匹配滤波器-htaxt">匹配滤波器 h(t)=a·x*(−t)</a></li><li class="article-toc-level-5"><a href="#时宽带宽积-τβ-解耦能量与分辨率">时宽带宽积 τβ 解耦能量与分辨率</a></li><li class="article-toc-level-5"><a href="#lfmchirp波形">LFM（chirp）波形</a></li><li class="article-toc-level-5"><a href="#模糊函数ambiguity-function">模糊函数（ambiguity function）</a></li><li class="article-toc-level-5"><a href="#相位编码波形">相位编码波形</a></li><li class="article-toc-level-4"><a href="#第21章-雷达成像概览an-overview-of-radar-imaging">第21章 雷达成像概览（An Overview of Radar Imaging）</a></li><li class="article-toc-level-5"><a href="#sar-相对光学成像的优势">SAR 相对光学成像的优势</a></li><li class="article-toc-level-5"><a href="#三种理解范式">三种理解范式</a></li><li class="article-toc-level-5"><a href="#核心分辨率公式">核心分辨率公式</a></li><li class="article-toc-level-5"><a href="#prf-采样约束">PRF 采样约束</a></li><li class="article-toc-level-5"><a href="#图像形成dbs-vs-backprojection">图像形成：DBS vs backprojection</a></li><li class="article-toc-level-5"><a href="#sar-特有现象学">SAR 特有现象学</a></li><li class="article-toc-level-5"><a href="#图像质量指标">图像质量指标</a></li><li class="article-toc-level-3"><a href="#全书学习路径建议">全书学习路径建议</a></li><li class="article-toc-level-2"><a href="#附录">附录</a></li><li class="article-toc-level-3"><a href="#附录-a-核心公式速查表">附录 A  核心公式速查表</a></li><li class="article-toc-level-3"><a href="#附录-b-术语中英对照表">附录 B  术语中英对照表</a></li><li class="article-toc-level-3"><a href="#附录-c-两书对照学习路线建议-8-周">附录 C  两书对照学习路线（建议 8 周）</a></li><li class="article-toc-level-3"><a href="#附录-d-小白避坑清单十大高频误区">附录 D  小白避坑清单（十大高频误区）</a></li></ol></nav>
+      <div class="article-body"><h2 id="雷达原理两书学习总结零基础详细版">雷达原理两书学习总结（零基础详细版）</h2>
 <blockquote>
 <p>适用读者：雷达零基础（&quot;小白&quot;）。
 覆盖书目：
@@ -57,7 +58,7 @@
 全文结构：第零部分预备知识 → 第一部分《雷达原理》逐章笔记 → 第二部分 POMR 逐章笔记 → 附录（公式速查 / 术语表 / 学习路线 / 避坑清单）。</p>
 </blockquote>
 <hr>
-<h2 id="这份文件怎么用">这份文件怎么用</h2>
+<h3 id="这份文件怎么用">这份文件怎么用</h3>
 <ol>
 <li><strong>先读&quot;第零部分&quot;</strong>：30 分钟扫清预备概念（分贝、信噪比、多普勒、相参），后面所有章节都会反复用到它们。</li>
 <li><strong>再按顺序读逐章笔记</strong>：每章都有【本章定位】【核心概念逐个讲】【易混点】【一句话小结】四个固定栏目。第一遍只抓&quot;定位 + 小结&quot;，第二遍再啃公式。</li>
@@ -66,9 +67,9 @@
 <li><strong>两本书的关系</strong>：《雷达原理》像&quot;内功心法&quot;（按整机→分机→测量→处理搭建体系，中文、亲切）；POMR 像&quot;招式大全&quot;（按概览→环境→子系统→处理展开，更深更现代）。笔记两部分体例完全一致，可以对照着读同一主题（附录 C 给了对照学习路线）。</li>
 </ol>
 <hr>
-<h1 id="第零部分-零基础预备知识先修扫盲">第零部分  零基础预备知识（先修扫盲）</h1>
+<h2 id="第零部分-零基础预备知识先修扫盲">第零部分  零基础预备知识（先修扫盲）</h2>
 <p>这一部分不来自某一章，而是把两本书&quot;默认你已经会了&quot;的基础浓缩在这里。读完它，后面的笔记才能顺畅。</p>
-<h2 id="01-雷达是什么黑夜里听回声的人">0.1 雷达是什么：黑夜里听回声的人</h2>
+<h3 id="01-雷达是什么黑夜里听回声的人">0.1 雷达是什么：黑夜里听回声的人</h3>
 <p>雷达（radar = <strong>ra</strong>dio <strong>d</strong>etection <strong>a</strong>nd <strong>r</strong>anging，无线电探测与测距）的工作方式，和你在山谷里喊一嗓子听回声完全一样：</p>
 <ul>
 <li>你喊一声（<strong>发射</strong>电磁波脉冲）；</li>
@@ -79,7 +80,7 @@
 <p><strong>R = c · t_R / 2</strong>（距离 = 光速 × 回波延迟 ÷ 2，除以 2 是因为电波走了往返两趟）</p>
 <p>算例：回波比发射脉冲晚到 100 μs，则 R = 3×10⁸ × 100×10⁻⁶ / 2 = 15 000 m = 15 km。
 记一个黄金换算：<strong>1 μs 延迟 ↔ 150 m 距离</strong>（两本书都反复用到）。</p>
-<h2 id="02-雷达能测四样东西">0.2 雷达能测四样东西</h2>
+<h3 id="02-雷达能测四样东西">0.2 雷达能测四样东西</h3>
 <table>
 <thead>
 <tr>
@@ -110,11 +111,11 @@
 </tr>
 </tbody></table>
 <p>&quot;径向速度&quot;指目标沿雷达视线方向靠近/远离的分量；横向运动不产生多普勒频移，这是第一个容易晕的点。</p>
-<h2 id="03-一部脉冲雷达里有什么整机巡游">0.3 一部脉冲雷达里有什么（整机巡游）</h2>
+<h3 id="03-一部脉冲雷达里有什么整机巡游">0.3 一部脉冲雷达里有什么（整机巡游）</h3>
 <p>以经典单基地脉冲雷达为例，信号的一生：</p>
 <p><strong>定时器/激励器</strong>（定节奏、产生波形）→ <strong>发射机</strong>（放大到大功率）→ <strong>收发开关</strong>（同一副天线先当嘴巴后当耳朵）→ <strong>天线</strong>（把电波聚成波束发出去，收回微弱回波）→ <strong>接收机</strong>（低噪声放大、变频、滤波、解调）→ <strong>信号处理机</strong>（脉冲压缩、MTI、检测、CFAR）→ <strong>数据处理/终端</strong>（点迹录取、航迹、显示给人看）。</p>
 <p>《雷达原理》第 2<del>4 章讲发射机/接收机/终端，第 8</del>9 章讲信号处理；POMR 第 9<del>13 章讲子系统、第 14</del>21 章讲处理。对照看，你会发现两本书讲的是同一条流水线。</p>
-<h2 id="04-分贝db雷达工程师的汇率">0.4 分贝（dB）：雷达工程师的&quot;汇率&quot;</h2>
+<h3 id="04-分贝db雷达工程师的汇率">0.4 分贝（dB）：雷达工程师的&quot;汇率&quot;</h3>
 <p>雷达里功率动辄相差 10¹⁰ 倍（发射 1 MW，接收 10⁻¹³ W），直接乘除没法口算，于是全用分贝：</p>
 <ul>
 <li><strong>定义</strong>：功率比 P₁/P₀ 的分贝值 = 10 · lg(P₁/P₀)。lg 是以 10 为底的对数。</li>
@@ -123,7 +124,7 @@
 <li><strong>常见单位</strong>：dBm（相对 1 mW）、dBW（相对 1 W）、dBc/Hz（相对载波、每赫兹，相位噪声用）。</li>
 </ul>
 <p>算例：信号比噪声强 100 倍 → SNR = 10·lg(100) = 20 dB。强 2 倍 → 约 3 dB。</p>
-<h2 id="05-噪声与信噪比snr雷达的视力表">0.5 噪声与信噪比（SNR）：雷达的&quot;视力表&quot;</h2>
+<h3 id="05-噪声与信噪比snr雷达的视力表">0.5 噪声与信噪比（SNR）：雷达的&quot;视力表&quot;</h3>
 <p>接收机里永远有热噪声（电子的热运动），功率为 <strong>N = k · T₀ · B · F</strong>：</p>
 <ul>
 <li>k = 1.38×10⁻²³ J/K（玻尔兹曼常数）；T₀ = 290 K（标准温度）；B = 接收机带宽（Hz）；F = 噪声系数（接收机自己额外掺进去的杂音倍数）。</li>
@@ -134,18 +135,18 @@
 <li><strong>虚警概率 P_FA</strong>：没有目标时，噪声尖峰骗过门限的概率（典型要求 10⁻⁶，百万分之一）。</li>
 </ul>
 <p>P_FA 定得太松，满屏假目标；定得太严，真目标被漏掉。这是贯穿两本书的核心矛盾（《雷达原理》第 5 章、POMR 第 3/15/16 章都在解这道题）。</p>
-<h2 id="06-多普勒效应让动目标无处遁形">0.6 多普勒效应：让动目标无处遁形</h2>
+<h3 id="06-多普勒效应让动目标无处遁形">0.6 多普勒效应：让动目标无处遁形</h3>
 <p>目标以径向速度 v_r 靠近雷达时，回波频率会变高；远离时变低。频移量：</p>
 <p><strong>f_d = 2 v_r / λ</strong>（λ 是波长）</p>
 <p>算例：X 波段雷达 λ = 3 cm，目标以 v_r = 300 m/s 飞来 → f_d = 2×300/0.03 = 20 000 Hz = 20 kHz。
 地面的房子、山也有回波，但它们不动，f_d = 0。于是用滤波器把&quot;零频附近&quot;的强杂波滤掉，动的飞机就显出来了——这就是第 8 章（中文书）/第 17 章（POMR）MTI 的全部思想源头。</p>
-<h2 id="07-相参coherent全雷达听同一个节拍器">0.7 相参（Coherent）：全雷达听同一个&quot;节拍器&quot;</h2>
+<h3 id="07-相参coherent全雷达听同一个节拍器">0.7 相参（Coherent）：全雷达听同一个&quot;节拍器&quot;</h3>
 <p>普通振荡器每次起振相位都是随机的；相参雷达里，发射信号、本振、采样时钟全都溯源到同一个高稳定基准，于是<strong>回波的相位</strong>携带信息可被利用。</p>
 <ul>
 <li>类比：合唱团所有声部听同一个指挥，才能精确叠加；各唱各的拍子就乱了。</li>
 <li>为什么重要：测多普勒 = 测相位的变化率；MTI 对消 = 相邻脉冲相减。没有相参，这两件事都做不了。所以现代雷达要求发射机频率稳定度达 10⁻⁸~10⁻⁹（《雷达原理》第 2 章），POMR 还专门用第 12 章讲产生这些基准的激励器（exciter）。</li>
 </ul>
-<h2 id="08-雷达频段与字母代号">0.8 雷达频段与字母代号</h2>
+<h3 id="08-雷达频段与字母代号">0.8 雷达频段与字母代号</h3>
 <table>
 <thead>
 <tr>
@@ -191,9 +192,9 @@
 </tr>
 </tbody></table>
 <p>规律：<strong>频率越高，同尺寸天线波束越窄（测角准、分辨好），但大气衰减越大、器件功率越难做</strong>。选频段就是在这两头权衡。</p>
-<h2 id="09-脉冲压缩与时宽带宽积鱼和熊掌兼得">0.9 脉冲压缩与&quot;时宽带宽积&quot;：鱼和熊掌兼得</h2>
+<h3 id="09-脉冲压缩与时宽带宽积鱼和熊掌兼得">0.9 脉冲压缩与&quot;时宽带宽积&quot;：鱼和熊掌兼得</h3>
 <p>直觉上：脉冲越长能量越大（看得远），但距离分辨率 ΔR = cτ/2 越差。破解办法：长脉冲内部做调制（线性调频 LFM 或相位编码），带宽 B ≫ 1/τ，接收时用<strong>匹配滤波器</strong>把它&quot;压&quot;回窄脉冲——能量按 τ 算，分辨率按 1/B 算。评价指标是时宽带宽积 <strong>Bτ</strong>（Bτ≫1 即复杂波形）。这是《雷达原理》第 9 章与 POMR 第 20 章的主角，也是现代雷达的标配。</p>
-<h2 id="010-前置数学其实只需要三样">0.10 前置数学：其实只需要三样</h2>
+<h3 id="010-前置数学其实只需要三样">0.10 前置数学：其实只需要三样</h3>
 <ul>
 <li>复数与相位（I/Q 两路就是复信号的实部虚部）；</li>
 <li>傅里叶变换的直觉（&quot;把时间信号拆成不同频率的音符&quot;，时域长 ↔ 频域窄）；</li>
@@ -202,16 +203,16 @@
 <p>两本书都是&quot;用到什么讲什么&quot;，POMR 第 14 章干脆内置了一个雷达专用 DSP 速成，不必先修完信号处理课程。</p>
 <hr>
 <hr>
-<h1 id="第一部分-雷达原理第5版逐章详细笔记">第一部分  《雷达原理》（第5版）逐章详细笔记</h1>
+<h2 id="第一部分-雷达原理第5版逐章详细笔记">第一部分  《雷达原理》（第5版）逐章详细笔记</h2>
 <blockquote>
 <p>本笔记基于《雷达原理》（第5版，丁鹭飞、耿富录、陈建春，电子工业出版社，2014）整理，供零基础学习使用。</p>
 </blockquote>
 <p><strong>怎么读这份笔记</strong>：假设你从没接触过雷达。每个概念先用一句大白话打比方，再给准确说法；每个公式都逐个解释符号、单位，并配一个带数字的算例。全书共 9 章，知识链是：第 1 章搭总框架 → 第 2~4 章讲雷达的三大分机（发射机、接收机、终端）→ 第 5 章回答&quot;雷达能看多远&quot; → 第 6、7 章讲怎么测距离和角度 → 第 8、9 章讲信号处理的高级话题（抓动目标、提高分辨力）。</p>
 <hr>
-<h3 id="第1章-绪论">第1章 绪论</h3>
+<h4 id="第1章-绪论">第1章 绪论</h4>
 <p><strong>【本章定位】</strong> 绪论是全书的&quot;地图&quot;：先回答&quot;雷达是什么、能干什么、由哪几部分组成&quot;，并建立后面所有章节都要用的坐标系（斜距、方位角、仰角）和三条最基本的测量原理（测距、测角、测速）。后面第 2<del>4 章讲分机、第 5</del>7 章讲性能与测量，都是在这一章搭好的骨架上添肉。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="1-雷达是什么定义与任务">1. 雷达是什么：定义与任务</h4>
+<h5 id="1-雷达是什么定义与任务">1. 雷达是什么：定义与任务</h5>
 <p>大白话：雷达就是&quot;用无线电波当手电筒&quot;——主动向空间发射一束电磁波，碰到目标后一部分能量被反射回来，机器接收这束&quot;回声&quot;，从回声里算出目标在哪里、跑多快。</p>
 <p>准确表述：雷达（Radar，Radio Detection and Ranging，无线电探测与测距）是利用目标对电磁波的反射来发现目标并测定其位置的电子设备。它的基本任务包括：</p>
 <ul>
@@ -220,7 +221,7 @@
 <li><strong>测定速度</strong>：利用多普勒效应测量目标的径向速度；</li>
 <li><strong>识别特征</strong>：进一步判断目标的尺寸、形状、类型（现代雷达的高级任务）。</li>
 </ul>
-<h4 id="2-目标位置怎么表示球坐标与圆柱坐标">2. 目标位置怎么表示：球坐标与圆柱坐标</h4>
+<h5 id="2-目标位置怎么表示球坐标与圆柱坐标">2. 目标位置怎么表示：球坐标与圆柱坐标</h5>
 <p>大白话：要告诉别人&quot;目标在哪&quot;，光说&quot;多远&quot;不够，还得说&quot;在哪个方向、抬多高&quot;——三个数才能锁定空间中的一个点。</p>
 <p>准确表述：以雷达站为原点，目标位置常用两种坐标系表示。</p>
 <p><strong>球（极）坐标</strong>（雷达测量最自然的坐标）：</p>
@@ -237,7 +238,7 @@
 <p>符号说明：R、D、H 的单位都是 m（或 km）；cos、sin 为三角函数；β 是仰角。</p>
 <p>算例：某目标斜距 R = 10 km，仰角 β = 30°，则
 D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km。即目标在水平方向 8.66 km 之外、5 km 的高度上。</p>
-<h4 id="3-脉冲雷达由哪几部分组成组成框图">3. 脉冲雷达由哪几部分组成（组成框图）</h4>
+<h5 id="3-脉冲雷达由哪几部分组成组成框图">3. 脉冲雷达由哪几部分组成（组成框图）</h5>
 <p>单基地脉冲雷达（发射和接收共用一副天线、放在同一地点）的简化框图：</p>
 <p>定时器 → 发射机 → 收发转换开关 ⇄ 天线 → 空间（目标）→ 天线 → 收发转换开关 → 接收机 → 信号处理机 → 显示器/终端</p>
 <p>各环节作用（用&quot;喊话听回声&quot;来类比）：</p>
@@ -250,7 +251,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li><strong>信号处理机</strong>：从噪声和杂波中把目标信息&quot;捞&quot;出来（第 8、9 章细讲）；</li>
 <li><strong>显示器/终端</strong>：把结果显示给人看、送进指挥系统（第 4 章细讲）。</li>
 </ul>
-<h4 id="4-雷达怎么测距离r-ctr2">4. 雷达怎么测距离：R = c·t_R/2</h4>
+<h5 id="4-雷达怎么测距离r-ctr2">4. 雷达怎么测距离：R = c·t_R/2</h5>
 <p>大白话：冲着山谷喊一声，2 秒后听到回声，声音每秒跑 340 m，山崖距离就是 340×2/2 = 340 m——要除以 2，因为声音走了一个来回。</p>
 <p>准确表述：电磁波以光速传播，测出发射脉冲与回波脉冲之间的时间差 t_R（回波延迟），就有</p>
 <p>R = c·t_R / 2</p>
@@ -263,7 +264,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ul>
 <p><strong>&quot;1 μs 对应 150 m&quot;的来历</strong>（雷达工程最常用口诀）：把 t_R = 1 μs = 1×10⁻⁶ s 代入公式，R = 3×10⁸ × 1×10⁻⁶ / 2 = 300/2 = 150 m。所以回波每晚到 1 微秒（μs），目标就远 150 m——注意是 150 m，不是 300 m，因为电波走了双程。</p>
 <p>算例：测得回波延迟 t_R = 100 μs，则 R = 3×10⁸ × 100×10⁻⁶ / 2 = 30000/2 = 15000 m = 15 km。</p>
-<h4 id="5-雷达怎么测速度多普勒频移-fd-2vrλ">5. 雷达怎么测速度：多普勒频移 f_d = 2v_r/λ</h4>
+<h5 id="5-雷达怎么测速度多普勒频移-fd-2vrλ">5. 雷达怎么测速度：多普勒频移 f_d = 2v_r/λ</h5>
 <p>大白话：火车进站时汽笛变尖、出站时变低沉——波源和观察者相对运动时，收到的波频率会改变。雷达波也一样：目标朝雷达飞来，回波频率升高；远离时降低。测出频率偏移量，就能算出目标接近或远离的速度。</p>
 <p>准确表述：目标径向速度 v_r（沿雷达视线方向的分量，靠近取正）引起的回波频率偏移为</p>
 <p>f_d = 2v_r / λ</p>
@@ -275,12 +276,12 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>系数 2：电波走双程，相位压缩/拉伸也是双份（第 8 章有严格推导）。</li>
 </ul>
 <p>算例：雷达波长 λ = 10 cm = 0.1 m（对应 f₀ = 3 GHz），目标以 v_r = 300 m/s 接近，则 f_d = 2 × 300 / 0.1 = 6000 Hz = 6 kHz。请注意量级：30 亿 Hz 的载波只偏移了 6 kHz，相对变化约百万分之二——这就是测速要求发射频率极其稳定的原因（第 2 章的&quot;相参&quot;概念由此而来）。</p>
-<h4 id="6-雷达怎么测角度天线方向性">6. 雷达怎么测角度：天线方向性</h4>
+<h5 id="6-雷达怎么测角度天线方向性">6. 雷达怎么测角度：天线方向性</h5>
 <p>大白话：手捂成喇叭状聚音，只有喇叭对准的方向听得最清。雷达天线把电磁波聚成一根窄&quot;波束&quot;，波束指到哪个方向收到回波，目标就在哪个方向。</p>
 <p>准确表述：雷达天线具有很强的方向性，只在一个很窄的角度范围（波束宽度）内有效收发。天线机械或电扫描转动时，回波最强的波束指向即目标方向。测角精度的量级：一般为波束宽度的 1/10 左右（例如波束宽 2°，测角精度约 0.2°）；采用单脉冲体制的精密跟踪雷达可达 0.1 mrad（毫弧度）均方根量级——1 mrad 意味着在 10 km 距离上横向误差约 10 m。</p>
-<h4 id="7-基本雷达方程初步印象">7. 基本雷达方程（初步印象）</h4>
+<h5 id="7-基本雷达方程初步印象">7. 基本雷达方程（初步印象）</h5>
 <p>这一章只需建立一个直觉：雷达收到的回波功率 P_r 与目标距离 R 的四次方成反比，即 P_r ∝ 1/R⁴。原因：电波&quot;去&quot;的时候按球面扩散衰减一次 1/R²，被目标反射&quot;回来&quot;时再扩散衰减一次 1/R²，合起来就是 1/R⁴。距离加倍，回波弱 16 倍。完整的雷达方程推导是第 5 章的核心内容。</p>
-<h4 id="8-电子战与军用雷达的对抗关系">8. 电子战与军用雷达的对抗关系</h4>
+<h5 id="8-电子战与军用雷达的对抗关系">8. 电子战与军用雷达的对抗关系</h5>
 <p>大白话：雷达是&quot;眼睛&quot;，就有人想&quot;晃瞎它、骗过它、躲开它、炸掉它&quot;，于是又有人研究&quot;怎么让眼睛更尖&quot;——这就是电子战。</p>
 <p>准确表述：电子战（EW，Electronic Warfare）围绕雷达展开四个方面的对抗：</p>
 <ul>
@@ -298,16 +299,16 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 雷达 = 发射电磁波、接收回波，用&quot;时间差测距离、波束指向测角度、频率差测速度&quot;，全书就是围绕这三件事往深里讲。</p>
 <hr>
-<h3 id="第2章-雷达发射机">第2章 雷达发射机</h3>
+<h4 id="第2章-雷达发射机">第2章 雷达发射机</h4>
 <p><strong>【本章定位】</strong> 发射机是雷达的&quot;嗓子&quot;，负责产生大功率射频信号。这一章的关键不是&quot;功率有多大&quot;，而是&quot;信号干不干净、稳不稳&quot;——因为第 8 章的动目标检测（MTI）和第 9 章的脉冲压缩，都建立在发射信号&quot;全相参、高稳定&quot;的前提上。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="1-发射机的任务">1. 发射机的任务</h4>
+<h5 id="1-发射机的任务">1. 发射机的任务</h5>
 <p>大白话：发射机就是雷达的&quot;大喇叭&quot;，每个脉冲周期把一大团射频能量&quot;喊&quot;出去。</p>
 <p>准确表述：发射机的任务是在脉冲调制器控制下，产生特定频率、特定波形的大功率射频脉冲信号，经馈线和收发开关送天线辐射出去。</p>
-<h4 id="2-两种基本体制单级振荡式-vs-主振放大式">2. 两种基本体制：单级振荡式 vs 主振放大式</h4>
+<h5 id="2-两种基本体制单级振荡式-vs-主振放大式">2. 两种基本体制：单级振荡式 vs 主振放大式</h5>
 <p><strong>单级振荡式发射机</strong>：用一个本身就能产生大功率射频振荡的器件（磁控管、微波三极管等，可覆盖 L 波段到 Ka 波段），直接用脉冲调制器控制它&quot;开/关&quot;，结构简单、成本低、体积小。缺点：每次起振的相位是随机的，频率稳定度差（10⁻⁴～10⁻⁵ 量级），输出<strong>不相参</strong>。</p>
 <p><strong>主振放大式（MOPA，Master Oscillator Power Amplifier）</strong>：先由一个功率很小但极其稳定的&quot;主控振荡器&quot;（固态频率源：晶体基准源 + 频率合成器 + 波形产生器 + 上变频激励）产生干净的射频信号，再用一级级射频放大器（行波管、速调管、固态放大器）把它放大到大功率。输出信号<strong>全相参</strong>，频率稳定度可达 10⁻⁸～10⁻⁹。</p>
-<h4 id="3-相参coherent本章最重要的概念">3. 相参（coherent）——本章最重要的概念</h4>
+<h5 id="3-相参coherent本章最重要的概念">3. 相参（coherent）——本章最重要的概念</h5>
 <p>大白话类比：合唱团。<strong>单级振荡式</strong>好比每个队员各唱各的调，虽然声音大，但彼此对不上；<strong>主振放大式</strong>好比所有人听同一个指挥，每个脉冲的相位都&quot;踩着同一个点&quot;。所谓相参，就是相邻发射脉冲之间的相位关系是确定的、可预测的。</p>
 <p>准确表述：若发射脉冲串中每个脉冲的射频初相都由同一个高稳定基准源决定（彼此有确定相位关系），则称信号是相参的；全相参指发射信号、本振信号、相参基准信号全部来自同一频率源系统。</p>
 <p>量级对比（务必记住）：</p>
@@ -315,9 +316,9 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>单级振荡式（磁控管）：频率稳定度 10⁻⁴～10⁻⁵ 量级；</li>
 <li>主振放大式（固态频率源 + 放大链）：10⁻⁸～10⁻⁹ 量级，好三四个数量级。</li>
 </ul>
-<h4 id="4-为什么-mti-需要全相参">4. 为什么 MTI 需要全相参</h4>
+<h5 id="4-为什么-mti-需要全相参">4. 为什么 MTI 需要全相参</h5>
 <p>第 8 章会细讲：动目标检测（MTI，Moving Target Indication）靠比较<strong>相邻两个脉冲周期回波的相位差</strong>——固定杂波相位不变被减掉，动目标相位在变被留下。如果发射机每个脉冲的初相都是随机的（单级振荡式），&quot;相位不变&quot;这个前提就没了，杂波和动目标看起来都在&quot;乱跳&quot;，根本无法区分。所以现代 MTI/MTD/PD（脉冲多普勒）雷达一律采用主振放大式全相参体制。这就是本章的工程落点：<strong>相参体制是现代动目标检测与脉冲压缩的硬件前提</strong>。</p>
-<h4 id="5-发射机的主要质量指标">5. 发射机的主要质量指标</h4>
+<h5 id="5-发射机的主要质量指标">5. 发射机的主要质量指标</h5>
 <ul>
 <li><strong>输出功率</strong>：分峰值功率（脉冲内的瞬时功率，可到 MW 级）和平均功率（峰值×占空比），二者差几个数量级，别混；</li>
 <li><strong>效率</strong>：直流电变射频能量的比例，关系到供电和散热；</li>
@@ -326,16 +327,16 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li><strong>波形能力</strong>：能产生线性调频、非线性调频、相位编码等复杂波形，使时宽带宽积 Bτ≫1（B 为信号带宽，τ 为脉冲宽度）。为什么需要 Bτ≫1：脉冲能量 ∝ τ（τ 长则能量大、看得远），而测距/分辨精度 ∝ 1/B（B 大则分辨细）。简单脉冲里 B≈1/τ，二者互相打架；复杂波形让 B 和 τ 各自独立做大，能量与精度兼得（第 9 章展开）。</li>
 </ul>
 <p>算例：τ = 100 μs 的简单脉冲，B ≈ 1/τ = 10 kHz，Bτ = 1。若改用 τ = 100 μs、B = 10 MHz 的线性调频脉冲，则 Bτ = 10⁷×10⁻⁴ = 1000≫1——同样的脉冲长度，分辨能力提高 1000 倍。</p>
-<h4 id="6-主要射频器件各自的特点">6. 主要射频器件各自的特点</h4>
+<h5 id="6-主要射频器件各自的特点">6. 主要射频器件各自的特点</h5>
 <ul>
 <li><strong>磁控管（Magnetron）</strong>：大功率振荡器，结构简单、便宜、结实，但每个脉冲相位随机、不相参，频率稳定度差，是老式雷达和微波炉的主角；</li>
 <li><strong>行波管（TWT，Traveling Wave Tube）</strong>：放大器，最大优点是频带宽（可倍频程），增益高，适合需要频率捷变的雷达；</li>
 <li><strong>速调管（Klystron）</strong>：放大器，增益和功率可以做到很高，但频带窄，适合频率固定的远程警戒雷达；</li>
 <li><strong>固态器件（Solid State）</strong>：硅双极功率晶体管、砷化镓场效应管（GaAs FET）等，单管功率小（几十到几百瓦）、工作电压低、可靠、寿命长、开机不用预热；要靠大量功率合成堆出总功率，是现代相控阵 T/R 组件的主力。</li>
 </ul>
-<h4 id="7-tr-组件">7. T/R 组件</h4>
+<h5 id="7-tr-组件">7. T/R 组件</h5>
 <p>T/R 组件（Transmitter/Receiver Module，收发组件）是把&quot;小型发射功放 + 接收前端 + 移相器&quot;封装在一起的标准单元。相控阵雷达给每个（或每组）天线单元配一个 T/R 组件，成千上万个小功率固态组件在空间合成功率，既解决了固态器件单管功率小的问题，又实现了波束电扫描（第 7 章细讲）。</p>
-<h4 id="8-脉冲调制器的作用">8. 脉冲调制器的作用</h4>
+<h5 id="8-脉冲调制器的作用">8. 脉冲调制器的作用</h5>
 <p>雷达发射的是脉冲而不是连续波。脉冲调制器的任务是在定时器控制下，产生大功率的视频（基带）调制脉冲，给射频管&quot;供电开闸&quot;：脉冲来时让射频管满功率工作，脉冲间隙完全关断。它决定了发射脉冲的宽度 τ、重复周期 T_r 和脉冲形状，是雷达里电压最高、电流最大、最&quot;皮实&quot;的部件之一。</p>
 <p><strong>【易混点/常见误区】</strong></p>
 <ol>
@@ -346,10 +347,10 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 发射机分两派：单级振荡式简单便宜但&quot;各唱各调&quot;（不相参），主振放大式贵但&quot;全听一个指挥&quot;（全相参），而相参正是现代雷达抓动目标、压脉冲的入场券。</p>
 <hr>
-<h3 id="第3章-雷达接收机">第3章 雷达接收机</h3>
+<h4 id="第3章-雷达接收机">第3章 雷达接收机</h4>
 <p><strong>【本章定位】</strong> 发射机管&quot;喊&quot;，接收机管&quot;听&quot;。回波经过上千公里往返，到天线上可能只剩 10⁻¹⁴ W 量级（比一片雪花还轻），接收机要在不添乱的前提下把它放大百万倍以上。接收机的低噪声、大动态、高稳定、抗干扰设计，直接决定雷达的灵敏度和信号保真度。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="1-超外差原理接收机的总架构">1. 超外差原理：接收机的总架构</h4>
+<h5 id="1-超外差原理接收机的总架构">1. 超外差原理：接收机的总架构</h5>
 <p>大白话：直接对几 GHz 的微波信号做精细放大滤波很难。超外差的思路是&quot;整体搬家&quot;——把高频信号原封不动地搬到一个低得多的固定频率（中频）上，在&quot;中音区&quot;舒舒服服地放大滤波，就像把高音歌曲整体降调来唱，音调变了但旋律（信息）不变。</p>
 <p>准确表述：超外差（Superheterodyne）接收机用<strong>混频器</strong>把接收信号频率 f_R 与本机振荡器频率 f_L 相乘（非线性混合），取差频得到固定的中频（IF，Intermediate Frequency）：</p>
 <p>f_I = |f_L − f_R|</p>
@@ -359,14 +360,14 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li><strong>镜像频率（Image frequency）</strong>：麻烦所在——除了想要的 f_R，凡是与 f_L 相差 f_I 的另一个频率（f_L + f_I 或 f_L − f_I 中的另一个）也会被搬到同一个中频上，像照镜子一样叠进来。必须用混频前的射频滤波器（预选器）先把镜像频率滤掉；</li>
 <li><strong>一次变频 vs 二次变频</strong>：高中频镜像好滤但选择性差，低中频选择性好但镜像难滤，折中就是变两次频：先变到高中频滤镜像，再变到低中频做精细滤波。</li>
 </ul>
-<h4 id="2-接收机前端各环节信号进门顺序">2. 接收机前端各环节（信号进门顺序）</h4>
+<h5 id="2-接收机前端各环节信号进门顺序">2. 接收机前端各环节（信号进门顺序）</h5>
 <ol>
 <li><strong>保护器</strong>：收发开关的&quot;保险丝&quot;，发射时形成放电短路，挡住漏进来的大功率脉冲，保护后级；</li>
 <li><strong>射频低噪声放大器（LNA，Low Noise Amplifier）</strong>：第一级放大，它的噪声系数几乎决定整机噪声系数（级联时第一级权重最大），所以必须用最低噪声的器件；</li>
 <li><strong>射频滤波器/预选器（Preselector）</strong>：选通本雷达频段，抑制镜像频率和带外干扰；</li>
 <li><strong>混频器</strong>：与本振差频出中频。</li>
 </ol>
-<h4 id="3-噪声系数-fn接收机的体检指标">3. 噪声系数 F_n：接收机的&quot;体检指标&quot;</h4>
+<h5 id="3-噪声系数-fn接收机的体检指标">3. 噪声系数 F_n：接收机的&quot;体检指标&quot;</h5>
 <p>大白话：噪声系数就像&quot;放大器自己往信号里掺的杂音多少&quot;。理想放大器一点不掺（F_n = 1），实际总要掺一些，掺得越少越好。</p>
 <p>准确表述：噪声系数（Noise Figure）定义为输入端信噪比与输出端信噪比之比：</p>
 <p>F_n = (S_i/N_i) / (S_o/N_o)</p>
@@ -379,38 +380,38 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>G_a：接收机额定功率增益。</li>
 </ul>
 <p>物理意义：k·T₀·B_n 是输入端的&quot;底噪&quot;（热噪声），k·T₀·B_n·G_a 是理想放大器应有的输出噪声；实际输出 N 是它的多少倍，F_n 就是多少。F_n 常用分贝表示：F_n(dB) = 10·lg(F_n)。算例：F_n = 3 dB 对应倍数关系 2，即这台接收机把信噪比&quot;糟蹋&quot;了一半；雷达接收机典型值约 2～5 dB。</p>
-<h4 id="4-灵敏度与动态范围">4. 灵敏度与动态范围</h4>
+<h5 id="4-灵敏度与动态范围">4. 灵敏度与动态范围</h5>
 <ul>
 <li><strong>灵敏度（Sensitivity）</strong>：接收机能检测的最小信号功率 S_imin，通常表示为 S_imin = k·T₀·B_n·F_n·D₀（D₀ 为检测所需的输出信噪比，见第 5 章）。灵敏度越高（S_imin 越小），雷达看得越远；</li>
 <li><strong>动态范围（Dynamic Range）</strong>：接收机从&quot;刚能听见&quot;到&quot;被撑爆（饱和/过载）&quot;之间的功率范围，单位 dB。雷达回波有强有弱（近处地物很强、远处飞机很弱），动态范围不够就会&quot;弱的听不见、强的全顶格&quot;。</li>
 </ul>
 <p>算例：若最小可检测信号为 −110 dBm、饱和电平为 −30 dBm，则动态范围为 80 dB。</p>
-<h4 id="5-stc-与-agc两种自动调增益">5. STC 与 AGC：两种自动调增益</h4>
+<h5 id="5-stc-与-agc两种自动调增益">5. STC 与 AGC：两种自动调增益</h5>
 <ul>
 <li><strong>灵敏时间控制（STC，Sensitivity Time Control，近程增益控制）</strong>：回波强度随距离按 1/R⁴ 变化，近处杂波（地物、海浪）强得吓人，会把接收机顶饱和。办法是<strong>增益随时间（即随距离）按 R⁴ 规律增大</strong>：每个脉冲刚发出去时（对应近处）把增益压到最低，随后随时间逐渐放开。为什么正好是 R⁴：雷达方程告诉我们回波功率 ∝ 1/R⁴，增益补上 R⁴，不同距离的同类目标输出就近似拉平了；</li>
 <li><strong>自动增益控制（AGC，Automatic Gain Control）</strong>：根据输出电平反馈调节增益，使输出稳定在合适范围，跟踪较慢的平均变化（如天气、杂波环境整体变化）。</li>
 </ul>
 <p>一句话区分：STC 是&quot;预先设计好的、每个脉冲周期内按 R⁴ 走一遍&quot;的开环程序；AGC 是&quot;看输出脸色行事&quot;的闭环反馈。</p>
-<h4 id="6-afc自动频率控制">6. AFC：自动频率控制</h4>
+<h5 id="6-afc自动频率控制">6. AFC：自动频率控制</h5>
 <p>超外差要求中频 f_I 恒定，可发射频率 f_R 和本振 f_L 都可能漂移。自动频率控制（AFC，Automatic Frequency Control）实时检测中频偏移，微调本振使 f_L = f_R ± f_I 始终成立，把信号&quot;锁&quot;在中放通带中央。</p>
-<h4 id="7-匹配滤波器为什么它能让信噪比最大">7. 匹配滤波器：为什么它能让信噪比最大</h4>
+<h5 id="7-匹配滤波器为什么它能让信噪比最大">7. 匹配滤波器：为什么它能让信噪比最大</h5>
 <p>大白话：噪声是&quot;乱弹琴&quot;，信号是&quot;一首固定的曲子&quot;。匹配滤波器好比一个&quot;只听这首曲子&quot;的耳朵——它把信号里每个频率成分按它本来的样子加权叠加，信号在某一时刻同相叠加到峰值，而乱七八糟的噪声加不到一起去，于是输出信噪比达到理论最大。</p>
 <p>准确表述：在白噪声背景下，能使输出信噪比最大的线性滤波器叫<strong>匹配滤波器（Matched Filter）</strong>，其冲激响应是输入信号的镜像共轭 h(t) = u*(t₀ − t)，频率响应与信号频谱共轭匹配。物理上它等效于对信号做自相关。最大输出信噪比只取决于信号能量与噪声谱密度之比（SNR_max = 2E/N₀），与波形细节无关——所以第 9 章说&quot;波形决定分辨力、能量决定发现能力&quot;。雷达中匹配滤波主要在中频（或数字基带）实现。</p>
-<h4 id="8-对数放大器">8. 对数放大器</h4>
+<h5 id="8-对数放大器">8. 对数放大器</h5>
 <p>普通线性放大器动态范围有限，强信号一来就饱和。对数放大器（Logarithmic Amplifier）输出 ∝ 输入的对数，把 80～100 dB 的输入动态范围&quot;压缩&quot;到小电压范围：强信号不顶格，弱信号仍可见。常用于杂波图显示和恒虚警率（CFAR，Constant False Alarm Rate，自动调节门限保持虚警率恒定的技术）处理。</p>
-<h4 id="9-iq-正交鉴相把相位信息留下来">9. I/Q 正交鉴相：把相位信息留下来</h4>
+<h5 id="9-iq-正交鉴相把相位信息留下来">9. I/Q 正交鉴相：把相位信息留下来</h5>
 <p>大白话：只测信号&quot;有多大&quot;（包络检波）会丢掉&quot;相位&quot;信息，而多普勒测速、MTI 全靠相位。I/Q 的做法是把中频信号同时与两路正交的本振（cos 和 sin）相乘，得到两个基带分量：</p>
 <p>I = A·cosφ，Q = A·sinφ</p>
 <p>有了 I、Q 两路，幅度 A = √(I² + Q²)、相位 φ = arctan(Q/I) 都能算出来，信息一点不丢。这叫正交鉴相/相干检波，I 称同相分量（In-phase），Q 称正交分量（Quadrature）。</p>
-<h4 id="10-中频采样与数字下变频">10. 中频采样与数字下变频</h4>
+<h5 id="10-中频采样与数字下变频">10. 中频采样与数字下变频</h5>
 <p>现代做法干脆用高速模数转换器（ADC）直接对中频信号采样，再用数字方法完成正交分解、滤波、抽取，得到 I/Q 基带——这就是数字下变频（DDC，Digital Down Conversion）。好处：两路完全对称（模拟器件做不到）、特性不随温度老化漂移、可软件重配置。</p>
-<h4 id="11-stalo-与-coho全相参雷达的两块表">11. STALO 与 COHO：全相参雷达的两块&quot;表&quot;</h4>
+<h5 id="11-stalo-与-coho全相参雷达的两块表">11. STALO 与 COHO：全相参雷达的两块&quot;表&quot;</h5>
 <ul>
 <li><strong>STALO（Stable Local Oscillator，稳定本机振荡器）</strong>：频率极稳的本振，负责把射频变到中频；</li>
 <li><strong>COHO（Coherent Oscillator，相干振荡器）</strong>：稳定的中频基准，作为相位检测的&quot;零点标尺&quot;。</li>
 </ul>
 <p>全相参雷达里，发射信号、STALO、COHO 都由同一套频率合成器从高稳定晶体基准产生，彼此相位关系固定——这样回波相位里剩下的唯一变量就是目标运动（第 8 章的多普勒）。</p>
-<h4 id="12-数字阵列接收机与软件无线电">12. 数字阵列接收机与软件无线电</h4>
+<h5 id="12-数字阵列接收机与软件无线电">12. 数字阵列接收机与软件无线电</h5>
 <ul>
 <li><strong>数字阵列接收机</strong>：每个天线单元/子阵各配一套接收机和 ADC，在数字域合成波束，可同时形成多个波束、自适应置零抗干扰（与第 7 章数字阵列雷达对应）；</li>
 <li><strong>软件无线电（SDR，Software Defined Radio）</strong>：把尽可能多的功能（变频、滤波、解调）用软件在通用硬件上实现，改改程序就换一种工作方式，是接收机发展的大方向。</li>
@@ -424,17 +425,17 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 接收机的全部学问：用超外差把微弱回波&quot;搬到中频&quot;放大，用低噪声前端保住灵敏度，用 STC/AGC 撑住动态范围，用匹配滤波器和 I/Q 把信噪比和相位信息都留到最后。</p>
 <hr>
-<h3 id="第4章-雷达终端">第4章 雷达终端</h3>
+<h4 id="第4章-雷达终端">第4章 雷达终端</h4>
 <p><strong>【本章定位】</strong> 终端是雷达与人、与指挥系统之间的&quot;翻译官&quot;：接收机/信号处理机吐出来的是电信号，终端把它录取成目标数据、处理成航迹、显示成画面。没有终端，前面所有分机的成果都到不了使用者手里。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="1-终端干什么录取处理显示">1. 终端干什么：录取、处理、显示</h4>
+<h5 id="1-终端干什么录取处理显示">1. 终端干什么：录取、处理、显示</h5>
 <p>大白话：终端 = &quot;阅卷 + 整理 + 展示&quot;。典型组成：点迹录取 → 数据处理 → 显示系统。</p>
 <ul>
 <li><strong>一次信息</strong>：雷达原始回波本身（未经加工的&quot;生料&quot;，如显示屏上的回波亮点）；</li>
 <li><strong>二次信息</strong>：对一次信息加工后的产品（&quot;熟料&quot;）——点迹、航迹、目标编号、高度速度批注等。</li>
 </ul>
 <p>一次/二次信息的划分，正好对应模拟显示与数字处理两代终端技术。</p>
-<h4 id="2-传统显示器大家族按显示内容分类">2. 传统显示器大家族（按显示内容分类）</h4>
+<h5 id="2-传统显示器大家族按显示内容分类">2. 传统显示器大家族（按显示内容分类）</h5>
 <ul>
 <li><strong>A 型显示器（A-scope，距离显示器）</strong>：一维，水平偏转表示斜距、垂直偏转表示回波强度——屏幕上就是一排&quot;距离轴上的竖峰&quot;。派生型有 A/R 型（局部距离放大）、J 型（圆周扫描，距离变角度）、以及 K/L/M/N 型（带活动距标的各种变体）。用途：精确测距、观察波形；</li>
 <li><strong>PPI（Plan Position Indicator，平面位置显示器，P 型）</strong>：二维亮度调制显示，径向是斜距、转角是天线方位角，提供以雷达为中心的 360° 全景地图，回波以亮斑显示。变体：偏心 P 型（原点偏移以放大某方向）、B 型/微 B 型（直角坐标的方位-距离显示，局部扇区放大）。用途：警戒、引导、指挥；</li>
@@ -442,21 +443,21 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li><strong>C 型、D 型</strong>：显示方位-仰角两个角坐标，用于跟踪瞄准。</li>
 </ul>
 <p>记忆线索：A 型看距离，PPI 看平面全景，RHI 看高度剖面，C/D 型看角度。</p>
-<h4 id="3-显示器的质量指标">3. 显示器的质量指标</h4>
+<h5 id="3-显示器的质量指标">3. 显示器的质量指标</h5>
 <p>选型时考虑：显示器类型、显示坐标的数量与种类、量程、显示分辨力等。传统 CRT 的光点直径一般 0.3～0.5 mm——光点本身占去了相当的角度/距离宽度，所以<strong>显示分辨力往往比雷达本身的分辨力差</strong>，屏幕上两个挨得很近的亮点未必是两个目标。</p>
-<h4 id="4-点迹录取从一片亮到一个点">4. 点迹录取：从&quot;一片亮&quot;到&quot;一个点&quot;</h4>
+<h5 id="4-点迹录取从一片亮到一个点">4. 点迹录取：从&quot;一片亮&quot;到&quot;一个点&quot;</h5>
 <p>大白话：原始回波是一片有噪声的视频信号，录取就是&quot;把每个目标浓缩成一行数据&quot;——判断哪里真有目标（过门限）、算出它的质心坐标，形成点迹（Plot）。现代录取由计算机自动完成：门限检测（常配 CFAR 恒虚警处理）→ 目标凝聚（把一串相邻过门限单元归并）→ 质心估计（幅度加权求中心，精度可达分辨单元的几分之一）。</p>
-<h4 id="5-数据处理与航迹入门">5. 数据处理与航迹入门</h4>
+<h5 id="5-数据处理与航迹入门">5. 数据处理与航迹入门</h5>
 <ul>
 <li><strong>航迹（Track）</strong>：把同一目标在连续多次扫描中形成的点迹串起来，就是航迹——点迹是&quot;某一瞬的照片&quot;，航迹是&quot;连续的行踪&quot;；</li>
 <li><strong>航迹处理基本环节</strong>：航迹起始（连续几点成直线就开航）、点迹-航迹相关（新点迹归到已有航迹上）、跟踪滤波（用 α-β 滤波或卡尔曼滤波平滑位置、估计速度、预测下一刻位置）、航迹终止。</li>
 </ul>
-<h4 id="6-显示器件crt-vs-平板">6. 显示器件：CRT vs 平板</h4>
+<h5 id="6-显示器件crt-vs-平板">6. 显示器件：CRT vs 平板</h5>
 <ul>
 <li><strong>阴极射线管（CRT，Cathode Ray Tube）</strong>：传统主力，亮度高、余辉可利用，但笨重、高压、寿命有限；</li>
 <li><strong>平板显示器件</strong>：液晶（LCD）、等离子体（PDP）等，轻薄、低电压、可与计算机图形直接结合，是现代终端主流。</li>
 </ul>
-<h4 id="7-随机扫描-vs-光栅扫描">7. 随机扫描 vs 光栅扫描</h4>
+<h5 id="7-随机扫描-vs-光栅扫描">7. 随机扫描 vs 光栅扫描</h5>
 <ul>
 <li><strong>随机扫描（Random Scan）</strong>：电子束/笔画直接按数据坐标偏转，指哪画哪，适合画字符、矢量图形和模拟雷达回波，传统 A 型/PPI 都是这种；</li>
 <li><strong>光栅扫描（Raster Scan）</strong>：像电视一样逐行扫满全屏，用像素亮度表达内容，便于与计算机显存结合、显示地图背景和多层信息，现代数字终端均采用。</li>
@@ -470,10 +471,10 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 终端把电信号翻译成情报：A 型看距离、PPI 看全景、RHI 看高度，录取出点迹、处理成航迹，从 CRT 随机扫描走到平板光栅扫描。</p>
 <hr>
-<h3 id="第5章-雷达作用距离">第5章 雷达作用距离</h3>
+<h4 id="第5章-雷达作用距离">第5章 雷达作用距离</h4>
 <p><strong>【本章定位】</strong> &quot;这部雷达能看多远？&quot;——雷达方程就是回答这个问题的总账本：把发射功率、天线增益、波长、目标反射能力、接收机灵敏度全部放进一个式子，解出最大作用距离 R_max。它是雷达系统设计与参数权衡（功率、孔径、波长、灵敏度之间怎么取舍）的根本工具。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="1-雷达方程推导链四步走每步都有物理直觉">1. 雷达方程推导链：四步走，每步都有物理直觉</h4>
+<h5 id="1-雷达方程推导链四步走每步都有物理直觉">1. 雷达方程推导链：四步走，每步都有物理直觉</h5>
 <p>设发射功率 P_t、发射天线增益 G_t、接收天线增益 G_r、波长 λ、目标雷达截面积 σ、距离 R。</p>
 <p><strong>第 1 步：目标处的功率密度 S₁ = P_t·G_t / (4πR²)</strong></p>
 <p>直觉：P_t 瓦的功率均匀撒在半径 R 的球面上，每平方米分到 P_t/(4πR²)；天线增益 G_t 相当于把功率往目标方向&quot;聚了 G_t 倍&quot;，所以乘上 G_t。单位：W/m²。</p>
@@ -487,12 +488,12 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <p>令 P_r 等于最小可检测信号 S_imin（再小就淹没在噪声里），解出</p>
 <p>R_max = [ P_t·G²·λ²·σ / ((4π)³·S_imin) ]^(1/4)</p>
 <p>注意两个 1/R² 相乘变成 1/R⁴，所以 R 出现在四次方根里。</p>
-<h4 id="2-雷达截面积-σ目标的等效反射面积">2. 雷达截面积 σ：目标的&quot;等效反射面积&quot;</h4>
+<h5 id="2-雷达截面积-σ目标的等效反射面积">2. 雷达截面积 σ：目标的&quot;等效反射面积&quot;</h5>
 <p>大白话：σ 是&quot;这个目标在雷达眼里有多大&quot;——不是它的真实几何面积，而是一个假想的等效面积：一个各向同性（向所有方向均匀）反射的球，要多大面积才能把同样多的功率反射回雷达。</p>
 <p>准确表述：雷达截面积（RCS，Radar Cross Section）定义为</p>
 <p>σ = 4π ×（返回接收机方向每单位立体角内的回波功率 / 入射到目标处的功率密度）</p>
 <p>单位是 m²。物理常识（公开通识，供建立量级感）：小型昆虫约 10⁻⁴～10⁻⁵ m²，单人约 1 m² 量级，常规战斗机正面典型 1～5 m² 量级，大型轰炸机可达几十到上百 m²，而隐身飞机可压到 0.01 m² 以下。同一目标从不同方向看 σ 差别极大，还随波长和极化变化。</p>
-<h4 id="3-四次方根关系雷达工程最扎心的规律">3. 四次方根关系：雷达工程最&quot;扎心&quot;的规律</h4>
+<h5 id="3-四次方根关系雷达工程最扎心的规律">3. 四次方根关系：雷达工程最&quot;扎心&quot;的规律</h5>
 <p>由 R_max ∝ (P_t)^(1/4)：<strong>功率翻倍，作用距离只增加 2^(1/4) ≈ 1.19 倍（19%）</strong>；距离想翻一倍，功率要增大 16 倍。同理，σ 缩小到 1/16，距离才减半。</p>
 <p>工程含义：</p>
 <ul>
@@ -500,36 +501,36 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>反过来说，隐身把 σ 压低一两个数量级（10～100 倍），雷达距离就缩到约 1/1.8～1/3，防空网会出现大漏洞——这就是隐身技术的价值所在。</li>
 </ul>
 <p>算例：原 R_max = 100 km。若发射功率加倍，R_max = 100 × 1.19 ≈ 119 km；若功率增大 16 倍，R_max = 100 × 2 = 200 km。</p>
-<h4 id="4-噪声系数与最小可检测信号">4. 噪声系数与最小可检测信号</h4>
+<h5 id="4-噪声系数与最小可检测信号">4. 噪声系数与最小可检测信号</h5>
 <p>第 3 章已定义噪声系数 F_n = N/(k·T₀·B_n·G_a)（T₀ = 290 K）。最小可检测信号可写为</p>
 <p>S_imin = k·T₀·B_n·F_n·D₀</p>
 <p>其中 D₀ 叫<strong>检测因子</strong>：为了在噪声中可靠地发现目标，输出端要求的最小信噪比。算例（量级感）：k·T₀ ≈ 4×10⁻²¹ W/Hz（即 −174 dBm/Hz），若 B_n = 1 MHz、F_n = 3 dB（2 倍）、D₀ = 13 dB（20 倍），则 S_imin ≈ 4×10⁻²¹ × 10⁶ × 2 × 20 = 1.6×10⁻¹³ W，约 −128 dBm。</p>
-<h4 id="5-检测是统计游戏发现概率与虚警概率">5. 检测是统计游戏：发现概率与虚警概率</h4>
+<h5 id="5-检测是统计游戏发现概率与虚警概率">5. 检测是统计游戏：发现概率与虚警概率</h5>
 <p>大白话：噪声是随机起伏的，再小心的门限也会出错——要么噪声蹿过门限被当成目标（虚警，False Alarm），要么目标没顶过门限被漏掉（漏警）。所以作用距离必须配上两个概率才有意义：</p>
 <ul>
 <li><strong>发现概率 P_d（检测概率）</strong>：目标真实存在时被正确报出的概率，典型要求 0.9（90%）；</li>
 <li><strong>虚警概率 P_fa</strong>：没有目标时噪声被误判为目标的概率，典型量级 10⁻⁶（即平均一百万次判决才错一次）。</li>
 </ul>
 <p>说&quot;某雷达对 σ = 5 m² 目标作用距离 200 km&quot;，完整含义是&quot;在 P_d = 0.9、P_fa = 10⁻⁶ 条件下为 200 km&quot;。提高 P_d 或压低 P_fa 都要求更大信噪比，都会缩短 R_max——指标是相互牵制的。</p>
-<h4 id="6-脉冲积累攒多次回波换信噪比">6. 脉冲积累：攒多次回波换信噪比</h4>
+<h5 id="6-脉冲积累攒多次回波换信噪比">6. 脉冲积累：攒多次回波换信噪比</h5>
 <p>雷达对同一目标往往连续收到 n 个回波脉冲，把它们加起来用：</p>
 <ul>
 <li><strong>相干积累（相参积累）</strong>：保持相位关系相加，信号幅度 ×n、功率 ×n²，噪声功率只 ×n，<strong>信噪比改善 n 倍</strong>（理想上限）；</li>
 <li><strong>非相干积累（视频积累）</strong>：只加包络（幅度），相位信息已丢，改善大约 √n 到 n 之间，工程常按 ~√n 估算。</li>
 </ul>
 <p>算例：n = 16 个脉冲，相干积累理想改善 16 倍（12 dB），等效于把 R_max 扩大 16^(1/4) = 2 倍；非相干约 √16 = 4 倍（6 dB），距离只扩大 √2 ≈ 1.41 倍。</p>
-<h4 id="7-目标起伏">7. 目标起伏</h4>
+<h5 id="7-目标起伏">7. 目标起伏</h5>
 <p>目标回波幅度不是常数：目标姿态稍变，σ 就剧烈波动（第 8 章还会看到这种起伏形成频谱）。工程上用 Swerling（斯威林）起伏模型分类（慢起伏/快起伏、指数/瑞利分布），计算发现概率时必须按起伏模型修正所需信噪比——目标闪烁有时帮你（偶尔一个大回波过门限），多数时候害你（需要更高的平均信噪比保 P_d）。</p>
-<h4 id="8-系统损耗-l账本上的苛捐杂税">8. 系统损耗 L：账本上的&quot;苛捐杂税&quot;</h4>
+<h5 id="8-系统损耗-l账本上的苛捐杂税">8. 系统损耗 L：账本上的&quot;苛捐杂税&quot;</h5>
 <p>实际雷达方程要除以总损耗因子 L（通常 5～15 dB），各项包括：馈线损耗、收发开关损耗、天线罩损耗、波束形状损耗（目标不在波束中心）、扫描损耗（扫描过程中增益变化）、起伏损耗、设备不理想损耗（量化、失配）、操作员/处理损耗等。逐项估算并留足余量，是外场实测距离常常打八折的原因。</p>
-<h4 id="9-传播影响">9. 传播影响</h4>
+<h5 id="9-传播影响">9. 传播影响</h5>
 <p>自由空间公式是理想情况，真实传播路径上还有：</p>
 <ul>
 <li><strong>大气衰减</strong>：氧气和水汽吸收（某些频段严重，如 22 GHz 附近水吸收峰），雨雾衰减随频率升高急剧增大；</li>
 <li><strong>大气折射</strong>：电波路径弯曲（第 6 章讲修正），使雷达&quot;看&quot;到地平线略下方的目标；</li>
 <li><strong>多径效应</strong>：直达波与地面/海面反射波干涉，使某些仰角出现增益凹陷。</li>
 </ul>
-<h4 id="10-雷达方程的各种变体形式">10. 雷达方程的各种变体形式</h4>
+<h5 id="10-雷达方程的各种变体形式">10. 雷达方程的各种变体形式</h5>
 <ul>
 <li><strong>二次雷达（应答式，如敌我识别/空管信标）</strong>：目标上带应答机，收到询问后主动转发大功率信号。去程衰减 1/R²，回程也是 1/R² 但发射方是应答机，链路分两段各按 1/R² 计——总的不再受 1/R⁴ 惩罚，所以作用距离远得多；</li>
 <li><strong>双基地雷达方程</strong>：收发分置两地，R⁴ 换成 (R_t·R_r)²，配置灵活、利于反隐身反摧毁，但同步和定位复杂；</li>
@@ -546,10 +547,10 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 雷达方程：回波 ∝ P_t·G²·λ²·σ/R⁴，距离是四次方根——功率翻 16 倍距离才翻倍，所以它把&quot;看得远&quot;变成一道功率、口径、波长、灵敏度、概率的统筹优化题。</p>
 <hr>
-<h3 id="第6章-目标距离的测量">第6章 目标距离的测量</h3>
+<h4 id="第6章-目标距离的测量">第6章 目标距离的测量</h4>
 <p><strong>【本章定位】</strong> 第 1 章说&quot;时间差测距离&quot;，本章往深问一层：时间差具体怎么测、测得有多准、误差从哪来、怎么跟踪一个连续运动的目标。测距精度分析是雷达指标设计与外场标校的依据。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="1-测距基本原理与常用写法">1. 测距基本原理与常用写法</h4>
+<h5 id="1-测距基本原理与常用写法">1. 测距基本原理与常用写法</h5>
 <p>回波延迟 t_R 与距离的关系：t_R = 2R/c，即</p>
 <p>R = ½·c·t_R</p>
 <p>工程速记式：t_R 以 μs 计、R 以 km 计时，</p>
@@ -561,14 +562,14 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li><strong>频率法（调频法）</strong>：发射频率随时间线性变化的连续波（FMCW，Frequency Modulated Continuous Wave），回波频率比当前发射频率&quot;慢了半拍&quot;，两者差频 f_b 与距离成正比（f_b ∝ R），测差频即测距离——高度表常用；</li>
 <li><strong>相位法</strong>：测发射与接收信号间的相位差 Δφ = 2πf·t_R。相位测得准，但相位以 2π 为周期会&quot;绕圈&quot;，只适合很短的无模糊距离或作精细内插。</li>
 </ul>
-<h4 id="2-回波到达时刻怎么定义前沿-vs-中心">2. 回波到达时刻怎么定义：前沿 vs 中心</h4>
+<h5 id="2-回波到达时刻怎么定义前沿-vs-中心">2. 回波到达时刻怎么定义：前沿 vs 中心</h5>
 <p>回波脉冲不是一根无限细的线，而是一段有宽度的波形，&quot;它什么时候到的&quot;有两种定义：</p>
 <ul>
 <li><strong>脉冲前沿</strong>：回波刚冒头（过某个门限）的时刻。电路简单，但受幅度影响（回波强则&quot;冒头&quot;早）；</li>
 <li><strong>脉冲中心</strong>：回波能量的质心时刻。对点目标，前沿与中心相差约 τ/2（τ 为脉宽）的固定值——是系统误差，可标校扣除，且对测距精度没有本质影响。</li>
 </ul>
 <p>中心估计的常用实现：回波经匹配滤波 → 包络检波 → 分两路，一路门限比较确定&quot;有回波&quot;，另一路微分后过零检测找到峰值（中心）时刻，再送入时间计数器读出 t_R。</p>
-<h4 id="3-测距误差的全微分式误差从哪来">3. 测距误差的全微分式：误差从哪来</h4>
+<h5 id="3-测距误差的全微分式误差从哪来">3. 测距误差的全微分式：误差从哪来</h5>
 <p>对 R = c·t_R/2 取全微分（把 c 和 t_R 各自的误差都算上）：</p>
 <p>ΔR = (R/c)·Δc + (c/2)·Δt_R</p>
 <p>符号说明：ΔR 为测距误差（m）；Δc 为电波传播速度相对真值的偏差（m/s）；Δt_R 为延迟时间的测量误差（s）。</p>
@@ -578,26 +579,26 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li><strong>第二项（测时误差）</strong>：与距离无关，测时间差错了多少 μs，距离就错 150 m × 多少。</li>
 </ul>
 <p>算例：大气参数昼夜变化使 Δc/c̄ ≈ 10⁻⁵（c̄ 为平均光速）。R = 60 km 时，第一项 ΔR = R·Δc/c = 60×10³ × 10⁻⁵ = 0.6 m——很小；但若 R = 600 km，就是 6 m，精密雷达必须实时修正大气参数。</p>
-<h4 id="4-系统误差-vs-随机误差">4. 系统误差 vs 随机误差</h4>
+<h5 id="4-系统误差-vs-随机误差">4. 系统误差 vs 随机误差</h5>
 <ul>
 <li><strong>系统误差</strong>：大小方向固定或可规律预测的偏差（如前沿/中心定义差 τ/2、设备固定延迟、折射系统性偏差），可以标校、建模、扣除；</li>
 <li><strong>随机误差</strong>：噪声引起的每次测量都不一样的抖动，只能用多次测量平均/滤波压低，无法彻底消除。</li>
 </ul>
 <p>测距精度指标通常写&quot;系统误差 ± 随机误差（1σ）&quot;两部分。</p>
-<h4 id="5-大气折射修正">5. 大气折射修正</h4>
+<h5 id="5-大气折射修正">5. 大气折射修正</h5>
 <p>真实大气不均匀，电波走的不是直线且速度略低于真空光速，几何直线距离 R 与按 c 折算的&quot;电波距离&quot; R₀ 之差 ΔR = R − R₀ 即折射误差。量级概念：距离 100 km、仰角 0.1 rad（约 5.7°）时，折射引起的距离误差约 16 m 量级；仰角越低、距离越远，误差越大（贴地平线的远程雷达误差可达百米量级）。修正办法：按大气折射率剖面（温度、湿度、压强随高度分布）建模积分，工程上常用等效地球半径模型近似。教材中附有不同条件下电波传播速度的实测数据表供查用。</p>
-<h4 id="6-距离分辨力两个目标多近还能分开">6. 距离分辨力：两个目标多近还能分开</h4>
+<h5 id="6-距离分辨力两个目标多近还能分开">6. 距离分辨力：两个目标多近还能分开</h5>
 <p>大白话：雷达&quot;眼神&quot;在时间轴上的分辨率——两个回波脉冲错不开就会糊成一个。</p>
 <p>准确表述：距离分辨力取决于脉冲宽度 τ：</p>
 <p>ΔR = c·τ/2</p>
 <p>用带宽表达：简单脉冲 B ≈ 1/τ，故 ΔR = c/(2B)——<strong>带宽决定距离分辨力</strong>，这是第 9 章的出发点。</p>
 <p>算例：τ = 1 μs 的简单脉冲，ΔR = 3×10⁸ × 10⁻⁶/2 = 150 m——相距小于 150 m 的两架飞机在屏幕上融成一个点；若用 B = 10 MHz 的脉压信号，ΔR = 3×10⁸/(2×10⁷) = 15 m。</p>
-<h4 id="7-距离模糊与解模糊">7. 距离模糊与解模糊</h4>
+<h5 id="7-距离模糊与解模糊">7. 距离模糊与解模糊</h5>
 <p>脉冲雷达每隔 T_r 发一个脉冲（重复频率 f_r = 1/T_r）。如果目标太远，回波在下一个脉冲发出之后才回来，雷达会把它错记到&quot;本周期&quot;头上——距离读数打了个折扣，这叫<strong>距离模糊</strong>。</p>
 <p>最大无模糊距离：R_u = c·T_r/2 = c/(2·f_r)</p>
 <p>算例：f_r = 1 kHz（T_r = 1 ms）→ R_u = 3×10⁸ × 10⁻³/2 = 150 km。150 km 内无模糊；一个真距离 200 km 的目标会被显示成 50 km。</p>
 <p>解模糊办法：采用多重重复频率（参差 PRF）交替发射，用余数定理思想把多个&quot;打折读数&quot;联立解出真距离；或给脉冲加标识（不同波形/相位编码）。</p>
-<h4 id="8-距离跟踪跟着目标跑的距离波门">8. 距离跟踪：跟着目标跑的距离波门</h4>
+<h5 id="8-距离跟踪跟着目标跑的距离波门">8. 距离跟踪：跟着目标跑的距离波门</h5>
 <ul>
 <li><strong>人工跟踪</strong>：操作员手摇手轮，让显示器上的活动距标压住回波，读出距离；</li>
 <li><strong>自动距离跟踪</strong>：用一对&quot;前波门、后波门&quot;（分裂门，split gate）卡住回波，比较两门内的能量，前大则门往前挪、后大则往后挪，闭环伺服让波门始终骑在回波中心上，输出连续的距离数据——这本质是一台&quot;距离伺服电机&quot;；</li>
@@ -612,13 +613,13 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 测距 = 测时间差（脉冲/调频/相位三法），误差 = (R/c)Δc + (c/2)Δt_R 两大来源，远距离开模糊、低仰角修折射、连续跟踪靠距离波门。</p>
 <hr>
-<h3 id="第7章-角度测量">第7章 角度测量</h3>
+<h4 id="第7章-角度测量">第7章 角度测量</h4>
 <p><strong>【本章定位】</strong> 距离靠&quot;掐表&quot;，角度靠&quot;天线指向&quot;。本章讲测角的物理基础、两大类测角方法（相位法、振幅法）、天线波束怎么扫描（机械/相位/频率），以及两种自动角跟踪体制（圆锥扫描、单脉冲）。测角精度与波束宽度直接挂钩，所以天线理论与雷达整机性能在这里合流。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="1-测角的物理基础">1. 测角的物理基础</h4>
+<h5 id="1-测角的物理基础">1. 测角的物理基础</h5>
 <p>两条前提：① 电波在均匀介质中沿直线传播；② 雷达天线有尖锐的方向性——波束指向哪里，哪里来的回波就最强。由波束指向反推目标方向，就是测角。</p>
 <p>注意实际大气并不均匀：折射使电波路径弯曲，地形地物反射造成多径，都会让&quot;电波来的方向&quot;偏离&quot;目标真实方向&quot;，产生测角误差。远程雷达必须对仰角测量作折射修正（低仰角尤其明显）。</p>
-<h4 id="2-天线方向图的关键指标">2. 天线方向图的关键指标</h4>
+<h5 id="2-天线方向图的关键指标">2. 天线方向图的关键指标</h5>
 <p>方向图（Antenna Pattern）是天线增益随角度变化的曲线：</p>
 <ul>
 <li><strong>主瓣（Main Lobe）</strong>：增益最大的那根&quot;尖峰&quot;，雷达工作就靠它；</li>
@@ -626,7 +627,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li><strong>半功率波束宽度 θ₀.₅（3 dB 波束宽度）</strong>：主瓣两侧增益降到峰值一半（−3 dB）的两个方向之间的夹角。θ₀.₅ 表征角度分辨能力，也直接限定测角精度（第 1 章：精度约 θ₀.₅ 的 1/10）。</li>
 </ul>
 <p>工程上常用简单函数近似方向图：余弦函数、高斯函数、辛克函数（sinc，即 sinx/x 及其平方），分单向工作（收或发）与双向工作（收发相乘，副瓣更低、主瓣更窄）。</p>
-<h4 id="3-相位法测角用两根天线比相位">3. 相位法测角：用两根天线&quot;比相位&quot;</h4>
+<h5 id="3-相位法测角用两根天线比相位">3. 相位法测角：用两根天线&quot;比相位&quot;</h5>
 <p>大白话：双眼听声定位——声音先到哪只耳朵、相位差多少，大脑就能判断声源方向。雷达用两根相距 d 的天线接收同一目标回波，目标偏离法线 θ 角时，电波到两天线有路程差，相位自然不同，测相位差就能算出 θ。</p>
 <p>推导直觉：目标很远时来波是平行线，到两天线的路程差 = d·sinθ；每差一个波长 λ，相位差 2π，所以</p>
 <p>φ = (2π/λ)·d·sinθ</p>
@@ -634,19 +635,19 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <p>算例：d = 0.5 m，λ = 0.1 m，θ = 1°（sinθ ≈ 0.0175），则 φ = (2π/0.1) × 0.5 × 0.0175 ≈ 0.55 rad ≈ 31.5°——目标角度 1° 对应可测的相位差 31.5°，所以相位法测角可以很灵敏。</p>
 <p>工程细节：高频上直接比相难，常先把两路信号与同一本振差频变到中频再比相（相位差在混频中保持不变）。典型器件是二极管相位检波器，输出 U_o = K_d·U_i·sinφ：单值测量范围 −π/2～π/2，φ &lt; 30° 时近似线性（U_o ∝ φ）。</p>
 <p>注意多值性：相位以 2π 为周期，若 d &gt; λ/2，路程差可能超过一个波长，φ 会&quot;绕圈&quot;导致角度多解（模糊），实际系统用多组间距（粗测 + 精测）解模糊。</p>
-<h4 id="4-振幅法测角看回波强弱">4. 振幅法测角：看回波强弱</h4>
+<h5 id="4-振幅法测角看回波强弱">4. 振幅法测角：看回波强弱</h5>
 <ul>
 <li><strong>最大值法</strong>：天线扫过目标，回波最强的波束指向即目标方向。简单，但峰值附近变化平缓，精度差；</li>
 <li><strong>最小值法</strong>：用方向图零点（变化最陡处）对准目标，灵敏但零点处信噪比差，且无法连续跟踪；</li>
 <li><strong>等信号法（波束切换/顺序波瓣）</strong>：两个稍微岔开的波束轮流接收，比较两次回波幅度，相等则目标恰在两波束交线方向——这是自动角跟踪的原型。</li>
 </ul>
-<h4 id="5-波束扫描的三种方式">5. 波束扫描的三种方式</h4>
+<h5 id="5-波束扫描的三种方式">5. 波束扫描的三种方式</h5>
 <ul>
 <li><strong>机械扫描</strong>：电机带动整个天线转动/俯仰。结构直观、技术成熟，但惯性大、扫描慢（转一圈要数秒），难以同时跟踪多目标；</li>
 <li><strong>相位扫描（相控阵）</strong>：见下一条；</li>
 <li><strong>频率扫描</strong>：利用色散馈电结构，改变频率即改变阵面各单元的相位梯度，波束指向随频率摆动——用&quot;调频率&quot;代替&quot;转天线&quot;，常用于一维电扫（另一维仍机械转动）。</li>
 </ul>
-<h4 id="6-相控阵原理用广场舞方阵理解电扫描">6. 相控阵原理：用&quot;广场舞方阵&quot;理解电扫描</h4>
+<h5 id="6-相控阵原理用广场舞方阵理解电扫描">6. 相控阵原理：用&quot;广场舞方阵&quot;理解电扫描</h5>
 <p>大白话类比：把几千个小天线单元排成一个方阵，像广场舞方阵做波浪动作——给每排单元的信号加上依次递推的微小时间差（相位差），各单元发出的波在某一斜方向上恰好同相叠加、其他方向相互抵消，波束就&quot;歪&quot;向那个方向。改变相位递推规律，波束瞬间跳向新方向，方阵本身纹丝不动。</p>
 <p>准确表述：相控阵（Phased Array）天线由大量辐射单元组成，每个单元配移相器；按 φ_n = (2π/λ)·n·d·sinθ₀ 给第 n 个单元设置相移，波束就指向 θ₀。特点：</p>
 <ul>
@@ -655,14 +656,14 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>与 T/R 组件结合（每个单元一个收发组件，第 2 章），固态化、可靠性高，坏 5% 单元性能只缓慢下降（&quot;软失效&quot;）；</li>
 <li>代价：复杂、贵，扫描偏离法线时波束展宽、增益下降（扫描角一般限 ±60° 内）。</li>
 </ul>
-<h4 id="7-数字阵列雷达dar">7. 数字阵列雷达（DAR）</h4>
+<h5 id="7-数字阵列雷达dar">7. 数字阵列雷达（DAR）</h5>
 <p>数字阵列雷达（Digital Array Radar）把相控阵再推进一步：每个单元/子阵的信号直接数字化（发射用数字波形产生，接收用 ADC），波束形成在数字域完成。可同时合成任意多个接收波束、自适应在干扰方向形成零点、波形与波束逐脉冲可编程，是新一代雷达的标志。</p>
-<h4 id="8-三坐标雷达3d-radar">8. 三坐标雷达（3D Radar）</h4>
+<h5 id="8-三坐标雷达3d-radar">8. 三坐标雷达（3D Radar）</h5>
 <p>普通两坐标雷达只测距离 + 方位，目标高度要靠另一台测高雷达。三坐标雷达一部顶两部：方位维机械旋转的同时，仰角维用电扫（相位或频率扫描）或多个堆积波束快速分层测量仰角，再由 H = R·sinβ 算出高度，直接输出距离、方位、高度三个坐标，是现代防空警戒网的主力。</p>
-<h4 id="9-圆锥扫描-vs-单脉冲两种自动角跟踪体制">9. 圆锥扫描 vs 单脉冲：两种自动角跟踪体制</h4>
+<h5 id="9-圆锥扫描-vs-单脉冲两种自动角跟踪体制">9. 圆锥扫描 vs 单脉冲：两种自动角跟踪体制</h5>
 <p><strong>圆锥扫描（Conical Scan）</strong>：让波束绕天线轴线快速画小圆圈（波束最大值方向描出一个圆锥）。目标若不在轴线上，回波幅度被圆周一圈&quot;扫&quot;出正弦起伏（幅度调制），调制的相位和深度给出目标偏轴的方向与大小，伺服系统据此驱动天线对准。缺点：误差信息要靠<strong>一串</strong>脉冲积累才拿得到，目标起伏会污染测量，而且干扰方摸清扫描规律后可施放欺骗式角度干扰。</p>
 <p><strong>单脉冲（Monopulse，同时波瓣法）</strong>：<strong>一个脉冲</strong>之内就测出角误差——用馈源产生一个&quot;和波束&quot;（Σ，两瓣同相叠加，管测距和参考）与两个&quot;差波束&quot;（Δ，方位差、俯仰差，两瓣反相叠加）。差波束在轴线方向输出为零、偏轴时输出与偏角成正比，符号（相位）指示偏向哪边。比较 Δ/Σ 即得角误差。因为不靠脉冲间幅度比较，目标起伏影响小，抗角度欺骗能力强，精度可达 0.1 mrad 量级——精密跟踪雷达（火控、测量雷达）清一色用单脉冲。</p>
-<h4 id="10-角跟踪精度的影响因素">10. 角跟踪精度的影响因素</h4>
+<h5 id="10-角跟踪精度的影响因素">10. 角跟踪精度的影响因素</h5>
 <p>主要来源：信噪比（噪声使单脉冲比相/比幅抖动，误差 ∝ θ₀.₅/√SNR）、目标起伏与角闪烁（大目标各散射中心干涉，等效&quot;视在中心&quot;晃动）、多径（低空目标镜像干涉）、大气折射、伺服滞后与机械误差、杂波与干扰。改善途径：提高 SNR、窄波束、单脉冲体制、平滑滤波。</p>
 <p><strong>【易混点/常见误区】</strong></p>
 <ol>
@@ -673,10 +674,10 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 测角靠天线方向性：相位法比&quot;相位差&quot;、振幅法比&quot;回波强弱&quot;，波束用机械/相位/频率三种方式扫描，自动跟踪分圆锥扫描（一串脉冲）与单脉冲（一个脉冲定乾坤，和差波束），精度量级 θ₀.₅/10，单脉冲可达 0.1 mrad。</p>
 <hr>
-<h3 id="第8章-运动目标检测">第8章 运动目标检测</h3>
+<h4 id="第8章-运动目标检测">第8章 运动目标检测</h4>
 <p><strong>【本章定位】</strong> 雷达面对的最大难题往往不是噪声，而是杂波——地面、海面、云雨的回波比飞机强几十万倍。本章讲怎么利用&quot;动与不动&quot;在多普勒频率上的差异，把动目标从杂波堆里&quot;滤&quot;出来，这就是 MTI（动目标显示）、MTD（动目标检测）与脉冲多普勒雷达的理论起点。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="1-多普勒效应的严格推导直觉往返相位怎么变">1. 多普勒效应的严格推导直觉：往返相位怎么变</h4>
+<h5 id="1-多普勒效应的严格推导直觉往返相位怎么变">1. 多普勒效应的严格推导直觉：往返相位怎么变</h5>
 <p>设雷达发射连续波 s(t) = A·cos(ω₀t + φ)，目标初始距离 R₀、以径向速度 v_r 匀速接近，则 t 时刻距离 R(t) = R₀ − v_r·t。</p>
 <p>回波是当前时刻发出、延迟 2R(t)/c 才回来的波，所以回波相位相对发射信号落后</p>
 <p>φ(t) = −ω₀·(2R(t)/c) = −2π·(2/λ)·(R₀ − v_r·t)</p>
@@ -685,29 +686,29 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <p>这就是式 8.1.4。三点结论：f_d 与径向速度成正比、与波长成反比；目标飞向雷达（R 减小）时 f_d 为正，背向飞行时为负；&quot;2&quot;来自双程。</p>
 <p>算例（教材同款量级）：λ = 10 cm = 0.1 m，v_r = 300 m/s（约 0.9 马赫），f_d = 2×300/0.1 = 6 kHz。</p>
 <p>对窄带信号（带宽远小于中心频率），工程上用复包络表示 s(t) = Re[u(t)·e^(jω₀t)]，多普勒效应表现为复包络整体乘上 e^(j2πf_d·t)，分析滤波器组时都用这个工具。</p>
-<h4 id="2-杂波与动目标在频谱上的区别">2. 杂波与动目标在频谱上的区别</h4>
+<h5 id="2-杂波与动目标在频谱上的区别">2. 杂波与动目标在频谱上的区别</h5>
 <ul>
 <li><strong>固定杂波（地物、铁塔）</strong>：相对雷达不动，f_d = 0，能量堆在零频附近（脉间相位不变）；</li>
 <li><strong>慢杂波（海浪、云雨、箔条）</strong>：有小的径向速度，f_d 在零频附近散布一个小范围（几十~几百 Hz）；</li>
 <li><strong>动目标（飞机、车辆）</strong>：v_r 大，f_d 明显偏离零频（几 kHz 量级）。</li>
 </ul>
 <p>于是策略清晰：做一个滤波器把零频附近&quot;挖掉&quot;（杂波对消），剩下的就是动目标。这就是 MTI。</p>
-<h4 id="3-mti-原理延迟对消器两张照片找不同">3. MTI 原理：延迟对消器——&quot;两张照片找不同&quot;</h4>
+<h5 id="3-mti-原理延迟对消器两张照片找不同">3. MTI 原理：延迟对消器——&quot;两张照片找不同&quot;</h5>
 <p>大白话：同一个机位每隔 T_r 拍一张&quot;雷达照片&quot;，把相邻两张照片逐点相减——不动的东西（山、楼）两张一样，减完变黑；动的东西（飞机）位置变了，减完留下残影。找不同，剩下的就是动目标。</p>
 <p>准确表述：脉冲雷达以固定重复周期 T_r 发射，<strong>延迟线对消器</strong>计算 y(t) = x(t) − x(t − T_r)（一次对消器）：把前一个脉冲周期的回波延迟一个 T_r，与本次回波相减。因为全相参体制下固定杂波每个周期的相位完全相同，相减为零；动目标相位逐周期变化 Δφ = 2π·f_d·T_r，相减后留下正比于 sin(π·f_d·T_r) 的残差。用两个一次对消器级联得二次对消器，杂波抑制更强、通带更宽。这里就能看出第 2 章&quot;全相参&quot;的性命攸关：发射相位若随机，杂波相减不为零，MTI 立刻失效。</p>
-<h4 id="4-盲速与盲相">4. 盲速与盲相</h4>
+<h5 id="4-盲速与盲相">4. 盲速与盲相</h5>
 <p><strong>盲速（Blind Speed）</strong>：若目标速度恰好使 f_d = n·f_r（n 为整数，f_r 为重复频率），则 Δφ = 2πn，动目标回波逐周期相位也&quot;绕了整圈&quot;，对消器把它当固定杂波一并消掉——目标消失！盲速：</p>
 <p>v_b = n·λ·f_r/2 （n = 1, 2, ...）</p>
 <p>算例：λ = 0.1 m、f_r = 1 kHz，第一盲速 v_b1 = 0.1×1000/2 = 50 m/s = 180 km/h——低速目标危险。</p>
 <p>解决办法：<strong>参差重复频率（Staggered PRF）</strong>——交替使用两三个不同的 T_r。某速度对一个 PRF 是盲速，对另一个通常不是，合起来就把盲速推到很高（第一盲速可提升几十倍）。</p>
 <p><strong>盲相（Blind Phase）</strong>：相位检波器输出 ∝ cos 或 sin 相位差，若动目标相位恰好落在检波器&quot;零点&quot;附近，单次检测输出接近零。解决：I/Q 双通道正交检波（第 3 章），一路在零点时另一路恰在峰点，两路平方相加永不落空。</p>
-<h4 id="5-改善因子mti-的成绩单">5. 改善因子：MTI 的成绩单</h4>
+<h5 id="5-改善因子mti-的成绩单">5. 改善因子：MTI 的成绩单</h5>
 <p>改善因子 I（Improvement Factor）定义为对消器输出端与输入端&quot;信号杂波比&quot;之比：</p>
 <p>I = (S/C)_out / (S/C)_in</p>
 <p>它综合了杂波被压低多少、动目标平均增益多少。受限于：杂波内部运动（树叶摆动、海浪）、天线扫描调制（波束转动使同一杂波相邻周期回波不同）、系统不稳定（本振相位噪声、定时抖动、量化误差）。早期模拟 MTI 约 20<del>30 dB，现代数字 MTI/MTD 可达 40</del>60 dB 量级——意味着比目标强 100 万倍的杂波也能被压到目标之下。</p>
-<h4 id="6-mti-的数字实现">6. MTI 的数字实现</h4>
+<h5 id="6-mti-的数字实现">6. MTI 的数字实现</h5>
 <p>现代 MTI 全部数字化：I/Q 基带采样后，用 FIR（有限冲激响应）数字滤波器实现对消（一次对消器就是系数 [1, −1] 的两抽头 FIR），系数可编程，配合参差 PRF 序列、自适应杂波图，稳定度和灵活性远超模拟延迟线（当年靠水银延迟线、石英延迟线）。</p>
-<h4 id="7-mtd从对消升级到滤波器组">7. MTD：从&quot;对消&quot;升级到&quot;滤波器组&quot;</h4>
+<h5 id="7-mtd从对消升级到滤波器组">7. MTD：从&quot;对消&quot;升级到&quot;滤波器组&quot;</h5>
 <p>动目标检测（MTD，Moving Target Detection）在 MTI 对消杂波之后，再让信号通过一组并排的多普勒滤波器组（Filter Bank，通常用 FFT 实现 8~32 路）：每个滤波器对应一个窄多普勒频段，动目标落入哪个滤波器，其 f_d（速度）就一目了然。MTD 相比 MTI 的收获：</p>
 <ul>
 <li><strong>能测速</strong>（粗测，分辨率为一个滤波器带宽）；</li>
@@ -715,11 +716,11 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>可按滤波器输出区分动目标与运动杂波（云雨）；</li>
 <li>配合 CFAR 门限与杂波图，全自动检测。</li>
 </ul>
-<h4 id="8-自适应-mti">8. 自适应 MTI</h4>
+<h5 id="8-自适应-mti">8. 自适应 MTI</h5>
 <p>杂波不总是&quot;钉&quot;在零频：云雨、箔条随风整体移动，杂波谱中心漂移到某个 f_d ≠ 0。固定对消器挖错位置就失效。自适应 MTI 实时估计杂波谱中心频率，把对消凹口自动&quot;挪&quot;过去压住它；更高级的形式结合空域（副瓣对消）形成空时自适应处理（STAP，Space-Time Adaptive Processing）。</p>
-<h4 id="9-脉冲多普勒雷达pd-radar">9. 脉冲多普勒雷达（PD Radar）</h4>
+<h5 id="9-脉冲多普勒雷达pd-radar">9. 脉冲多普勒雷达（PD Radar）</h5>
 <p>脉冲多普勒（Pulse Doppler）雷达采用高重复频率，在频域上把整个多普勒谱摊开分析，任何一个频率上的杂波和目标都清晰可见；再配合距离门把距离维也切开，形成&quot;距离 × 多普勒&quot;二维检测矩阵。特点：下视能力强（机载雷达从强地杂波中捡出低空目标靠的就是 PD 体制）；代价是高 PRF 带来严重距离模糊（第 6 章），需要多重 PRF 等解模糊手段。</p>
-<h4 id="10-测速方法">10. 测速方法</h4>
+<h5 id="10-测速方法">10. 测速方法</h5>
 <ul>
 <li><strong>连续波多普勒测速</strong>：发射连续正弦波作基准，与回波相位检波（相干检波）得差拍。合成电压 U_Σ ≈ U₀ + U_r·cos(ω_d·t − φ)：发射泄漏 U₀ 是直流大底子，回波 U_r 以多普勒角频率 ω_d = 2πf_d 摆动，测摆动频率即得 f_d = 2v_r/λ，再算出 v_r。交警测速雷达即此原理；</li>
 <li><strong>脉冲雷达测速</strong>：MTD 滤波器组粗测 + 脉间相位差精测；</li>
@@ -734,10 +735,10 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 动目标检测的全部基础是 f_d = 2v_r/λ：杂波趴在零频、动目标偏离零频，用延迟对消器&quot;两张照片找不同&quot;滤掉杂波（MTI），用滤波器组顺带测速（MTD），用参差 PRF 治盲速、用全相参体制保住相位——这就是第 2 章主振放大式存在的理由。</p>
 <hr>
-<h3 id="第9章-高分辨力雷达">第9章 高分辨力雷达</h3>
+<h4 id="第9章-高分辨力雷达">第9章 高分辨力雷达</h4>
 <p><strong>【本章定位】</strong> 前面解决&quot;发现目标、测出坐标&quot;，本章解决更精细的问题：多目标挤在一起能不能分开、能不能看清目标的形状细节。核心理论工具是<strong>模糊函数</strong>——它是脉冲压缩、编码信号与 SAR/ISAR 等高分辨力体制的统一分析工具，也是全书理论性最强的一章。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="1-分辨力雷达的眼神锐度">1. 分辨力：雷达的&quot;眼神锐度&quot;</h4>
+<h5 id="1-分辨力雷达的眼神锐度">1. 分辨力：雷达的&quot;眼神锐度&quot;</h5>
 <p>大白话：分辨率就是&quot;两个人站多近，你还能看出是两个人&quot;。</p>
 <p>准确表述：分辨力（Resolution）是多目标环境下，将两个或两个以上邻近目标区分开的能力。目标参量分两类：</p>
 <ul>
@@ -745,16 +746,16 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li><strong>运动参量</strong>：速度、加速度。</li>
 </ul>
 <p>分工明确：<strong>距离分辨力主要取决于信号波形</strong>（第 6 章已知 ΔR = c/(2B)，带宽说了算）；<strong>角度分辨力取决于天线波束形状</strong>（θ₀.₅ 说了算）；而在合成孔径雷达里，角度分辨力的提高又与多普勒分辨相联系（下面细讲）。</p>
-<h4 id="2-用什么数学尺子量可分辨程度均方差准则">2. 用什么数学尺子量&quot;可分辨程度&quot;：均方差准则</h4>
+<h5 id="2-用什么数学尺子量可分辨程度均方差准则">2. 用什么数学尺子量&quot;可分辨程度&quot;：均方差准则</h5>
 <p>两个参量分别为 θ₁、θ₂ 的目标，其回波信号为 u(t,θ₁)、u(t,θ₂)。把信号看成 N 维取样矢量空间中的点，两点间距离越远越好区分。取均方差准则：</p>
 <p>ε²(θ₁,θ₂) = ∫|u(t,θ₁) − u(t,θ₂)|²dt = 2(2E) − 2·Re∫u(t,θ₁)·u*(t,θ₂)dt</p>
 <p>符号说明：E 为信号能量；u* 为 u 的复共轭；Re 表示取实部。第一项 2(2E) 是固定的（两个信号各自的能量），第二项是两个信号的<strong>互相关</strong>——它越小，ε² 越大，两目标越好分辨。对距离参量而言，第二项就退化为信号的自相关函数，由此引出模糊函数。一句话：<strong>信号的自相关特性决定它的分辨力</strong>。</p>
-<h4 id="3-模糊函数-yτ信号的自己自己相似度">3. 模糊函数 y(τ)：信号的&quot;自己—自己相似度&quot;</h4>
+<h5 id="3-模糊函数-yτ信号的自己自己相似度">3. 模糊函数 y(τ)：信号的&quot;自己—自己相似度&quot;</h5>
 <p>大白话：把信号复制一份、错开时间 τ，再和原件对齐比较&quot;有多像&quot;。τ = 0 时当然完全一样（峰值）；τ 稍一错开就迅速&quot;不像&quot;的信号，距离分辨力就强；错开很多还很像的信号，两个目标容易糊成一团。</p>
 <p>准确表述：距离模糊函数（Ambiguity Function）定义为</p>
 <p>y(τ) = ∫u(t)·u*(t − τ)dt</p>
 <p>它恰好等于信号通过匹配滤波器（冲激响应 u*(−t)）后的输出响应（第 3 章说过匹配滤波等效于自相关，这里接上了）。判别标准：<strong>|y(τ)| 的主瓣越窄、旁瓣越低，两个目标越容易分辨</strong>。完整模糊函数是时延 τ 和多普勒频移 f_d 的二维函数 χ(τ, f_d)，同时刻画距离与速度分辨能力；本章主要讨论 τ 轴上的切割 y(τ)。</p>
-<h4 id="4-匹配滤波器输出的几种典型形态">4. 匹配滤波器输出的几种典型形态</h4>
+<h5 id="4-匹配滤波器输出的几种典型形态">4. 匹配滤波器输出的几种典型形态</h5>
 <ul>
 <li><strong>单瓣响应</strong>：只有一个窄主峰、旁瓣低（如线性调频脉压输出）——理想，距离分辨好、不模糊；</li>
 <li><strong>周期模糊</strong>：输出出现一串等间隔峰（如均匀脉冲串）——分辨细但有&quot;重影&quot;，可能把目标位置认错整格；</li>
@@ -765,22 +766,22 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li><strong>名义分辨力</strong>：以输出主瓣的 3 dB 宽度表示（半功率点多宽，分辨就多细）；</li>
 <li><strong>时延分辨常数</strong>：A_ε = ∫|y(τ)|²dτ / y²(0)，用整个响应的&quot;等效宽度&quot;衡量，含旁瓣影响。用傅里叶变换可把它写成频域形式，从而严格证明：<strong>距离分辨力取决于信号频谱结构（带宽）</strong>，与第 6 章的 ΔR = c/(2B) 完全一致。</li>
 </ul>
-<h4 id="5-时宽带宽积-bτ能量与分辨力解耦的钥匙">5. 时宽带宽积 Bτ：能量与分辨力&quot;解耦&quot;的钥匙</h4>
+<h5 id="5-时宽带宽积-bτ能量与分辨力解耦的钥匙">5. 时宽带宽积 Bτ：能量与分辨力&quot;解耦&quot;的钥匙</h5>
 <p>矛盾回顾：探测距离要能量 → 脉冲要长（τ 大）；距离分辨要带宽 → 脉冲要&quot;快&quot;（B 大）。简单脉冲 B ≈ 1/τ，Bτ ≈ 1，两个愿望互相卡死。</p>
 <p>出路：让脉内信号&quot;变化起来&quot;（调频或调相），使带宽 B 不再受 1/τ 限制，实现 Bτ≫1——长脉冲存足能量，大带宽保住分辨力。Bτ 有多大，&quot;能量与分辨兼得&quot;的红利就有多大（也常等于脉冲压缩比）。</p>
-<h4 id="6-线性调频脉冲压缩长脉冲存能量压缩后变细">6. 线性调频脉冲压缩：&quot;长脉冲存能量、压缩后变细&quot;</h4>
+<h5 id="6-线性调频脉冲压缩长脉冲存能量压缩后变细">6. 线性调频脉冲压缩：&quot;长脉冲存能量、压缩后变细&quot;</h5>
 <p>大白话：发一个长长的&quot;鸟鸣&quot;脉冲——频率在脉宽 τ 内从低到高线性扫过（chirp，啁啾），时间拉得长所以能量足。回波进匹配滤波器后，滤波器对低频段延迟大、高频段延迟小，把&quot;先发的低音&quot;和&quot;后发的高音&quot;硬是赶到同一时刻叠加出来——长脉冲被&quot;捏&quot;成 1/B 宽的窄尖峰，能量一点没少，分辨力却按 B 算。</p>
 <p>准确表述：线性调频（LFM，Linear Frequency Modulation）信号带宽 B、脉宽 τ，经匹配滤波后输出为辛克形窄脉冲，主瓣宽度约 1/B，<strong>压缩比 = 脉宽之比 = τ/(1/B) = Bτ</strong>。距离分辨力 ΔR = c/(2B)，与 τ 无关。</p>
 <p>算例：τ = 100 μs、B = 10 MHz，则 Bτ = 1000：压缩后脉宽 1/B = 0.1 μs，ΔR = 3×10⁸/(2×10⁷) = 15 m；若用同样 τ 的简单脉冲，ΔR 是 15 km——同是 100 μs 的长脉冲，分辨力提高了 1000 倍。LFM 还有多普勒容限大（目标有速度时压缩峰只稍偏、不明显恶化）的优点，是应用最广的脉压波形。</p>
-<h4 id="7-相位编码信号巴克码">7. 相位编码信号：巴克码</h4>
+<h5 id="7-相位编码信号巴克码">7. 相位编码信号：巴克码</h5>
 <p>另一路思路：把长脉冲切成 N 个子脉冲，每个子脉冲的相位按 0/π 两值跳变（二相编码）。**巴克码（Barker Code）**是其中的明星：自相关函数主峰为 N、旁瓣全部 ≤1，是&quot;最整齐&quot;的编码。最长已知巴克码只有 N = 13 位，压缩比 13，旁瓣电平 20·lg(1/13) ≈ −22.3 dB。</p>
 <p>算例：13 位巴克码、子脉冲宽 0.1 μs，总脉宽 1.3 μs，压缩后等效脉宽 0.1 μs，ΔR = 15 m，压缩比 13。想要更大压缩比就得用伪随机码、组合码，但旁瓣不如巴克码整齐，需要旁瓣抑制滤波配合。</p>
-<h4 id="8-sar用小天线飞出大天线">8. SAR：用小天线&quot;飞出&quot;大天线</h4>
+<h5 id="8-sar用小天线飞出大天线">8. SAR：用小天线&quot;飞出&quot;大天线</h5>
 <p>大白话：真实天线波束宽度 θ₀.₅ ≈ λ/D（D 为天线口径），想要角分辨细就得天线大——可飞机/卫星上装不下几百米的大天线。SAR 的巧思：让载机带着小天线沿直线飞，边飞边不断发收脉冲，把沿途每个位置收到的回波<strong>相位精确地存起来</strong>，事后再按&quot;这些位置等效于一个几百米到几千米长的大天线阵&quot;做相干合成——小天线一路飞一路&quot;采样&quot;，等效&quot;飞出&quot;一个超大天线，方位分辨力成倍提高。</p>
 <p>准确表述：合成孔径雷达（SAR，Synthetic Aperture Radar）利用平台运动形成合成孔径，对孔径内各次回波作相干处理，等效出远大于实物天线的孔径。由于目标相对各飞行位置的多普勒频率随方位位置线性变化，方位向分辨本质上靠<strong>多普勒分辨</strong>实现（所以本章开头说&quot;SAR 中角度分辨力的提高与多普勒分辨相联系&quot;）。一个反直觉而优美的结论：条带 SAR 的理论方位分辨力 = D/2（真实天线方位尺寸的一半）——<strong>小天线反而合成更长的孔径、分辨更细</strong>（因为小天线波束宽，照亮目标的时间久）。距离向则照常靠大带宽脉压。两维结合即得地表二维高分辨图像，穿云透雾、全天时全天候，是遥感测绘主力。</p>
-<h4 id="9-isar目标自己转身配合成像">9. ISAR：目标自己&quot;转身&quot;配合成像</h4>
+<h5 id="9-isar目标自己转身配合成像">9. ISAR：目标自己&quot;转身&quot;配合成像</h5>
 <p>逆合成孔径雷达（ISAR，Inverse SAR）雷达不动、靠<strong>目标自身的转动</strong>（飞机转弯、舰船摇摆）提供视角变化：目标转一小段角度，等效于雷达绕目标扫过一段孔径。用与 SAR 相同的多普勒分析，对飞机、舰船等非合作目标成二维像，用于目标识别。SAR 是&quot;我动你不动&quot;，ISAR 是&quot;你动我不动&quot;，数学上互为镜像。</p>
-<h4 id="10-角度超分辨">10. 角度超分辨</h4>
+<h5 id="10-角度超分辨">10. 角度超分辨</h5>
 <p>当多个目标落在同一波束内，常规方法（比波束宽度）无能为力。超分辨技术把方向估计变成谱估计问题（如 MUSIC、ESPRIT 等子空间方法），理论上可把角分辨推进到波束宽度的几分之一以下，代价是要求高信噪比、精确的天线阵流形标定，计算量大。这是阵列信号处理与雷达的交叉前沿。</p>
 <p><strong>【易混点/常见误区】</strong></p>
 <ol>
@@ -791,7 +792,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 分辨力的理论核心是模糊函数 y(τ)——信号&quot;自己与自己错开时间后的相似度&quot;决定能不能分清邻近目标；工程上的三板斧是：大带宽脉冲压缩（LFM、相位编码）细化距离分辨，合成孔径（SAR/ISAR）用运动换孔径细化方位分辨，超分辨谱估计再把波束极限往下压。</p>
 <hr>
-<h2 id="全书知识链回顾">全书知识链回顾</h2>
+<h3 id="全书知识链回顾">全书知识链回顾</h3>
 <ol>
 <li><strong>总框架（第 1 章）</strong>：坐标系 + 三大测量原理（时延测距、指向测角、多普勒测速）；</li>
 <li><strong>分机（第 2~4 章）</strong>：发射机管&quot;喊得响且稳&quot;（相参）、接收机管&quot;听得清&quot;（低噪声、超外差）、终端管&quot;看得懂&quot;（录取、航迹、显示）；</li>
@@ -801,19 +802,19 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p>记住这五个公式 + 两条主线（相参体制贯穿发射—接收—MTI，带宽/孔径决定分辨力），全书骨架就立住了。</p>
 <hr>
-<h1 id="第二部分-pomrprinciples-of-modern-radar-basic-principles逐章详细笔记">第二部分  POMR（Principles of Modern Radar: Basic Principles）逐章详细笔记</h1>
+<h2 id="第二部分-pomrprinciples-of-modern-radar-basic-principles逐章详细笔记">第二部分  POMR（Principles of Modern Radar: Basic Principles）逐章详细笔记</h2>
 <blockquote>
 <p>本笔记基于《Principles of Modern Radar: Basic Principles》（Richards, Scheer, Holm 主编，SciTech，2010）整理，供零基础学习使用。</p>
 </blockquote>
 <hr>
-<h2 id="part-i-概览overview">Part I 概览（Overview）</h2>
-<h3 id="第1章-绪论与雷达概览introduction-and-radar-overview">第1章 绪论与雷达概览（Introduction and Radar Overview）</h3>
+<h3 id="part-i-概览overview">Part I 概览（Overview）</h3>
+<h4 id="第1章-绪论与雷达概览introduction-and-radar-overview">第1章 绪论与雷达概览（Introduction and Radar Overview）</h4>
 <p><strong>【本章定位】</strong> 全书的第一块砖：告诉你雷达是什么、靠什么物理关系工作、由哪些子系统组成，以及后面 20 章各自讲什么。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="雷达是什么">雷达是什么</h4>
+<h5 id="雷达是什么">雷达是什么</h5>
 <p>大白话：雷达（radar，radio detection and ranging）就像黑夜里大声喊话听回声的人——你喊一声，过一会儿听到对面山壁的回声，根据&quot;声音往返用了多久&quot;就能算出山有多远。雷达喊出去的不是声音，而是射频（RF, radio frequency）电磁波，接收的是目标反射回来的回波（echo）。</p>
 <p>准确表述：雷达是发射 RF 电磁波、接收并处理目标回波，从而完成检测（detection）、测量（measurement）、跟踪（tracking）、成像（imaging）等功能的电子系统。核心子系统包括：发射机（transmitter）、天线（antenna）、接收机（receiver）、激励器（exciter）、信号处理机（signal processor）、数据处理机——第 9~13 章会逐个深入。</p>
-<h4 id="测距公式-rcδt2">测距公式 R=cΔT/2</h4>
+<h5 id="测距公式-rcδt2">测距公式 R=cΔT/2</h5>
 <p>电磁波以光速 c≈3×10⁸ m/s 传播。若发射脉冲到收到回波的时间差为 ΔT，则</p>
 <p>R = c·ΔT / 2</p>
 <ul>
@@ -823,11 +824,11 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>除以 2 是因为电磁波走了&quot;去+回&quot;两趟</li>
 </ul>
 <p>算例：ΔT = 100 μs = 10⁻⁴ s，则 R = 3×10⁸ × 10⁻⁴ / 2 = 15000 m = 15 km。直觉记忆：回波每晚 1 μs，距离近 150 m。</p>
-<h4 id="电磁波与-λfc">电磁波与 λf=c</h4>
+<h5 id="电磁波与-λfc">电磁波与 λf=c</h5>
 <p>雷达波在数学上是正弦振荡的电场：E = E0·cos(kz − ωt + φ)，其中 k 是空间角频率（波数），ω 是时间角频率，φ 是初相位。波长 λ（一个完整波形占的空间长度，单位 m）与频率 f（每秒振荡次数，单位 Hz）满足</p>
 <p>λ·f = c</p>
 <p>算例：f = 10 GHz（X 波段典型频率），λ = 3×10⁸ / 10¹⁰ = 0.03 m = 3 cm。频率越高，波长越短，天线越容易做小、分辨率越容易做高，但大气衰减也越大（第 4 章）。</p>
-<h4 id="雷达频段划分">雷达频段划分</h4>
+<h5 id="雷达频段划分">雷达频段划分</h5>
 <p>3 MHz–300 GHz 都可用于雷达。ITU（国际电联）为雷达分配了授权频段；工程界更常用字母代号：</p>
 <ul>
 <li>HF（3–30 MHz）：超视距雷达（OTH）用地波/天波</li>
@@ -839,20 +840,20 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>Ku（12–18 GHz）、K（18–27 GHz）、Ka（27–40 GHz）：短程高精度、导弹导引头</li>
 <li>毫米波（40 GHz 以上）：汽车雷达（77 GHz）、近程成像</li>
 </ul>
-<h4 id="极化polarization">极化（polarization）</h4>
+<h5 id="极化polarization">极化（polarization）</h5>
 <p>电磁波电场矢量的指向叫极化。水平极化（H）、垂直极化（V）、圆极化（RCP/LCP）等。目标对不同极化的反射不同，所以测全极化散射矩阵（PSM）能推断目标形状信息。杂波抑制、雨衰抑制也常利用极化差异。</p>
-<h4 id="单基地与双基地monostatic-bistatic">单基地与双基地（monostatic / bistatic）</h4>
+<h5 id="单基地与双基地monostatic-bistatic">单基地与双基地（monostatic / bistatic）</h5>
 <ul>
 <li>单基地：收发天线同址（或共用一面天线），绝大多数雷达如此，回波走&quot;原路返回&quot;。</li>
 <li>双基地：发射站与接收站分开布设。优点是接收站可保持无线电静默（隐蔽），缺点是几何复杂、时间同步难。第 2 章的 RRE 也有双基地版本。</li>
 </ul>
-<h4 id="cw-与脉冲波形">CW 与脉冲波形</h4>
+<h5 id="cw-与脉冲波形">CW 与脉冲波形</h5>
 <ul>
 <li>CW（continuous wave，连续波）：一直发射不停。纯 CW 雷达只能测速（靠 Doppler），不能测距——因为发射没停过，无法标记&quot;这一份回波是哪时刻发出的&quot;。</li>
 <li>脉冲（pulse）雷达：发射短促脉冲后静默收听。靠 ΔT 测距，是最主流体制。</li>
 <li>折中：FMCW（调频连续波）用频率变化给时间&quot;打标签&quot;，既能测距又省电，汽车雷达常用。</li>
 </ul>
-<h4 id="检测三指标初识pdpfasnr">检测三指标初识：P_D、P_FA、SNR</h4>
+<h5 id="检测三指标初识pdpfasnr">检测三指标初识：P_D、P_FA、SNR</h5>
 <p>回波总是混在噪声里。把接收信号幅度与一个门限（threshold）比较：超过门限判&quot;有目标&quot;。</p>
 <ul>
 <li>P_D（probability of detection，检测概率）：真有目标时判对的概率，希望高。</li>
@@ -860,11 +861,11 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>SNR（signal-to-noise ratio，信噪比）：信号功率/噪声功率，是决定 P_D 与 P_FA 的根本量。</li>
 </ul>
 <p>三者关系：门限升高 → P_FA 降、P_D 也降；SNR 越高，同样 P_FA 下 P_D 越高。第 3、15 章展开。</p>
-<h4 id="距离分辨率-δrcτ2">距离分辨率 ΔR=cτ/2</h4>
+<h5 id="距离分辨率-δrcτ2">距离分辨率 ΔR=cτ/2</h5>
 <p>两个目标距离差多小还能分开？对宽度为 τ（秒）的简单脉冲：</p>
 <p>ΔR = cτ / 2</p>
 <p>算例：τ = 1 μs，ΔR = 150 m。要 1.5 m 分辨率需 τ = 10 ns——脉冲太短能量不够，于是发明了脉冲压缩（第 20 章），用&quot;长脉冲+大带宽&quot;兼得能量与分辨率（ΔR = c/2B，B 为带宽）。</p>
-<h4 id="三大功能搜索跟踪成像">三大功能：搜索、跟踪、成像</h4>
+<h5 id="三大功能搜索跟踪成像">三大功能：搜索、跟踪、成像</h5>
 <ul>
 <li>搜索（search/scan）：在一大片空域里找有没有目标，强调覆盖与数据率。</li>
 <li>跟踪（track）：盯住已知目标，连续估计其位置速度，强调精度。</li>
@@ -880,10 +881,10 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 雷达=发 RF 波、收回波，靠 R=cΔT/2 测距、靠 Doppler 测速、靠门限与 SNR 做检测，全书的其余章节就是把这句话逐层展开。</p>
 <hr>
-<h3 id="第2章-雷达距离方程the-radar-range-equation">第2章 雷达距离方程（The Radar Range Equation）</h3>
+<h4 id="第2章-雷达距离方程the-radar-range-equation">第2章 雷达距离方程（The Radar Range Equation）</h4>
 <p><strong>【本章定位】</strong> 全书最重要的公式章：雷达距离方程（RRE, radar range equation）把&quot;发射多大功率、天线多大、目标多远&quot;翻译成&quot;接收 SNR 有多少&quot;，是一切性能预算的出发点。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="推导链一步步来">推导链（一步步来）</h4>
+<h5 id="推导链一步步来">推导链（一步步来）</h5>
 <p>第 1 步：发射功率 P_t（瓦，W）经增益为 G_t 的天线集中到一个方向，距离 R 处的功率密度（W/m²）为</p>
 <p>S = P_t·G_t / (4πR²)</p>
 <p>直觉：灯泡的光按球面 4πR² 摊开，所以除以 4πR²；G_t 表示天线把能量&quot;捏&quot;到目标方向的倍数（各向同性天线 G=1）。</p>
@@ -896,7 +897,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>λ：波长（m）；σ：RCS（m²）；R：距离（m）</li>
 <li>R⁴：去的路上 1/R²，回来再 1/R²，所以是四次方——雷达比通信吃亏得多</li>
 </ul>
-<h4 id="热噪声与-snr-形式">热噪声与 SNR 形式</h4>
+<h5 id="热噪声与-snr-形式">热噪声与 SNR 形式</h5>
 <p>接收机自身的噪声来自电子热运动，噪声功率</p>
 <p>N = k·T0·B·F</p>
 <ul>
@@ -907,7 +908,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <p>于是</p>
 <p>SNR = P_r / N = P_t·G_t·G_r·λ²·σ / [(4π)³·R⁴·k·T0·B·F]</p>
 <p>工程上常把各种损耗归并为系统损耗 L_s（系统 loss，≥1），再乘大气损耗，SNR 除以 L_s。</p>
-<h4 id="db-形式手把手做一次预算">dB 形式（手把手做一次预算）</h4>
+<h5 id="db-形式手把手做一次预算">dB 形式（手把手做一次预算）</h5>
 <p>dB（分贝）= 10·log10(比值)。乘法变加法，是雷达工程师的算术方式。算例（X 波段搜索雷达）：</p>
 <ul>
 <li>P_t = 100 kW → 10log10(10⁵) = 50 dBW</li>
@@ -921,15 +922,15 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ul>
 <p>SNR(dB) = 50 + 30 + 30 − 30.5 + 0 − 33.0 − 188.0 + 204.0 − 60 − 3 − 4 = <strong>−4.5 dB</strong></p>
 <p>单个脉冲不够（一般要 13 dB 上下），所以要多脉冲积累：积累 N 个相干脉冲理想增益为 N（dB 下加 10log10 N），N=100 即加 20 dB → 15.5 dB，够了。</p>
-<h4 id="平均功率能量形式">平均功率/能量形式</h4>
+<h5 id="平均功率能量形式">平均功率/能量形式</h5>
 <p>把 P_t·τ（脉冲能量）换成平均功率 P_avg 与驻留时间 T_d：</p>
 <p>SNR = P_avg·T_d·G_t·G_r·λ²·σ / [(4π)³·R⁴·k·T0·F·L_s]</p>
 <p>物理含义：检测靠的是<strong>砸在目标上的总能量</strong>，不是峰值功率多大。这就是固态雷达&quot;低峰值、长驻留&quot;路线可行的理论依据。</p>
-<h4 id="脉压形式">脉压形式</h4>
+<h5 id="脉压形式">脉压形式</h5>
 <p>脉冲压缩（第 20 章）后 SNR 再乘时宽带宽积 τβ（τ 脉宽，β 带宽）：</p>
 <p>SNR_pc = SNR_u·τβ</p>
 <p>即长脉冲攒能量、大带宽保分辨率，两者解耦。</p>
-<h4 id="其他常用变体">其他常用变体</h4>
+<h5 id="其他常用变体">其他常用变体</h5>
 <ul>
 <li>SCR（signal-to-clutter ratio）：目标 σ 对杂波 σ_c 之比，杂波受限时用 SCR 代替 SNR（第 5 章）。</li>
 <li>单程链路方程：干扰机、信标只走一趟，功率按 1/R² 衰减——所以自卫干扰机功率效率远高于雷达。</li>
@@ -946,29 +947,29 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> RRE 一句话：SNR = 发射能量×天线增益×孔径×目标 RCS / (R⁴×噪声×损耗)，dB 形式让它变成小学加法。</p>
 <hr>
-<h3 id="第3章-雷达搜索与干扰中检测概览radar-search-and-overview-of-detection-in-interference">第3章 雷达搜索与干扰中检测概览（Radar Search and Overview of Detection in Interference）</h3>
+<h4 id="第3章-雷达搜索与干扰中检测概览radar-search-and-overview-of-detection-in-interference">第3章 雷达搜索与干扰中检测概览（Radar Search and Overview of Detection in Interference）</h4>
 <p><strong>【本章定位】</strong> 把第 1 章的&quot;P_D/P_FA/SNR&quot;变成可计算的统计检测理论，并讲清&quot;搜索一片空域&quot;的工程约束；是第 15、16 章的预备课。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="搜索空域与驻留">搜索空域与驻留</h4>
+<h5 id="搜索空域与驻留">搜索空域与驻留</h5>
 <p>搜索雷达要在规定时间（frame time）内扫完规定立体角。常见形态是 search fence（搜索栅栏）：对来袭方向只扫一道俯仰窄条，省钱省时。机扫（机械转动天线）与电扫（ESA，电子扫描阵列）的本质差别：电扫波束可瞬时跳变，驻留时间可按需分配。</p>
 <ul>
 <li>相干处理间隔（CPI 的驻留）T_d = n/PRF：n 个脉冲、脉冲重复频率 PRF（pulse repetition frequency，每秒发多少个脉冲）。</li>
 <li>天线扫过一个波束宽度的驻留 T_ad = θ₃/ω：θ₃ 是 3 dB 波束宽度（rad），ω 是扫描角速度（rad/s）。目标只在 T_ad 内&quot;被照亮&quot;，可用脉冲数 = T_ad×PRF。</li>
 </ul>
-<h4 id="rayleigh-噪声与-pfa">Rayleigh 噪声与 P_FA</h4>
+<h5 id="rayleigh-噪声与-pfa">Rayleigh 噪声与 P_FA</h5>
 <p>接收机噪声经包络检波后，幅度服从 Rayleigh 分布——一个长尾分布：偶尔噪声自己就会蹿得很高。设门限 T，则</p>
 <p>P_FA = exp(−T²/2σ²_n)</p>
 <p>σ²_n 为噪声功率。关键结论：<strong>P_FA 只由门限与噪声功率之比决定</strong>。工程上给定 P_FA（如 10⁻⁶）反解门限。</p>
-<h4 id="rician-分布marcum-q-与-pd">Rician 分布、Marcum Q 与 P_D</h4>
+<h5 id="rician-分布marcum-q-与-pd">Rician 分布、Marcum Q 与 P_D</h5>
 <p>目标存在时，&quot;信号+噪声&quot;的幅度服从 Rician 分布。P_D = 该分布超过门限 T 的概率，积分结果用 Marcum Q 函数表示（一种特殊函数，工程上查表/调库即可）。于是 P_D = f(SNR, P_FA)：SNR 越高或门限越低，P_D 越大。</p>
-<h4 id="roc-曲线怎么读">ROC 曲线怎么读</h4>
+<h5 id="roc-曲线怎么读">ROC 曲线怎么读</h5>
 <p>ROC（receiver operating characteristic）曲线：横轴 P_FA、纵轴 P_D，每条曲线对应一个 SNR。读法三要点：</p>
 <ol>
 <li>同一曲线：P_FA 放宽（右移），P_D 上升——门限调低的代价。</li>
 <li>SNR 越大的曲线越靠左上——整体性能更好。</li>
 <li>设计流程：先按系统可承受虚警率定 P_FA，再按期望 P_D 查需要的 SNR，回代第 2 章 RRE 算作用距离。</li>
 </ol>
-<h4 id="swerling-04-起伏模型">Swerling 0~4 起伏模型</h4>
+<h5 id="swerling-04-起伏模型">Swerling 0~4 起伏模型</h5>
 <p>真实目标的 RCS 会随姿态角、频率起伏（第 7 章细讲），Swerling 模型用&quot;概率密度 × 起伏快慢&quot;两维分类：</p>
 <ul>
 <li>SW0（非起伏/Marcum 目标）：RCS 恒定，如球形定标体。</li>
@@ -977,7 +978,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>SW3：4 自由度 chi-square 起伏（对应一个大散射体+若干小散射体），慢起伏。</li>
 <li>SW4：同 SW3 的 PDF，快起伏。</li>
 </ul>
-<h4 id="各模型所需-snr-量级">各模型所需 SNR 量级</h4>
+<h5 id="各模型所需-snr-量级">各模型所需 SNR 量级</h5>
 <p>达到 P_D=0.9、P_FA=10⁻⁶（单脉冲）大致需要：</p>
 <ul>
 <li>SW0：约 13.2 dB</li>
@@ -985,14 +986,14 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>SW3/SW4：介于其间</li>
 </ul>
 <p>含义：<strong>起伏让检测变难</strong>——虽然 RCS 平均值相同，但&quot;目标恰好处于深衰落&quot;的概率拉低了 P_D。快起伏+多脉冲非相干积累反而有&quot;分集&quot;好处，SW2 比 SW1 容易些。</p>
-<h4 id="确认驻留与-m-of-n-积累">确认驻留与 m-of-n 积累</h4>
+<h5 id="确认驻留与-m-of-n-积累">确认驻留与 m-of-n 积累</h5>
 <ul>
 <li>确认驻留（confirmation dwell）：第一次检测过门限后，立刻回头再看一眼，两次都过才算数。单次 P_FA=10⁻³ 时，两次独立确认的联合 P_FA≈10⁻⁶——用时间换虚警率，电扫雷达常用。</li>
 <li>m-of-n 二进制积累：n 次检测中至少 m 次过门限才报目标。对快起伏目标稳健，且对单次大虚警不敏感；第 15 章给定量公式。</li>
 </ul>
-<h4 id="albersheim-公式">Albersheim 公式</h4>
+<h5 id="albersheim-公式">Albersheim 公式</h5>
 <p>闭式经验公式，手算给定 P_D、P_FA、积累数 N 所需 SNR（SW0 情况），误差约 0.2 dB 量级，做方案估算极方便，避免查 Marcum Q 表。Shnidman 公式是其对 Swerling 各型的推广。</p>
-<h4 id="antpq-3637-例子">AN/TPQ-36/37 例子</h4>
+<h5 id="antpq-3637-例子">AN/TPQ-36/37 例子</h5>
 <p>Firefinder 武器定位雷达：敌方炮弹一旦穿过其 search fence（一道窄空域栅栏）即被捕获，随即转入跟踪外推弹道、解算发射阵地。它是&quot;小空域搜索 + 搜索-跟踪无缝交叠&quot;的教科书案例：搜索空域小 → 每帧时间短 → 对高速小目标（炮弹）也能高数据率观测。</p>
 <p><strong>【易混点/常见误区】</strong></p>
 <ol>
@@ -1003,35 +1004,35 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 搜索章回答&quot;用多少时间照多大天区&quot;，检测章回答&quot;门限定多高才能 P_FA 受控而 P_D 尽量高&quot;，Swerling 模型告诉你真实目标比理想目标难检测约 8 dB。</p>
 <hr>
-<h2 id="part-ii-外部因素external-factors">Part II 外部因素（External Factors）</h2>
-<h3 id="第4章-传播效应与机理propagation-effects-and-mechanisms">第4章 传播效应与机理（Propagation Effects and Mechanisms）</h3>
+<h3 id="part-ii-外部因素external-factors">Part II 外部因素（External Factors）</h3>
+<h4 id="第4章-传播效应与机理propagation-effects-and-mechanisms">第4章 传播效应与机理（Propagation Effects and Mechanisms）</h4>
 <p><strong>【本章定位】</strong> 电磁波从天线到目标要走真实大气与地表，本章系统讲解路上发生的一切：衰减、折射、波导、多径、衍射、电离层——决定&quot;RRE 算出的理想距离&quot;要打多少折扣、低空为什么有盲区。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="传播因子-f">传播因子 F</h4>
+<h5 id="传播因子-f">传播因子 F</h5>
 <p>把所有传播效应用一个复电压传播因子 F_v 收进 RRE：接收电压乘 F，功率乘 |F|²，单基地双程 RRE 里出现</p>
 <p>P_r ∝ |F|⁴</p>
 <p>F=1 表示自由空间；F 可因多径干涉而 &gt;1（信号增强，最多 6 dB 电压即 12 dB 功率双程更多）或 ≈0（相消，深衰落）。要区分单程（信标/干扰）、双程单基地、双基地三种路径；空间还分干涉区（直视，多径相干叠加）与衍射区（地平线以下）。</p>
-<h4 id="大气衰减与吸收">大气衰减与吸收</h4>
+<h5 id="大气衰减与吸收">大气衰减与吸收</h5>
 <p>用衰减系数 α（dB/km）描述：</p>
 <ul>
 <li>晴空：氧气在约 60 GHz 有强吸收峰（该频段反而适合保密短程通信）；水汽在 22 GHz、183 GHz 附近有吸收线。X 波段以上衰减随频率上升。</li>
 <li>雨：雨滴散射+吸收，频率越高越惨（Ka 波段大雨可衰减数 dB/km）；雾、雪各有模型。</li>
 <li>工程用法：把 α 乘双程路径长度（km）得到 dB 损耗，塞进 RRE 的 L_s。例：α=0.03 dB/km、R=100 km → 双程损耗 = 0.03×2×100 = 6 dB。</li>
 </ul>
-<h4 id="折射与波导ducting">折射与波导（ducting）</h4>
+<h5 id="折射与波导ducting">折射与波导（ducting）</h5>
 <p>大气折射率随高度降低，电磁波射线会向下弯。工程上用&quot;4/3 地球半径模型&quot;把弯曲射线拉直、把地球等效放大。当近海面/近地面出现强逆温逆湿层时形成大气波导（duct）：电磁波被&quot;关&quot;在波导层内沿地表传播，可看到地平线外很远的目标（超折射/超视距），也可能在波导顶上方形成新的盲区。评估低空覆盖必须考虑。</p>
-<h4 id="湍流电离层与-oth">湍流、电离层与 OTH</h4>
+<h5 id="湍流电离层与-oth">湍流、电离层与 OTH</h5>
 <ul>
 <li>湍流（turbulence）：折射率的随机小尺度起伏，引起信号闪烁（scintillation）与到达角抖动，对高精度测角、长基线系统有影响。</li>
 <li>电离层（ionosphere）：60–1000 km 高度的电离气体，对 HF（3–30 MHz）像一面镜子。OTH（over-the-horizon）超视距雷达故意打上天再反射下来，探测数千公里外目标；代价是分辨率粗、受电离层天气摆布。</li>
 <li>频率越高电离层越透明，微波雷达（L 波段以上）基本直线穿透。</li>
 </ul>
-<h4 id="衍射与多径">衍射与多径</h4>
+<h5 id="衍射与多径">衍射与多径</h5>
 <ul>
 <li>衍射（diffraction）：电磁波会&quot;拐弯&quot;绕过地球曲率/障碍物一点点，使地平线外仍有弱场（衍射区），但衰减很快，不能指望它探测低空远距目标。</li>
 <li>多径（multipath）：目标回波=直射路径+地面/海面反射路径的相干叠加。低仰角时两路径相位差随距离起伏，形成&quot;花瓣状&quot;干涉方向图；测角时直射与反射分量夹角小于波束宽度，单脉冲也分不开，导致<strong>低仰角测角误差剧增</strong>——这是地基雷达低空精度差的根本原因。</li>
 </ul>
-<h4 id="趋肤深度与穿墙">趋肤深度与穿墙</h4>
+<h5 id="趋肤深度与穿墙">趋肤深度与穿墙</h5>
 <p>导体/损耗介质中电磁波按指数衰减，趋肤深度 δ = 场强降到 1/e 的深度。频率越低、介质电导率越低，穿透越深。应用：低频穿墙雷达、穿叶雷达（FOPEN 用 VHF/UHF）、探地雷达；反面教材：毫米波几乎穿不过任何墙，只能视距内用。</p>
 <p><strong>【易混点/常见误区】</strong></p>
 <ol>
@@ -1042,10 +1043,10 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 传播章=给理想 RRE 打真实世界的折扣：衰减用 dB/km 扣、折射决定地平线、多径决定低空精度、电离层给 HF 开了一扇超视距的窗。</p>
 <hr>
-<h3 id="第5章-杂波特性characteristics-of-clutter">第5章 杂波特性（Characteristics of Clutter）</h3>
+<h4 id="第5章-杂波特性characteristics-of-clutter">第5章 杂波特性（Characteristics of Clutter）</h4>
 <p><strong>【本章定位】</strong> 杂波（clutter）是地面、海面、雨雪等&quot;不想要的回波&quot;，多数雷达真正的对手是杂波而不是接收机噪声。本章给杂波定量建模，是 CFAR 门限设计与 MTI 指标计算的输入。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="杂波-vs-噪声对比表">杂波 vs 噪声对比表</h4>
+<h5 id="杂波-vs-噪声对比表">杂波 vs 噪声对比表</h5>
 <table>
 <thead>
 <tr>
@@ -1076,24 +1077,24 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </tr>
 </tbody></table>
 <p>对策方向因此不同：噪声靠压低 F 与积累；杂波靠 Doppler 滤波（第 17 章）与 CFAR（第 16 章）。</p>
-<h4 id="σ⁰-与-η">σ⁰ 与 η</h4>
+<h5 id="σ⁰-与-η">σ⁰ 与 η</h5>
 <p>杂波用单位面积/体积的散射率描述：</p>
 <ul>
 <li>σ⁰（sigma-nought）：面杂波归一化散射系数，无量纲（m²/m²），是擦地角、频率、极化、地形的函数，常以 dB 表示（如 -20 dB）。</li>
 <li>η（eta）：体杂波（雨、箔条云）的反射率，单位 m²/m³。</li>
 </ul>
-<h4 id="照射面积与杂波随-r²">照射面积与&quot;杂波随 R⁻²&quot;</h4>
+<h5 id="照射面积与杂波随-r²">照射面积与&quot;杂波随 R⁻²&quot;</h5>
 <p>杂波区总 RCS = σ⁰ × 照射面积 A_c。A_c 有两种极限：</p>
 <ul>
 <li>波束限制（beam-limited）：A_c ≈ Rθ₃ × Rφ/csc（俯仰向被波束宽截断）→ A_c ∝ R²；</li>
 <li>脉冲限制（pulse-limited）：距离向被脉宽 cτ/2 截断，A_c ≈ Rθ₃ × cτ/(2·cos ψ)，ψ 为擦地角 → A_c ∝ R。</li>
 </ul>
 <p>把 A_c ∝ R² 代回 RRE 的 R⁴：杂波功率 ∝ σ⁰R²/R⁴ = R⁻²。所以<strong>杂波回波只按 R⁻²（脉冲限制时 R⁻³）衰减，而点目标按 R⁻⁴</strong>——远距离上杂波相对目标反而&quot;变强&quot;，这是杂波受限雷达的核心困境。</p>
-<h4 id="长尾分布的含义">长尾分布的含义</h4>
+<h5 id="长尾分布的含义">长尾分布的含义</h5>
 <p>海杂波、城市地杂波常出现&quot;尖峰&quot;（spike）：多数时间温和，偶尔窜出远超均值的强回波。Weibull、log-normal、K 分布的尾部比 Rayleigh 厚得多。含义：按 Rayleigh 假设设的门限会严重低估虚警，必须把 CFAR 门限余量加大或用有序统计量（第 16 章）。</p>
-<h4 id="gtri-地杂波模型">GTRI 地杂波模型</h4>
+<h5 id="gtri-地杂波模型">GTRI 地杂波模型</h5>
 <p>Georgia Tech Research Institute 模型：把 σ⁰ 写成&quot;擦地角依赖 × 频率依赖 × 极化因子&quot;的乘积，按地形类别（山地、农田、城市、沙漠）给参数表。用途：仿真与 MTI 改善因子预算时直接查表代入。</p>
-<h4 id="海杂波与-nathanson-数据表">海杂波与 Nathanson 数据表</h4>
+<h5 id="海杂波与-nathanson-数据表">海杂波与 Nathanson 数据表</h5>
 <p>海杂波 σ⁰ 强烈依赖海态（浪高）、擦地角、风向、极化（HH 尖峰多于 VV）。Nathanson 数据表按&quot;波段 × 擦地角 × 极化 × 海态&quot;汇总大量实测平均 σ⁰，是海用雷达设计的第一手数据。雨回波用 η 表示并与气象反射率 dBZ 换算；风吹植被带来非零谱宽（几 Hz 量级），限制 MTI 对消深度。</p>
 <p><strong>【易混点/常见误区】</strong></p>
 <ol>
@@ -1104,22 +1105,22 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 杂波是&quot;会跟着你功率一起变强的回波&quot;，面杂波 ∝ R⁻² 衰减比目标慢，统计上长尾有尖峰——抑制它靠 Doppler，容忍它靠 CFAR。</p>
 <hr>
-<h3 id="第6章-目标反射率target-reflectivity">第6章 目标反射率（Target Reflectivity）</h3>
+<h4 id="第6章-目标反射率target-reflectivity">第6章 目标反射率（Target Reflectivity）</h4>
 <p><strong>【本章定位】</strong> 把 RRE 里那个经验参数 σ（RCS）变成有物理内涵的量：回答&quot;电磁波照到飞机上，到底发生了什么&quot;。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="散射物理感应电流再辐射">散射物理：感应电流再辐射</h4>
+<h5 id="散射物理感应电流再辐射">散射物理：感应电流再辐射</h5>
 <p>平面波入射到良导体（PEC, perfect electric conductor）表面时，表面边界条件要求切向电场为零，于是表面被感应出电荷与电流；这些感应电流本身就是新的辐射源，向各方向再辐射出散射场。雷达收到的是&quot;再辐射&quot;中朝回雷达方向的那一份。波阻抗 377 Ω（自由空间 E/H 之比）、极化等概念在此复习。</p>
 <p>直觉类比：目标不是镜子&quot;弹回&quot;波，而是被波&quot;激励&quot;后自己二次发声。</p>
-<h4 id="rcs-正式定义">RCS 正式定义</h4>
+<h5 id="rcs-正式定义">RCS 正式定义</h5>
 <p>雷达截面积 σ：假想一个各向同性散射体，在雷达方向产生的功率密度与真实目标相同，则该假想体的截获面积即 σ，单位 m²（常用 dBsm = 10log10 σ）。注意 σ <strong>不是几何投影面积</strong>——1 m² 的金属板正对时可有几千 m² 的 RCS，斜对时可能小于 10⁻³ m²。</p>
-<h4 id="三个散射区按尺寸波长">三个散射区（按尺寸/波长）</h4>
+<h5 id="三个散射区按尺寸波长">三个散射区（按尺寸/波长）</h5>
 <p>以目标特征尺寸 a 与波长 λ 之比划分：</p>
 <ul>
 <li>Rayleigh 区（a ≪ λ，如雨滴对 S 波段）：散射场来不及在目标上&quot;成形&quot;，σ ∝ a⁶/λ⁴——小目标对高频雷达急剧&quot;隐形&quot;，这也是气象雷达要用低频看小雨滴还能看到的反面原因。</li>
 <li>谐振/Mie 区（a ≈ λ）：感应电流在目标表面形成驻波式谐振，σ 随频率上下振荡，必须用严格解（如球体的 Mie 级数）或数值法计算。</li>
 <li>光学区（a ≫ λ，如飞机对 X 波段）：可用几何光学/物理光学近似，散射由若干局部机制叠加。</li>
 </ul>
-<h4 id="镜面散射与多散射中心">镜面散射与多散射中心</h4>
+<h5 id="镜面散射与多散射中心">镜面散射与多散射中心</h5>
 <p>光学区的散射机制：</p>
 <ul>
 <li>镜面散射（specular）：表面法线恰好把入射方向反射向雷达时出现强回波（平板、二面角、三面角最强）。</li>
@@ -1135,19 +1136,19 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 目标回波=入射波激励的表面电流的再辐射；按 a/λ 分 Rayleigh/Mie/光学三区，光学区的多散射中心相干叠加决定 RCS 的强方向性。</p>
 <hr>
-<h3 id="第7章-目标起伏模型target-fluctuation-models">第7章 目标起伏模型（Target Fluctuation Models）</h3>
+<h4 id="第7章-目标起伏模型target-fluctuation-models">第7章 目标起伏模型（Target Fluctuation Models）</h4>
 <p><strong>【本章定位】</strong> 第 6 章说 RCS 会剧烈变化，本章给变化建立统计模型，直接供第 15 章计算检测性能、供仿真系统生成逼真目标。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="定标基准导电球与角反射器">定标基准：导电球与角反射器</h4>
+<h5 id="定标基准导电球与角反射器">定标基准：导电球与角反射器</h5>
 <ul>
 <li>导电球（PEC sphere）：Mie 级数有严格解析解。光学区（半径 a≫λ）σ → πa²（恰为几何投影面积）；Mie 区绕此值上下振荡。球是全向的，适合做法拉第定标中的&quot;标准答案&quot;。</li>
 <li>三面角反射器（trihedral corner reflector）：三个互相垂直的金属面把来波沿原路三次反射回去，光学区峰值 σ_max = 12πa⁴/λ²（a 为棱边长）。特点：宽角度内回波强且可精确计算，是外场 RCS 测量、SAR 定标的标准器件。注意 σ 与 λ² 成反比——同一反射器频率越高 RCS 越大。</li>
 </ul>
-<h4 id="dumbbell-模型看懂起伏">dumbbell 模型：看懂起伏</h4>
+<h5 id="dumbbell-模型看懂起伏">dumbbell 模型：看懂起伏</h5>
 <p>哑铃（dumbbell）= 两个各向同性散射体，间距 D。双站……单站回波是两散射体回波的相干叠加：</p>
 <p>σ ∝ |cos(2πD·sinθ/λ)|²</p>
 <p>θ 为视线与哑铃轴的夹角。θ 稍变，路径差 2D·sinθ 对应的相位就变，σ 在深谷（≈0）与峰值（4 倍单体）之间震荡。间距越大、波长越短，震荡越密集。真实飞机=几十个散射中心的叠加，起伏自然剧烈——这就是&quot;为什么需要统计模型&quot;。</p>
-<h4 id="统计模型族">统计模型族</h4>
+<h5 id="统计模型族">统计模型族</h5>
 <ul>
 <li>Swerling 1/2：σ 服从指数分布（电压 Rayleigh），物理对应&quot;大量强度相当的散射中心&quot;（如大型飞机）。SW1 慢起伏（驻留间去相关），SW2 快起伏（脉冲间去相关）。</li>
 <li>Swerling 3/4：σ 服从 4 自由度 chi-square，对应&quot;一个主导散射体+一群小散射体&quot;（如带螺旋桨的飞机、小船）。</li>
@@ -1155,7 +1156,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>Weibull、log-normal：长尾分布，用于某些大目标/特定视角下比 chi-square 更拟合实测。</li>
 <li>Shnidman：进一步推广的解析框架。</li>
 </ul>
-<h4 id="去相关角度与频率">去相关：角度与频率</h4>
+<h5 id="去相关角度与频率">去相关：角度与频率</h5>
 <p>起伏要&quot;快&quot;才有分集价值（快起伏+非相干积累降低检测所需 SNR）。什么时候目标自己变了？</p>
 <ul>
 <li>角度去相关：Δθ = λ/(2L)。L 为目标横向尺寸。算例：L=10 m、λ=3 cm → Δθ ≈ 0.0015 rad ≈ 0.086°——目标转千分之一圈，回波就完全换一副面孔。</li>
@@ -1171,10 +1172,10 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> RCS 起伏源于多散射中心的相干叠加，统计上用 Swerling/Weinstock/Weibull 建模；目标每转 λ/2L 或雷达每跳频 c/2L 就换一张&quot;回波脸&quot;。</p>
 <hr>
-<h3 id="第8章-doppler-现象与数据采集doppler-phenomenology-and-data-acquisition">第8章 Doppler 现象与数据采集（Doppler Phenomenology and Data Acquisition）</h3>
+<h4 id="第8章-doppler-现象与数据采集doppler-phenomenology-and-data-acquisition">第8章 Doppler 现象与数据采集（Doppler Phenomenology and Data Acquisition）</h4>
 <p><strong>【本章定位】</strong> 连接&quot;物理现象&quot;与&quot;数据形式&quot;的桥梁：讲清 Doppler 频移、脉冲串的时频结构，以及雷达到底把什么数据存下来交给后面的处理章节。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="doppler-频移-fd2vλ">Doppler 频移 f_d=2v/λ</h4>
+<h5 id="doppler-频移-fd2vλ">Doppler 频移 f_d=2v/λ</h5>
 <p>运动目标的回波频率会偏移（救护车警笛变调同款物理）。从狭义相对论精确式出发，在 v≪c 下取近似：</p>
 <p>f_d = 2v/λ</p>
 <ul>
@@ -1182,7 +1183,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>因子 2：发射时目标&quot;压缩&quot;一次波长，反射时二次多普勒，共两份</li>
 </ul>
 <p>算例：X 波段 λ=0.03 m，v=100 m/s → f_d ≈ 6.67 kHz。v 只有切向分量时 f_d=0——Doppler 雷达测不到横向运动。</p>
-<h4 id="四个时间尺度-四个频率尺度时频互展">四个时间尺度 ↔ 四个频率尺度（时频互展）</h4>
+<h5 id="四个时间尺度-四个频率尺度时频互展">四个时间尺度 ↔ 四个频率尺度（时频互展）</h5>
 <p>脉冲串信号由四个时间尺度嵌套，每个时间尺度在频域对应一个&quot;互成倒数&quot;的尺度（reciprocal spreading，时域越宽频域越窄）：</p>
 <table>
 <thead>
@@ -1209,16 +1210,16 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </tr>
 </tbody></table>
 <p>规律：频域里每个尺度 = 1/对应时域尺度。为什么要发一串脉冲测 Doppler？单脉冲频谱宽 1/τ≈1 MHz，而 f_d 只有几 kHz，根本&quot;看不见&quot;；M 个脉冲的 CPI 把频谱压成宽度 1/(M·PRI) 的细谱线，才能分辨几 kHz 的 Doppler——<strong>Doppler 分辨率 = 1/CPI</strong>。</p>
-<h4 id="快时间慢时间数据矩阵">快时间/慢时间数据矩阵</h4>
+<h5 id="快时间慢时间数据矩阵">快时间/慢时间数据矩阵</h5>
 <p>雷达采集的数据是二维矩阵：</p>
 <ul>
 <li>快时间（fast time）：单个脉冲内的采样轴，对应距离（采样率~MHz，每微秒对应 150 m 距离）。</li>
 <li>慢时间（slow time）：脉冲序号轴，PRI 为采样间隔，对应 Doppler（PRF 为采样率）。</li>
 </ul>
 <p>沿快时间做处理 → 距离维；沿慢时间做 FFT → Doppler 维；合起来得到 range-Doppler 图。这个&quot;数据矩阵&quot;概念是第 17 章 MTI/pulse-Doppler 与第 21 章 SAR 的统一语言。</p>
-<h4 id="iq-采集">I/Q 采集</h4>
+<h5 id="iq-采集">I/Q 采集</h5>
 <p>为保留相位信息（Doppler 就是相位的线性变化），接收机把信号下变频后用两路正交通道采样：I（同相）与 Q（正交），合成复数 x = I + jQ。目标在慢时间上呈现为频率 f_d 的复正弦：x[m] = A·exp(j·2πf_d·m·PRI)。没有 I/Q 只有幅度，就无法区分 +f_d 与 −f_d（分不清目标在靠近还是远离）。</p>
-<h4 id="range-doppler-谱与运动平台问题">range-Doppler 谱与运动平台问题</h4>
+<h5 id="range-doppler-谱与运动平台问题">range-Doppler 谱与运动平台问题</h5>
 <p>静止雷达的 range-Doppler 图里：噪声铺底（宽带、弱）、杂波占据零 Doppler 附近一条竖带（强、窄）、运动目标是偏离杂波带的点。雷达装在运动平台（飞机/舰船）上时，地面相对平台运动，不同方向的地杂波有不同 Doppler（正前方最大、正侧面为零）——<strong>杂波谱沿 Doppler 扩展成一个斜脊</strong>，且受 PRF 采样限制会折叠（混叠）；主瓣杂波、副瓣杂波、高度线杂波成分复杂。同时引入距离模糊（回波跨越多个 PRI）与速度模糊（f_d 超过 PRF/2 被折叠）的解算问题。机载下视检测因此远比地基雷达难，这是 STAP 等高级技术的动机。</p>
 <p><strong>【易混点/常见误区】</strong></p>
 <ol>
@@ -1229,13 +1230,13 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 运动目标让回波变成慢时间上的复正弦，雷达用快时间×慢时间数据矩阵采集 I/Q 样本，频域里 RF/τ/PRI/CPI 四个尺度互为倒数地展开。</p>
 <hr>
-<h2 id="part-iii-子系统subsystems">Part III 子系统（Subsystems）</h2>
-<h3 id="第9章-雷达天线radar-antennas">第9章 雷达天线（Radar Antennas）</h3>
+<h3 id="part-iii-子系统subsystems">Part III 子系统（Subsystems）</h3>
+<h4 id="第9章-雷达天线radar-antennas">第9章 雷达天线（Radar Antennas）</h4>
 <p><strong>【本章定位】</strong> 天线是把电功率变成定向波束（发射）和把回波功率收回（接收）的器件；它的增益与波束宽度直接进入 RRE 和搜索/跟踪方程。本章从各向同性源讲到相控阵。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="从各向同性源到方向图">从各向同性源到方向图</h4>
+<h5 id="从各向同性源到方向图">从各向同性源到方向图</h5>
 <p>各向同性（isotropic）辐射源向 4π 立体角均匀辐射，是假想基准。真实天线把能量集中到某些方向，用辐射方向图（radiation pattern）描述：主瓣（mainlobe，能量最集中的方向）、副瓣（sidelobe，不需要的泄漏方向）、后瓣、零点。副瓣是&quot;漏洞&quot;：杂波和干扰机会从副瓣钻进来，所以低副瓣是军用最在意的指标之一。</p>
-<h4 id="波束宽度-θ₃αλl">波束宽度 θ₃=αλ/L</h4>
+<h5 id="波束宽度-θ₃αλl">波束宽度 θ₃=αλ/L</h5>
 <p>均匀照射的线孔径，3 dB 波束宽度（主瓣半功率点之间夹角）：</p>
 <p>θ₃ = α·λ/L</p>
 <ul>
@@ -1243,7 +1244,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>算例：L=1 m、λ=3 cm → θ₃ ≈ 0.03–0.045 rad ≈ 1.7°–2.6°</li>
 <li>含义：<strong>天线越大、波长越短，波束越细</strong>。波束细→角分辨率高、增益高。</li>
 </ul>
-<h4 id="增益-dη4πaλ²">增益 D=η·4πA/λ²</h4>
+<h5 id="增益-dη4πaλ²">增益 D=η·4πA/λ²</h5>
 <p>方向性增益（directivity）峰值：</p>
 <p>D_max = η_a·4πA/λ²</p>
 <ul>
@@ -1251,13 +1252,13 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>算例：A=1 m²、λ=3 cm、η=0.6 → D = 0.6×4π×1/(0.03)² ≈ 8377 → 39.2 dB</li>
 <li>与波束宽的关系：G ≈ 26000°/(θ₃°·φ₃°)，波束越细增益越高——同一枚硬币两面。</li>
 </ul>
-<h4 id="孔径加权与副瓣">孔径加权与副瓣</h4>
+<h5 id="孔径加权与副瓣">孔径加权与副瓣</h5>
 <p>均匀照射副瓣约 -13 dB（太高）。给孔径加&quot;中间强、边缘弱&quot;的幅度加权（aperture taper，如 Taylor 加权），副瓣可压到 -35 dB 甚至更低。代价：波束变宽（α 变大）、增益下降（η_a 降）。这是天线设计最经典的 trade-off。</p>
-<h4 id="单脉冲monopulse">单脉冲（monopulse）</h4>
+<h5 id="单脉冲monopulse">单脉冲（monopulse）</h5>
 <p>跟踪雷达要精确测角。单脉冲技术：把孔径分成两半，形成和（Σ）波束与差（Δ）波束，同一脉冲内比较两路信号之比即可读出目标偏离轴线多少——不受脉冲间目标起伏影响（故名&quot;单脉冲&quot;）。第 18 章会算其测角精度。</p>
-<h4 id="反射面天线">反射面天线</h4>
+<h5 id="反射面天线">反射面天线</h5>
 <p>抛物面（dish）：馈源发出的球面波经抛物面反射变成平面波——光学的反射望远镜同款原理。简单、便宜、宽带，但馈源遮挡、机械扫描慢、副瓣受限（典型 -25 dB 量级）。偏馈、赋形反射面、卡塞格伦双反射面是常见变体。</p>
-<h4 id="相控阵phased-array">相控阵（phased array）</h4>
+<h5 id="相控阵phased-array">相控阵（phased array）</h5>
 <p>本章重头戏。N 个阵元排成阵列，每个阵元后接移相器（phase shifter）；给各阵元施加线性递增的相移，各阵元波前在某个方向同相叠加——波束就指向那个方向，且<strong>微秒级跳变，无机械惯性</strong>。</p>
 <ul>
 <li>阵因子（array factor）：N 元等幅同相时方向图 ∝ sin(Nψ/2)/sin(ψ/2)，ψ 含方向与阵元间距 d。</li>
@@ -1275,33 +1276,33 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 天线=把功率捏成波束的透镜：孔径决定波束宽与增益，加权决定副瓣，相控阵用相位代替机械转动换来微秒级敏捷。</p>
 <hr>
-<h3 id="第10章-雷达发射机radar-transmitters">第10章 雷达发射机（Radar Transmitters）</h3>
+<h4 id="第10章-雷达发射机radar-transmitters">第10章 雷达发射机（Radar Transmitters）</h4>
 <p><strong>【本章定位】</strong> 发射机决定雷达&quot;喊多大声、喊多干净&quot;。本章按器件路线对比磁控管、行波管/速调管与固态功放，并引入功率孔径积等系统级度量。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="发射机三要素">发射机三要素</h4>
+<h5 id="发射机三要素">发射机三要素</h5>
 <ol>
 <li>RF 源：产生/放大射频信号（振荡器或放大链）。</li>
 <li>调制器（modulator）：产生高压脉冲，让 RF 源按 PRF 节奏工作。</li>
 <li>高压电源：供能。功率覆盖 mW（引信）到 GW（OTH 实验台），频率从 HF 到 94 GHz。</li>
 </ol>
-<h4 id="磁控管-vs-mopa">磁控管 vs MOPA</h4>
+<h5 id="磁控管-vs-mopa">磁控管 vs MOPA</h5>
 <ul>
 <li>磁控管（magnetron）：高功率振荡器，自己&quot;起振&quot;就出大功率脉冲。便宜、高效、皮实（微波炉同款），但<strong>相位逐脉冲随机</strong>——非相干，不能直接做 pulse-Doppler 处理；频率也随温度漂移。老式对空搜索、船用雷达常用。</li>
 <li>MOPA（master oscillator power amplifier，主振功放）：低功率高稳定主振荡器产生干净信号，再经放大链放大。放大器件有 TWT（traveling wave tube，行波管，宽带）与多腔速调管（klystron，高增益高功率、窄带）。相干——相位逐脉冲可控，是 pulse-Doppler/SAR 雷达的前提。代价：贵、重、效率较低、高压危险。</li>
 </ul>
-<h4 id="固态与-tr-组件">固态与 T/R 组件</h4>
+<h5 id="固态与-tr-组件">固态与 T/R 组件</h5>
 <p>固态功放（GaAs/GaN 晶体管）：单管功率几十到几百瓦，远低于真空管（兆瓦级），但可<strong>分布式部署</strong>：AESA 天线每个阵元后放一个 T/R 组件（含功放+低噪放+移相+开关），几千个组件合成兆瓦级总功率。</p>
 <ul>
 <li>graceful degradation（优雅降级）：真空管坏了=雷达瘫了；AESA 坏 10% 组件，波束仅轻微变差——可靠性范式完全不同。</li>
 <li>固态另两个优点：占空比高（可发长脉冲/高 PRF 波形）、无需高压预热、寿命按十万小时计。</li>
 </ul>
-<h4 id="功率孔径积与-pag">功率孔径积与 PAG</h4>
+<h5 id="功率孔径积与-pag">功率孔径积与 PAG</h5>
 <ul>
 <li>power-aperture 积（P_avg×A）：搜索雷达的根本度量——搜索方程里检测性能只取决于这个乘积（第 2 章）。</li>
 <li>PAG（power-aperture-gain 积）：跟踪/火控雷达的度量，跟踪精度还要看增益。</li>
 <li>含义：固态单机功率低没关系，用天线孔径与驻留时间补——系统设计看的是乘积。</li>
 </ul>
-<h4 id="频谱管理与可靠性">频谱管理与可靠性</h4>
+<h5 id="频谱管理与可靠性">频谱管理与可靠性</h5>
 <ul>
 <li>频谱分配：雷达要与通信、导航抢频段；发射频谱纯度（谐波、带外杂散）受 ITU/国内法规约束，波形发生器与功放的线性度直接影响电磁兼容。</li>
 <li>可靠性指标：MTBF、可维护性、冷却（液冷/风冷）——发射机是雷达里故障率最高、最难维护的部分，真空管寿命仅数千小时，这也是为什么现代雷达全面固态化。</li>
@@ -1315,10 +1316,10 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 发射机的核心问题是&quot;用什么器件、以多高的平均功率、发出多干净的信号&quot;；现代答案是分布式固态 T/R 组件，用数量与优雅降级取代单管的暴力。</p>
 <hr>
-<h3 id="第11章-雷达接收机radar-receivers">第11章 雷达接收机（Radar Receivers）</h3>
+<h4 id="第11章-雷达接收机radar-receivers">第11章 雷达接收机（Radar Receivers）</h4>
 <p><strong>【本章定位】</strong> 接收机负责把微弱回波放大、变频、数字化，同时不能添太多噪声、不能被强信号压垮。本章给出七类接收机的全景图和灵敏度/动态范围两大指标。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="七类接收机">七类接收机</h4>
+<h5 id="七类接收机">七类接收机</h5>
 <ol>
 <li>crystal video（晶体检波视频）：天线后直接包络检波。无增益无变频，灵敏度差，但极简单——引信、告警接收机用它。</li>
 <li>TRF（tuned RF，调谐射频）：直接在 RF 放大后检波。选择性差，历史上昙花一现。</li>
@@ -1328,7 +1329,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>数字接收机：在 IF（甚至 RF）直接 ADC 采样，后续下变频、滤波全由 FPGA/DSP 软件完成。灵活、通道一致性好，是现代方向。</li>
 <li>IFM（instantaneous frequency measurement）与信道化：电子战用，瞬时测频/并行窄带接收，快速分选信号。</li>
 </ol>
-<h4 id="超外差链上的关键件">超外差链上的关键件</h4>
+<h5 id="超外差链上的关键件">超外差链上的关键件</h5>
 <ul>
 <li>双工器（duplexer）：收发共用天线时的切换开关（环流器/T-R 开关），并在发射时保护接收机不被兆瓦级泄漏烧毁。</li>
 <li>LNA（low-noise amplifier，低噪放）：链路第一级，其噪声系数基本决定整机 F（Friis 公式：第一级权重最大）。</li>
@@ -1336,12 +1337,12 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>RF 预选滤波器：压带外干扰与镜像频率。</li>
 <li>LO/IF 频率选择：权衡镜像抑制、滤波器实现难度与 ADC 采样率。</li>
 </ul>
-<h4 id="解调包络-vs-iq">解调：包络 vs I/Q</h4>
+<h5 id="解调包络-vs-iq">解调：包络 vs I/Q</h5>
 <ul>
 <li>非相干包络检波：只取幅度，丢掉相位。简单便宜，磁控管雷达只能这样。</li>
 <li>相干 I/Q 同步解调：用相干本振分出 I、Q 两路，保留相位——Doppler 处理、脉压、成像的前提。</li>
 </ul>
-<h4 id="噪声系数与动态范围">噪声系数与动态范围</h4>
+<h5 id="噪声系数与动态范围">噪声系数与动态范围</h5>
 <ul>
 <li>噪声功率 kTB（第 2 章）；噪声系数 F = (输入 SNR)/(输出 SNR)，理想=1（0 dB），现代 LNA 可做到 1–3 dB。</li>
 <li>动态范围（dynamic range）：可处理的最强信号（1 dB 压缩点/饱和点）与最弱信号（噪声底）之比。</li>
@@ -1357,27 +1358,27 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 超外差+LNA+I/Q 是标准答案，数字接收是未来；设计灵魂是在&quot;足够灵敏（低 F）&quot;与&quot;不被强信号压垮（大 SFDR）&quot;之间走钢丝。</p>
 <hr>
-<h3 id="第12章-雷达激励器radar-exciters">第12章 雷达激励器（Radar Exciters）</h3>
+<h4 id="第12章-雷达激励器radar-exciters">第12章 雷达激励器（Radar Exciters）</h4>
 <p><strong>【本章定位】</strong> 入门教材中独有的专章。激励器是雷达的&quot;节拍器+音叉&quot;：产生发射波形与所有相干参考时钟。它的稳定度直接封顶杂波对消与成像质量。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="激励器是什么">激励器是什么</h4>
+<h5 id="激励器是什么">激励器是什么</h5>
 <p>类比：乐队里打拍子的指挥+定音的音叉。功能两件套：</p>
 <ol>
 <li>波形产生：由一组高稳定振荡器合成发射信号（载频、调制、PRF 节奏）；</li>
 <li>参考分配：给发射机、接收机本振、ADC 采样时钟提供<strong>同源</strong>的定时与相位基准。</li>
 </ol>
-<h4 id="相参coherence的含义">相参（coherence）的含义</h4>
+<h5 id="相参coherence的含义">相参（coherence）的含义</h5>
 <p>相参=全系统所有频率/时钟从同一个基准（如恒温晶振/原子钟）导出，脉冲间相位关系确定可知。为什么必须？Doppler 测量的本质是测量回波相位随脉冲序号的线性变化；若每次发射的初相都随机（磁控管），相位里就没有目标信息。REX（receiver/exciter）架构：接收与激励共用频率综合器，是现代相干雷达的标准形态。</p>
-<h4 id="iq-信号模型">I/Q 信号模型</h4>
+<h5 id="iq-信号模型">I/Q 信号模型</h5>
 <p>对静止点目标，解调后：</p>
 <p>I = A·cos(4πR/λ)，Q = A·sin(4πR/λ)</p>
 <p>4πR/λ 是双程路径对应的相位（去 2πR/λ，回 2πR/λ）。R 变化 λ/4（X 波段 7.5 mm！），相位就绕一整圈——雷达是天然的精密测相仪。目标径向运动 v 使相位随时间线性旋转，即 Doppler。</p>
-<h4 id="频率漂移ppm">频率漂移（ppm）</h4>
+<h5 id="频率漂移ppm">频率漂移（ppm）</h5>
 <p>振荡器频率随温度、老化漂移，用 ppm（parts per million，百万分之一）度量。例：10 GHz 载波、0.1 ppm 漂移 → 1 kHz 绝对频偏。收发共源时大部分漂移对消（相干体制的好处），但长相干积累（SAR 几秒级）仍受残余漂移限制。</p>
-<h4 id="ssb-相位噪声dbchz">SSB 相位噪声（dBc/Hz）</h4>
+<h5 id="ssb-相位噪声dbchz">SSB 相位噪声（dBc/Hz）</h5>
 <p>振荡器输出不是完美的单频谱线，谱线两裙有随机起伏的&quot;噪声裙边&quot;，用单边带相位噪声（SSB phase noise）度量：偏离载波 Δf 处 1 Hz 带宽内噪声功率相对载波的 dBc/Hz（如 -120 dBc/Hz @ 10 kHz offset）。</p>
 <p>为什么致命：强地杂波本身是&quot;大信号&quot;，它的相位噪声裙边会<strong>倒灌</strong>进相邻 Doppler 通道，淹没慢速小目标（reciprocal mixing 效应）。pulse-Doppler 雷达对近载波（几十 Hz~几 kHz offset）相位噪声要求最苛刻——因为那正是慢目标的 Doppler 频道。</p>
-<h4 id="定时抖动与杂散">定时抖动与杂散</h4>
+<h5 id="定时抖动与杂散">定时抖动与杂散</h5>
 <ul>
 <li>定时抖动（timing jitter）：采样时钟/脉冲沿的随机晃动。MTI 对消要求相邻脉冲在几十 dB 深度上&quot;一模一样&quot;，抖动直接限制对消深度（改善因子上限）；SAR 成像中孔径内定时误差会抬高图像副瓣。</li>
 <li>杂散（spur）：频率综合中的确定性杂频分量，会在 range-Doppler 图上产生假目标线。来源：混频交调、电源纹波、数字时钟泄漏。</li>
@@ -1392,32 +1393,32 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 激励器是全雷达的相位基准源：它的稳定度决定了 MTI 能压多深、Doppler 能测多准、SAR 能聚焦多好。</p>
 <hr>
-<h3 id="第13章-雷达信号处理机the-radar-signal-processor">第13章 雷达信号处理机（The Radar Signal Processor）</h3>
+<h4 id="第13章-雷达信号处理机the-radar-signal-processor">第13章 雷达信号处理机（The Radar Signal Processor）</h4>
 <p><strong>【本章定位】</strong> 讲算法跑在什么硬件上：从模拟处理器到 GPU，用 FLOPS/延迟/功耗这套度量把&quot;信号处理&quot;落地为实时工程。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="模拟-vs-数字处理">模拟 vs 数字处理</h4>
+<h5 id="模拟-vs-数字处理">模拟 vs 数字处理</h5>
 <p>模拟前辈们：延迟线 MTI（用水银/石英延迟线存上一脉冲回波做对消）、SAW（声表面波）脉压滤波器、光学 SAR 处理器（用透镜胶片做相关！）。它们曾创造奇迹，但参数焊死、温漂难控。数字处理可编程、可重构、精度一致；<strong>自适应 MTI、非线性调频（NLFM）匹配滤波、STAP 等现代算法只有数字能实现</strong>——这是全数字化的根本理由。</p>
-<h4 id="处理机结构streaming-前端-后端">处理机结构：streaming 前端 + 后端</h4>
+<h5 id="处理机结构streaming-前端-后端">处理机结构：streaming 前端 + 后端</h5>
 <ul>
 <li>前端 streaming（流式）处理：数据像流水线一样进来就被处理——脉压、MTI、pulse-Doppler FFT、CFAR、SAR 成像。特点：数据率极高（GB/s）、算法规则、延迟要求硬实时。</li>
 <li>后端数据依赖处理：检测后的点迹做跟踪、识别、资源调度。数据量小、算法分支多、更像通用计算。</li>
 <li>这个划分直接决定硬件选型：前端用 FPGA/ASIC，后端用 CPU/GPGPU。</li>
 </ul>
-<h4 id="度量体系">度量体系</h4>
+<h5 id="度量体系">度量体系</h5>
 <ul>
 <li>吞吐：FLOPS（每秒浮点运算次数）/MIPS；</li>
 <li>延迟（latency）：从数据进来到结果出去的时间，火控环路对它最敏感；</li>
 <li>效率：FLOPS/瓦、FLOPS/公斤、FLOPS/美元——机载、星载对这三者依次敏感；</li>
 <li>bisection 带宽：芯片内部数据搬运能力，常比峰值算力更早成为瓶颈。</li>
 </ul>
-<h4 id="flops-计数估算处理器规模">FLOPs 计数（估算处理器规模）</h4>
+<h5 id="flops-计数估算处理器规模">FLOPs 计数（估算处理器规模）</h5>
 <ul>
 <li>FIR 滤波（N 抽头）：每输出点约 2N 次实乘加；</li>
 <li>IIR：每点约常数（与阶数成正比）；</li>
 <li>DFT 直接算：N 点输出共 N² 复乘；FFT：N·log₂N 量级——N=1024 时 FFT 约比直接 DFT 省 100 倍。</li>
 </ul>
 <p>估算流程：把处理链每级的&quot;输入率 × 每点运算量&quot;相加，加存储与 I/O 带宽，得处理器规格。</p>
-<h4 id="实现载体与数制">实现载体与数制</h4>
+<h5 id="实现载体与数制">实现载体与数制</h5>
 <ul>
 <li>ASIC：性能功耗比最高，开发贵、不可改——量产雷达用；</li>
 <li>FPGA：可重构、流式处理天然匹配、确定延迟——雷达前端主流；</li>
@@ -1433,42 +1434,42 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 信号处理机=用 FLOPS/带宽/延迟/功耗四把尺子，把算法映射到 FPGA+GPU 的混合硬件上，streaming 前端要硬实时，后端要灵活。</p>
 <hr>
-<h2 id="part-iv-信号与数据处理signal-and-data-processing">Part IV 信号与数据处理（Signal and Data Processing）</h2>
-<h3 id="第14章-雷达数字信号处理基础dsp-fundamentals-for-radar">第14章 雷达数字信号处理基础（DSP Fundamentals for Radar）</h3>
+<h3 id="part-iv-信号与数据处理signal-and-data-processing">Part IV 信号与数据处理（Signal and Data Processing）</h3>
+<h4 id="第14章-雷达数字信号处理基础dsp-fundamentals-for-radar">第14章 雷达数字信号处理基础（DSP Fundamentals for Radar）</h4>
 <p><strong>【本章定位】</strong> Part IV 的数学工具箱：采样、量化、DFT/FFT、数字滤波、随机信号、积累与匹配滤波。后面每章都在用这里的工具。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="雷达-dsp-的独特性">雷达 DSP 的独特性</h4>
+<h5 id="雷达-dsp-的独特性">雷达 DSP 的独特性</h5>
 <p>与语音/通信 DSP 相比，雷达 DSP 有四个特点：相干 I/Q 复信号（相位是信息）、载波体制（信号是 GHz 载波上的 MHz 调制）、40–80 dB 动态范围（强杂波与弱目标同框）、MHz–GHz 大带宽。这些特点驱动了所有后续设计。</p>
-<h4 id="nyquist-采样与欠采样">Nyquist 采样与欠采样</h4>
+<h5 id="nyquist-采样与欠采样">Nyquist 采样与欠采样</h5>
 <ul>
 <li>Nyquist 定理：采样率 f_s ≥ 2B（B 为信号带宽）才能无失真恢复；否则频谱折叠（混叠，aliasing）。</li>
 <li>实信号采样：f_s ≥ 2f_max；复信号（I/Q）：带宽 B 的信号只需 f_s ≥ B（正负频率独立）。</li>
 <li>欠采样/数字 IF：对中心频率 f_IF、带宽 B 的窄带信号，不必按 2f_IF 采样——用略大于 2B 的采样率，让信号混叠到一个&quot;数字中频&quot;上，频谱不重叠即可。好处：ADC 要求大降，后续数字下变频。雷达接收机普遍采用。</li>
 </ul>
-<h4 id="量化">量化</h4>
+<h5 id="量化">量化</h5>
 <p>ADC 把连续幅度压成 2^N 级。量化噪声功率 ≈ q²/12（q 为量化间隔），每增加 1 bit，SNR 提升约 6 dB。N bit ADC 理论动态范围 ≈ 6N dB：12 bit → 72 dB，14 bit → 84 dB。雷达动态范围需求据此选位数。</p>
-<h4 id="dftfft-与加窗">DFT/FFT 与加窗</h4>
+<h5 id="dftfft-与加窗">DFT/FFT 与加窗</h5>
 <ul>
 <li>DFT：N 个时域样本 → N 个频域样本，频率分辨率 = f_s/N = 1/T_obs（观测时间越长，频线越细）。</li>
 <li>FFT：DFT 的快速算法，N·log₂N 运算量。</li>
 <li>加窗（windowing）：直接截断信号相当于乘矩形窗，频谱副瓣高（-13 dB）。乘 Taylor/Hamming 等窗函数，副瓣可压到 -35 dB 以下，代价是主瓣展宽——<strong>副瓣与主瓣宽度的 trade-off</strong> 与第 9 章孔径加权完全同构（数学上是同一个傅里叶变换）。</li>
 <li>插值（interpolation）：频域峰值落在两条谱线之间时，用相邻谱线插值精估频率。</li>
 </ul>
-<h4 id="z-变换与-firiir">z 变换与 FIR/IIR</h4>
+<h5 id="z-变换与-firiir">z 变换与 FIR/IIR</h5>
 <ul>
 <li>z 变换：离散信号的复频域工具，H(z) 描述滤波器输入输出关系；单位圆上取值即频率响应。</li>
 <li>FIR（有限冲激响应）：输出=输入加权和，H(z)=Σ b_k z^(−k)。稳定、可线性相位，雷达脉压、MTI 对消器都是 FIR。</li>
 <li>IIR（无限冲激响应）：带反馈，少量系数实现陡峭响应，但有稳定性与相位非线性问题，雷达中较少用于主链路。</li>
 </ul>
-<h4 id="随机信号与-psd">随机信号与 PSD</h4>
+<h5 id="随机信号与-psd">随机信号与 PSD</h5>
 <p>噪声/杂波是随机过程，用均值、方差、自相关函数描述；自相关的傅里叶变换=功率谱密度（PSD, power spectral density）。白噪声 PSD 平坦；杂波 PSD 集中在零 Doppler 附近。滤波器输出 PSD = 输入 PSD × |H(f)|²——杂波抑制度量（改善因子）由此定义。</p>
-<h4 id="积累增益相干-n-vs-非相干-nn">积累增益：相干 N vs 非相干 √N~N</h4>
+<h5 id="积累增益相干-n-vs-非相干-nn">积累增益：相干 N vs 非相干 √N~N</h5>
 <ul>
 <li>相干积累（coherent integration）：复电压直接相加。信号电压同相叠加（×N），噪声电压随机游走（×√N），功率 SNR 增益 = N（10log10 N dB）。要求：信号相位已知且对齐。</li>
 <li>非相干积累（noncoherent integration）：取幅度/功率后再加，相位信息丢弃。SNR 增益介于 √N 与 N 之间，N 大时趋近 √N 量级。代价换来：不需要相位对齐，对起伏目标/非相干雷达可用。</li>
 </ul>
 <p>算例：100 个脉冲，相干增益 20 dB；非相干约 10~17 dB。</p>
-<h4 id="相关与匹配滤波">相关与匹配滤波</h4>
+<h5 id="相关与匹配滤波">相关与匹配滤波</h5>
 <p>相关运算（correlation）：度量两个信号&quot;像不像&quot;。检测理论给出最优结论：白噪声中检测已知波形的最优处理器是<strong>匹配滤波器</strong>（matched filter），其冲激响应 h(t)=a·x*(−t)（波形时间反转取共轭），等效于用波形自己做相关。输出 SNR 峰值 = 2E/N0，只取决于能量 E——这解释了第 2 章能量形式 RRE，也通向第 20 章脉压。</p>
 <p><strong>【易混点/常见误区】</strong></p>
 <ol>
@@ -1479,33 +1480,33 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 采样把世界数字化，DFT 把快慢时间变成距离-Doppler 谱，匹配滤波器用波形自相关给出白噪声下的 SNR 上限 2E/N0。</p>
 <hr>
-<h3 id="第15章-雷达目标门限检测threshold-detection-of-radar-targets">第15章 雷达目标门限检测（Threshold Detection of Radar Targets）</h3>
+<h4 id="第15章-雷达目标门限检测threshold-detection-of-radar-targets">第15章 雷达目标门限检测（Threshold Detection of Radar Targets）</h4>
 <p><strong>【本章定位】</strong> 第 3 章的深化与形式化：从&quot;设门限比较&quot;升级为统计假设检验的最优理论，给出各种目标模型的检测性能与工程估算公式。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="积累策略对比">积累策略对比</h4>
+<h5 id="积累策略对比">积累策略对比</h5>
 <ul>
 <li>相干积累：SNR 增益 N（理想上限），需相位对齐；</li>
 <li>非相干积累：增益 √N~N 之间，稳健；</li>
 <li>二进制 m-of-n 积累：n 次单脉冲判决（0/1）中至少 m 次过门限。抗单次大虚警、对快起伏目标好，但有量化损失（约 1~2 dB）；</li>
 <li>混合方案：先相干小组、再非相干跨组——现代雷达常规操作（CPI 内相干，CPI 间非相干或 m-of-n）。</li>
 </ul>
-<h4 id="假设检验与-neyman-pearson-准则">假设检验与 Neyman-Pearson 准则</h4>
+<h5 id="假设检验与-neyman-pearson-准则">假设检验与 Neyman-Pearson 准则</h5>
 <p>形式化：每个检测单元面临二选一——</p>
 <ul>
 <li>H0：只有噪声（无目标）</li>
 <li>H1：噪声+目标</li>
 </ul>
 <p>判决错误两类：虚警（H0 判成 H1，概率 P_FA）与漏警（H1 判成 H0，1−P_D）。Neyman-Pearson 准则：<strong>先定虚警预算（P_FA ≤ 给定值），在此约束下最大化 P_D</strong>。类比：法院先定&quot;冤枉好人的概率不得超过万分之一&quot;，再力求多抓真凶。这符合雷达系统逻辑：虚警会消耗跟踪/识别资源，必须硬约束。</p>
-<h4 id="似然比导出门限">似然比导出门限</h4>
+<h5 id="似然比导出门限">似然比导出门限</h5>
 <p>Neyman-Pearson 引理证明：最优检验是算<strong>似然比</strong> Λ = p(x|H1)/p(x|H0) 并与门限比较。对高斯噪声中的信号，似然比化简后等价于&quot;包络（或包络平方）与门限比&quot;——<strong>门限检测器不是工程偷懒，而是最优理论的自然结果</strong>。门限值由 P_FA 反解。</p>
-<h4 id="各类目标的检测性能">各类目标的检测性能</h4>
+<h5 id="各类目标的检测性能">各类目标的检测性能</h5>
 <ul>
 <li>非起伏目标（Marcum）：P_D 由 Marcum Q 函数给出，P_D=0.9、P_FA=10⁻⁶ 需 SNR≈13.2 dB（单脉冲）。</li>
 <li>Swerling 1/2（Rayleigh 起伏）：同指标约需 21 dB——起伏惩罚约 8 dB。</li>
 <li>Swerling 3/4：介于其间（约 18 dB 量级）。</li>
 <li>多脉冲非相干积累+快起伏（SW2/SW4）可追回大部分起伏损失（分集效应）。</li>
 </ul>
-<h4 id="albersheim-与-shnidman-公式">Albersheim 与 Shnidman 公式</h4>
+<h5 id="albersheim-与-shnidman-公式">Albersheim 与 Shnidman 公式</h5>
 <ul>
 <li>Albersheim：闭式经验式，输入 P_D、P_FA、N（积累脉冲数），输出所需单脉冲 SNR，适用于非起伏目标，精度约 0.2 dB——手算/电子表格即可做方案论证。</li>
 <li>Shnidman：推广到 Swerling 各型（含非整数积累数），用 Gamma 函数近似，精度相当。</li>
@@ -1520,26 +1521,26 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 检测=受虚警约束的假设检验，似然比给出最优门限结构，Albersheim/Shnidman 把&quot;P_D/P_FA/N → 所需 SNR&quot;变成一行可算的公式。</p>
 <hr>
-<h3 id="第16章-恒虚警率检测器constant-false-alarm-rate-detectors">第16章 恒虚警率检测器（Constant False Alarm Rate Detectors）</h3>
+<h4 id="第16章-恒虚警率检测器constant-false-alarm-rate-detectors">第16章 恒虚警率检测器（Constant False Alarm Rate Detectors）</h4>
 <p><strong>【本章定位】</strong> 第 15 章假设噪声功率已知，现实中干扰功率随位置/时间剧变。CFAR 让门限自动跟随环境，把虚警率&quot;钉死&quot;在设定值——几乎所有实用雷达检测器的最后一级。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="为什么固定门限失效">为什么固定门限失效</h4>
+<h5 id="为什么固定门限失效">为什么固定门限失效</h5>
 <p>固定门限按&quot;已知噪声功率 σ²&quot;设定。若实际干扰功率增大 κ 倍（比如进入杂波区），Rayleigh 包络假设下：</p>
 <p>P_FA_final = (P_FA_initial)^(1/κ)</p>
 <p>算例：设计 P_FA=10⁻⁶，干扰增强 κ=2（仅 3 dB！）→ P_FA = (10⁻⁶)^(1/2) = 10⁻³。虚警率恶化 <strong>1000 倍</strong>；κ=4（6 dB）→ 10⁻¹·⁵≈0.03，检测器瘫痪。注意这是幂律（指数 1/κ）恶化，不是线性。虚警的代价：每个虚警要启动确认、跟踪起始，虚警洪流会耗光计算机与操作员资源。</p>
-<h4 id="cfar-思想">CFAR 思想</h4>
+<h5 id="cfar-思想">CFAR 思想</h5>
 <p>用待测单元（CUT, cell under test）<strong>周围的参考单元</strong>实时估计本地干扰功率 σ̂²，门限随估计浮动：干扰强门限自动抬高，干扰弱自动降低。设计让 P_FA 与真实干扰功率无关——&quot;恒虚警率&quot;。代价：估计有误差，P_D 略降，叫 CFAR 损失（典型 1~3 dB）。</p>
-<h4 id="ca-cfar-与门限-tασ²">CA-CFAR 与门限 T=α·σ̂²</h4>
+<h5 id="ca-cfar-与门限-tασ²">CA-CFAR 与门限 T=α·σ̂²</h5>
 <p>CA（cell-averaging）CFAR：取 CUT 两侧各若干参考单元（紧邻 CUT 留保护单元 guard cells 防目标能量泄漏）平均，得干扰功率的最大似然估计 σ̂²，门限：</p>
 <p>T = α_CA·σ̂²</p>
 <p>α_CA 由参考单元数 M 与目标 P_FA 闭式算出（指数分布假设下 P_FA = (1+α/M)^(−M)）。参考单元越多估计越准、损失越小，但&quot;环境均匀&quot;的假设越容易破。</p>
-<h4 id="杂波边缘与目标遮蔽">杂波边缘与目标遮蔽</h4>
+<h5 id="杂波边缘与目标遮蔽">杂波边缘与目标遮蔽</h5>
 <p>CA-CFAR 的两个致命场景：</p>
 <ul>
 <li>杂波边缘（clutter edge）：参考窗一半在弱杂波区、一半在强杂波区。平均值被拉高或拉低——CUT 在强区侧时门限过低→虚警簇；在弱区侧时门限过高→目标被埋没。</li>
 <li>目标遮蔽（masking）：参考窗里混进另一个目标（或多目标互扰），σ̂² 被抬高，门限升高，真目标漏检。</li>
 </ul>
-<h4 id="鲁棒变体">鲁棒变体</h4>
+<h5 id="鲁棒变体">鲁棒变体</h5>
 <ul>
 <li>GOCA（greatest-of CA）：两侧参考窗分别平均，取<strong>大</strong>者设门限——杂波边缘处虚警受控，但遮蔽更敏感。</li>
 <li>SOCA（smallest-of CA）：取<strong>小</strong>者——抗遮蔽（一侧有目标时用另一侧），代价是边缘虚警。</li>
@@ -1556,28 +1557,28 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 固定门限在变化干扰中虚警率按幂律爆炸，CFAR 用邻域估计动态设门限（T=α·σ̂²），GOCA/SOCA/OS 分别对付边缘与遮蔽。</p>
 <hr>
-<h3 id="第17章-doppler-处理doppler-processing">第17章 Doppler 处理（Doppler Processing）</h3>
+<h4 id="第17章-doppler-处理doppler-processing">第17章 Doppler 处理（Doppler Processing）</h4>
 <p><strong>【本章定位】</strong> 杂波抑制的主力方法集：MTI 只报&quot;有动目标&quot;，pulse-Doppler 还能测速并分辨多目标。气象雷达的 pulse pair 是另一分支。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="mti-与两脉冲对消器">MTI 与两脉冲对消器</h4>
+<h5 id="mti-与两脉冲对消器">MTI 与两脉冲对消器</h5>
 <p>MTI（moving target indication）思想：静止杂波相邻脉冲回波一模一样，相减即消；运动目标回波相位随脉冲变化（Doppler），相减后残留。两脉冲对消器：</p>
 <p>y[m] = x[m] − x[m−1]，即 H(z) = 1 − z⁻¹</p>
 <p>这是一个慢时间上的 FIR 高通滤波器，在零 Doppler 处有零点（杂波被压），在 PRF/2 处增益最大。三脉冲对消器 H(z)=(1−z⁻¹)²：零频处二阶零点，对消带更宽，能抑制有谱宽的杂波（风吹植被），代价是滤波器更&quot;钝&quot;。</p>
-<h4 id="改善因子improvement-factor">改善因子（improvement factor）</h4>
+<h5 id="改善因子improvement-factor">改善因子（improvement factor）</h5>
 <p>改善因子 I = 对消器输出端 SCR / 输入端 SCR 的平均提升，单位 dB。受限于：杂波内部运动（谱宽）、系统不稳定（相位噪声、定时抖动、量化）、平台运动。例：植被杂波谱宽 + 系统稳定度共同决定 I 上限，工程上 30~50 dB 常见。</p>
-<h4 id="盲速与参差-prf">盲速与参差 PRF</h4>
+<h5 id="盲速与参差-prf">盲速与参差 PRF</h5>
 <p>盲速（blind speed）：目标 Doppler 恰等于 PRF 的整数倍时，慢时间采样把它混叠到零频——被对消器当杂波消掉！第一盲速 v_b = λ·PRF/2。</p>
 <p>对策：staggered PRF（参差 PRF）——脉冲间隔按周期模式变化（如 3:4 交替），把第一盲速推高数倍（等于各 PRI 的公倍数对应的 Doppler）。代价：频率响应出现周期性起伏（书中量化讨论约 9 dB 量级的响应凹坑深度），且在凹坑处对消性能下降；机载 MTI 还要补偿平台运动导致的主杂波谱搬移与展宽。</p>
-<h4 id="pulse-doppler慢时间-dft">pulse-Doppler：慢时间 DFT</h4>
+<h5 id="pulse-doppler慢时间-dft">pulse-Doppler：慢时间 DFT</h5>
 <p>对 CPI 内 M 个脉冲的每个距离单元沿慢时间做 DFT（FFT），形成 range-Doppler 图：M 个 Doppler 滤波器并行，零频滤波器收杂波，非零滤波器各对应一个径向速度。相对 MTI 的优势：测速、分辨多目标、积累增益（相干 M 倍）、可按滤波器分别 CFAR。</p>
-<h4 id="距离-速度模糊与解模糊">距离-速度模糊与解模糊</h4>
+<h5 id="距离-速度模糊与解模糊">距离-速度模糊与解模糊</h5>
 <ul>
 <li>距离模糊：无模糊距离 R_u = c·PRI/2。回波延迟超过 PRI 就&quot;折叠&quot;到近处。</li>
 <li>速度模糊：无模糊 Doppler 范围 ±PRF/2，对应 v_u = λ·PRF/4。</li>
 <li>两难：PRF 高→速度不模糊但距离近处折叠；PRF 低→反之。低/中/高 PRF 体制各有适用场景（高 PRF 适合机载迎头，低 PRF 适合地基预警）。</li>
 <li>解模糊：用多个 PRF 轮流观测，中国剩余定理式的逻辑解出真实距离/速度；blind zones（盲带）在距离与速度维同时存在，需 PRF 集设计保证无目标全程落在盲带。</li>
 </ul>
-<h4 id="杂波图mtd-与-pulse-pair">杂波图、MTD 与 pulse pair</h4>
+<h5 id="杂波图mtd-与-pulse-pair">杂波图、MTD 与 pulse pair</h5>
 <ul>
 <li>杂波图（clutter map）：把长期平均的杂波强度按距离-方位单元存成&quot;地图&quot;，作为门限基准。妙用：零 Doppler 通道也能检测<strong>静止目标</strong>（桥上的车 vs 空桥：回波强度变化），弥补 MTI/pulse-Doppler 对零速目标的盲区。</li>
 <li>MTD（moving target detector）：完整处理链——脉压→MTI 预滤波→Doppler FFT→各滤波器 CFAR→杂波图通道→点迹输出，是机场监视雷达的经典架构。</li>
@@ -1592,16 +1593,16 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> MTI 用 H(z)=1−z⁻¹ 在慢时间挖掉杂波，pulse-Doppler 用 FFT 把 Doppler 分成 M 个频道测速辨目标，模糊与盲速靠 PRF 设计管理。</p>
 <hr>
-<h3 id="第18章-雷达测量radar-measurements">第18章 雷达测量（Radar Measurements）</h3>
+<h4 id="第18章-雷达测量radar-measurements">第18章 雷达测量（Radar Measurements）</h4>
 <p><strong>【本章定位】</strong> 检测到目标只是开始，本章回答&quot;测得多准&quot;：定义 accuracy 与 precision，用 CRLB 给出测量精度的理论下限，并过一遍距离、速度、角度、RCS 的测量方法。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="accuracy-vs-precision">accuracy vs precision</h4>
+<h5 id="accuracy-vs-precision">accuracy vs precision</h5>
 <ul>
 <li>accuracy（准确度）：误差均值离真值多远，由系统性偏差决定——校准残差、传播折射、坐标转换误差。多源误差按 rss（root-sum-square，平方和开根）合成：σ_total = √(σ₁²+σ₂²+…)。可通过标定修正。</li>
 <li>precision（精密度）：重复测量的散布（标准差），由噪声决定，随 SNR 改善。加积累、提 SNR 就能降。</li>
 <li>类比：射箭。accuracy 是平均弹着点离靶心的偏差（瞄具没校准）；precision 是箭与箭之间的散布（手抖）。</li>
 </ul>
-<h4 id="crlb-直觉">CRLB 直觉</h4>
+<h5 id="crlb-直觉">CRLB 直觉</h5>
 <p>Cramér-Rao 下界（CRLB）：任何无偏估计器的方差都有一个理论下限，达到它的估计器称&quot;有效&quot;。对所有测量参数的共同规律：</p>
 <p>估计方差 ∝ 1/(SNR × 信号在参数维的&quot;有效宽度&quot;²)</p>
 <ul>
@@ -1611,7 +1612,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>相位：σ_φ ∝ 1/√SNR（rad）。</li>
 </ul>
 <p>重要结论：<strong>测量精度可以远优于分辨率</strong>。分辨率 ΔR=c/2B 是&quot;分得开两个目标&quot;的尺度；单目标测距质心内插后误差可到 ΔR 的 1/10 甚至 1/100（只要 SNR 够高）。</p>
-<h4 id="各参数测量方法">各参数测量方法</h4>
+<h5 id="各参数测量方法">各参数测量方法</h5>
 <ul>
 <li>距离：匹配滤波输出峰值定位；峰值落在采样点之间时用相邻采样做质心/抛物线内插。<strong>straddle loss</strong>（跨骑损失）：目标峰值恰落在两个采样点/滤波器之间，SNR 损失（典型设计 1~3 dB），靠加密采样/滤波器重叠缓解；Doppler 失配 also 造成脉压峰值下降（Doppler loss）。</li>
 <li>相位：I/Q 反正切直接测，精度毫米级路径变化，用于微动测量。</li>
@@ -1629,44 +1630,44 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 测量精度受 CRLB 约束：带宽定测距、孔径定测角、观测时长定测速，SNR 是统一的分母。</p>
 <hr>
-<h3 id="第19章-雷达跟踪算法radar-tracking-algorithms">第19章 雷达跟踪算法（Radar Tracking Algorithms）</h3>
+<h4 id="第19章-雷达跟踪算法radar-tracking-algorithms">第19章 雷达跟踪算法（Radar Tracking Algorithms）</h4>
 <p><strong>【本章定位】</strong> 把离散的点迹（detection 报告）连成连续的航迹（track）：滤波负责平滑与预测，数据关联负责&quot;哪个点归哪条航迹&quot;。多功能雷达的大脑。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="跟踪-滤波-数据关联">跟踪 = 滤波 + 数据关联</h4>
+<h5 id="跟踪-滤波-数据关联">跟踪 = 滤波 + 数据关联</h5>
 <p>跟踪雷达/多功能相控阵每个扫描周期拿到一批量测（含目标真量测+虚警+杂波残余）。两个子问题：</p>
 <ol>
 <li>滤波（filtering）：已知量测属于某航迹，如何最优融合历史与当前量测，估计位置/速度/加速度（状态向量）及其不确定性（协方差矩阵）？</li>
 <li>数据关联（data association）：这个量测到底属于哪条航迹（或是新目标/虚警）？</li>
 </ol>
-<h4 id="α-β-滤波器">α-β 滤波器</h4>
+<h5 id="α-β-滤波器">α-β 滤波器</h5>
 <p>最简单的航迹滤波器，状态=位置+速度：</p>
 <ul>
 <li>预测：x_pred = x + v·T</li>
 <li>校正：x_new = x_pred + α·(量测−x_pred)；v_new = v + (β/T)·(量测−x_pred)</li>
 </ul>
 <p>α、β 是两个 0~1 的固定增益：α 大→紧跟量测（响应快、噪声大）；α 小→信历史（平滑、滞后机动目标）。它是 Kalman 滤波器的稳态（增益不再变化）特例，计算极省。</p>
-<h4 id="kalman-滤波蒙眼猜位置类比">Kalman 滤波：蒙眼猜位置类比</h4>
+<h5 id="kalman-滤波蒙眼猜位置类比">Kalman 滤波：蒙眼猜位置类比</h5>
 <p>类比：蒙眼走路猜自己在哪。你有一个运动模型（&quot;我每秒走 1 米&quot;）做<strong>预测</strong>，但越走越没把握（协方差变大）；每次摸到墙（量测）就<strong>校正</strong>——模型与量测谁可信（协方差小）就多信谁。Kalman 增益自动完成这个加权，理论上是 MMSE（最小均方误差）意义最优。</p>
 <ul>
 <li>运动模型：NCV（nearly constant velocity，近匀速：状态含位置速度，过程噪声驱动速度变化）与 NCA（nearly constant acceleration，近匀加速：多一维加速度）。模型越简单越平滑但对机动滞后；过程噪声大小（tracking index）调&quot;信模型 vs 信量测&quot;。</li>
 <li>量测模型：雷达量测在球坐标，状态在笛卡尔坐标——需坐标转换（或用 EKF）。</li>
 <li>LFM 波形的 range-Doppler 耦合：Doppler 频移会让脉压峰值在距离上平移（第 20 章），跟踪滤波器可建模补偿。</li>
 </ul>
-<h4 id="门控与关联算法">门控与关联算法</h4>
+<h5 id="门控与关联算法">门控与关联算法</h5>
 <ul>
 <li>门控（gating）：以航迹预测值为中心画一个&quot;确认区域&quot;（如 3σ 椭圆），只有落入门内的量测才可能是本航迹的——先把计算量砍下来。</li>
 <li>最近邻（NN）：用门内离预测最近的量测更新。密集目标/虚警环境下易错联。</li>
 <li>统计 NN：用统计距离（Mahalanobis 距离，计及协方差）代替几何距离。</li>
 <li>PDAF（probabilistic data association filter，概率数据关联）：门内<strong>所有</strong>量测按&quot;属于本航迹的概率&quot;加权合成一个等效量测再更新——杂波环境下比 NN 稳健得多，是工程标配。</li>
 </ul>
-<h4 id="航迹管理">航迹管理</h4>
+<h5 id="航迹管理">航迹管理</h5>
 <ul>
 <li>起始（initiation）：连续 2/3 次扫描在合理位置出现新点迹 → 建暂时航迹（tentative）；</li>
 <li>确认（confirmation）：再命中若干次 → 转为确认航迹，分配更新资源；</li>
 <li>删除（deletion）：连续若干次未关联到量测 → 航迹丢失删除。</li>
 <li>这套状态机平衡&quot;建得慢（抗虚警）&quot;与&quot;跟得稳（防丢失）&quot;。</li>
 </ul>
-<h4 id="性能评估">性能评估</h4>
+<h5 id="性能评估">性能评估</h5>
 <ul>
 <li>Monte Carlo 仿真：跑成百上千次随机场景，统计 RMSE（均方根误差）。</li>
 <li>NEES（normalized estimation error squared）：把&quot;估计误差/滤波器自报协方差&quot;做卡方检验——检验滤波器是否&quot;自知之明&quot;：报错太大或自报太乐观都说明模型不对。一致性（consistency）检验是跟踪算法开发的体检表。</li>
@@ -1680,26 +1681,26 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 跟踪=Kalman 式&quot;预测-校正&quot;循环+PDAF 式&quot;门内加权关联&quot;+航迹状态机管理，好坏用 Monte Carlo 与 NEES 体检。</p>
 <hr>
-<h3 id="第20章-脉冲压缩波形基础fundamentals-of-pulse-compression-waveforms">第20章 脉冲压缩波形基础（Fundamentals of Pulse Compression Waveforms）</h3>
+<h4 id="第20章-脉冲压缩波形基础fundamentals-of-pulse-compression-waveforms">第20章 脉冲压缩波形基础（Fundamentals of Pulse Compression Waveforms）</h4>
 <p><strong>【本章定位】</strong> 解决雷达波形的根本矛盾：能量要长脉冲、分辨率要短脉冲。脉冲压缩（pulse compression）用&quot;长脉冲+大带宽&quot;让两者解耦，现代雷达几乎全部采用。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="匹配滤波器-htaxt">匹配滤波器 h(t)=a·x*(−t)</h4>
+<h5 id="匹配滤波器-htaxt">匹配滤波器 h(t)=a·x*(−t)</h5>
 <p>第 14 章已知：白噪声中检测已知波形 x(t) 的最优滤波器是 h(t)=a·x*(−t)（波形时间反转取共轭，a 为任意常数）。输出=波形自相关函数，峰值 SNR=2E/N0。脉冲压缩=发射一个内部有调制的长脉冲 x(t)，接收端过匹配滤波器——长脉冲的能量、短脉冲的分辨率兼得。</p>
-<h4 id="时宽带宽积-τβ-解耦能量与分辨率">时宽带宽积 τβ 解耦能量与分辨率</h4>
+<h5 id="时宽带宽积-τβ-解耦能量与分辨率">时宽带宽积 τβ 解耦能量与分辨率</h5>
 <ul>
 <li>分辨率：ΔR = c/2β，只由带宽 β 决定（匹配滤波输出主瓣宽 ~1/β）；</li>
 <li>能量：E = P_t·τ，只由脉宽 τ 决定；</li>
 <li>时宽带宽积 τβ（亦称脉压比/脉压增益）：τβ 越大，能量与分辨率解耦得越开。简单脉冲 τβ≈1；LFM 雷达 τβ 可达数百到数万。</li>
 <li>与测量精度的联系：σ_R ∝ 1/(B_rms·√SNR)（第 18 章 CRLB），宽带同时提升分辨率与精度。</li>
 </ul>
-<h4 id="lfmchirp波形">LFM（chirp）波形</h4>
+<h5 id="lfmchirp波形">LFM（chirp）波形</h5>
 <p>线性调频（linear frequency modulation）：脉冲内频率线性扫过带宽 β，如&quot;啾&quot;声。匹配滤波输出：</p>
 <ul>
 <li>形状为 sinc 函数：主瓣宽 <del>1/β，副瓣仅 -13 dB——太高，需加权（加权窗把副瓣压到 -30</del>-40 dB，代价主瓣展宽 ~30%+几分 dB SNR 损失）；</li>
 <li>Doppler 容限：目标有 Doppler 频移时，压缩滤波器失配不大，输出仍可用——LFM 对 Doppler 宽容，这是它比相位编码实用的原因之一；</li>
 <li>range-Doppler 耦合：Doppler 失配把压缩峰在距离上平移 ΔR ≈ (f_d/斜率)·c/2——测出的距离与真实距离有耦合偏差，速度已知可补偿，跟踪滤波器中可建模（第 19 章）。</li>
 </ul>
-<h4 id="模糊函数ambiguity-function">模糊函数（ambiguity function）</h4>
+<h5 id="模糊函数ambiguity-function">模糊函数（ambiguity function）</h5>
 <p>χ(τ_d, f_d)：波形匹配滤波输出对&quot;距离偏移 τ_d × Doppler 偏移 f_d&quot;的二维响应。它统一描述：</p>
 <ul>
 <li>主瓣宽度 → 距离/速度分辨率；</li>
@@ -1707,7 +1708,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>副瓣与基底 → 多目标遮蔽与模糊。</li>
 <li>&quot;图钉形&quot;（单尖峰，理想）、&quot;刀刃形&quot;（LFM：斜脊，耦合）、&quot;图钉阵列&quot;（脉冲串：周期模糊峰）是三类典型。</li>
 </ul>
-<h4 id="相位编码波形">相位编码波形</h4>
+<h5 id="相位编码波形">相位编码波形</h5>
 <p>把长脉冲切成 N 个子脉冲（chip），每个子脉冲调相位：</p>
 <ul>
 <li>Barker 码：双相（0/180°），最长仅 13 位，压缩比 13，峰值副瓣 1/N（-22 dB）。稀缺珍贵。</li>
@@ -1725,10 +1726,10 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> 脉压=用 τβ 解耦能量与分辨率：LFM 靠频率扫描、相位码靠子脉冲调相，匹配滤波把它们压缩成 1/β 宽的距离峰。</p>
 <hr>
-<h3 id="第21章-雷达成像概览an-overview-of-radar-imaging">第21章 雷达成像概览（An Overview of Radar Imaging）</h3>
+<h4 id="第21章-雷达成像概览an-overview-of-radar-imaging">第21章 雷达成像概览（An Overview of Radar Imaging）</h4>
 <p><strong>【本章定位】</strong> 全书收官：把前面所有概念（脉压、Doppler、相干、运动平台）汇成合成孔径雷达（SAR）——用飞行的小天线&quot;合成&quot;出巨天线的分辨率，给地面拍照。</p>
 <p><strong>【核心概念逐个讲】</strong></p>
-<h4 id="sar-相对光学成像的优势">SAR 相对光学成像的优势</h4>
+<h5 id="sar-相对光学成像的优势">SAR 相对光学成像的优势</h5>
 <ul>
 <li>全天时全天候：微波自带照明（主动成像）、穿云透雨，黑夜浓雾照常工作；</li>
 <li>穿透能力：低频 SAR 可 FOPEN（穿叶）/GPEN（浅层穿土）；</li>
@@ -1736,13 +1737,13 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>多极化：HH/VV/HV 组合揭示地物散射机制（建筑、植被、海面区分）。</li>
 </ul>
 <p>代价：图像需要复杂处理才&quot;看得见&quot;，且有 SAR 特有的几何畸变与斑点。</p>
-<h4 id="三种理解范式">三种理解范式</h4>
+<h5 id="三种理解范式">三种理解范式</h5>
 <ol>
 <li>合成大孔径：天线波束宽 θ₃≈λ/D，分辨率 ∝ 孔径 D。飞机带着小天线飞，沿途每个位置都收发并<strong>相干记录</strong>，事后把这些记录像一副 D_SAR（可达数百米~公里）长的虚拟天线的阵元一样同相叠加——合成孔径，波束宽度 θ_SAR ≈ λ/(2D_SAR)（因子 2 来自双程）。</li>
 <li>range-Doppler 成像：地面不同方位的散射点对平台有不同径向速度→不同 Doppler。沿航向分辨=按 Doppler 分选，本质与第 8、17 章同源。</li>
 <li>信号处理范式：回波是地面反射率与系统点扩散响应的二维卷积，成像=二维匹配滤波/解卷积。</li>
 </ol>
-<h4 id="核心分辨率公式">核心分辨率公式</h4>
+<h5 id="核心分辨率公式">核心分辨率公式</h5>
 <p>横向（cross-range，沿航向）分辨率：</p>
 <p>ΔCR ≈ Rλ/(2D_SAR)</p>
 <ul>
@@ -1750,21 +1751,21 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <li>奇妙推论：目标被波束照多久，D_SAR 就有多长（D_SAR ≈ R·θ₃ = Rλ/D_ant）→ 代入得 ΔCR ≈ D_ant/2——<strong>条带 SAR 横向分辨率=真实天线长度的一半，与距离和波长无关</strong>！小天线反而分辨率好（波束宽、照射久），这是 SAR 最反直觉也最美的结论。</li>
 <li>距离向分辨率：ΔR = c/2β，第 20 章脉压解决。</li>
 </ul>
-<h4 id="prf-采样约束">PRF 采样约束</h4>
+<h5 id="prf-采样约束">PRF 采样约束</h5>
 <p>平台飞行中脉冲采样沿航向位置：PRF 必须 ≥ 沿航向回波 Doppler 带宽（≈2v/D_ant），否则方位向混叠（假目标鬼影）；PRF 又受无模糊距离上限约束（第 17 章两难再次出现）。SAR 系统设计的核心折中。</p>
-<h4 id="图像形成dbs-vs-backprojection">图像形成：DBS vs backprojection</h4>
+<h5 id="图像形成dbs-vs-backprojection">图像形成：DBS vs backprojection</h5>
 <ul>
 <li>DBS（Doppler beam sharpening，多普勒波束锐化）：最简单——对每个距离单元沿慢时间做 FFT，把 Doppler 轴直接当地图方位轴用。分辨率有限，适合实时粗成像/海面。</li>
 <li>backprojection（BP，时域反投影）：&quot;黄金标准&quot;——逐像素地把每个脉冲回波按精确几何（平台轨迹+延时）相干累加到该像素。理论最精确、适应任意航迹，代价是计算量巨大（像素数×脉冲数）；fast BP 用分级子孔径降复杂度。FFT 类快速算法（range-Doppler 算法、chirp scaling、ω-k）介于两者之间，是星载 SAR 主流。</li>
 </ul>
-<h4 id="sar-特有现象学">SAR 特有现象学</h4>
+<h5 id="sar-特有现象学">SAR 特有现象学</h5>
 <ul>
 <li>layover（叠掩）：山顶比山脚离雷达近，回波先到达——山的图像&quot;倒&quot;向雷达方向，高层建筑在 SAR 图里都是躺倒的。</li>
 <li>阴影（shadow）：山背/楼后照不到，图像全黑（连噪声都没有，因无回波放大）。</li>
 <li>speckle（斑点）：同一分辨单元内多个散射体相干叠加，像素强度随机起伏，图像呈颗粒噪声状。抑制：多视处理（multi-look，把孔径/带宽分几段成像后非相干平均，牺牲分辨率换平滑）或滤波（Lee 滤波等）。</li>
 <li>距离向亮线、角反射器状强点（二面角）等也是解译要点。</li>
 </ul>
-<h4 id="图像质量指标">图像质量指标</h4>
+<h5 id="图像质量指标">图像质量指标</h5>
 <ul>
 <li>PSR（point spread response，点扩散响应）：点目标成像后的二维响应，等效光学 PSF；</li>
 <li>主瓣宽度（-3 dB）：实测分辨率；</li>
@@ -1780,15 +1781,15 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </ol>
 <p><strong>【一句话小结】</strong> SAR=把飞行轨迹变成一副虚拟巨天线：ΔCR≈Rλ/(2D_SAR) 且条带模式下等于 D_ant/2，距离向靠脉压、横向靠相干合成，图像是带叠掩/阴影/斑点的斜距投影。</p>
 <hr>
-<h2 id="全书学习路径建议">全书学习路径建议</h2>
+<h3 id="全书学习路径建议">全书学习路径建议</h3>
 <ol>
 <li><strong>主线</strong>：Ch1（建立全局图景）→ Ch2（RRE 算账）→ Ch8（数据从哪来）→ Ch14（DSP 工具）→ Ch15/16（检测落地）→ Ch17（杂波抑制）→ Ch20（波形）→ Ch21（成像）。</li>
 <li><strong>配套</strong>：Ch4<del>7（环境现象学）在需要给 RRE 打真实折扣时回头查；Ch9</del>13（硬件子系统）在关心&quot;指标怎么实现&quot;时读。</li>
 <li><strong>公式最少集</strong>：R=cΔT/2、λf=c、RRE 峰值功率形式、N=kT0BF、f_d=2v/λ、θ₃=αλ/L、ΔR=c/2B、ΔCR≈Rλ/(2D_SAR)、CA-CFAR 门限 T=α·σ̂²——掌握这九个式子即可跟完大部分雷达系统论证。</li>
 </ol>
 <hr>
-<h1 id="附录">附录</h1>
-<h2 id="附录-a-核心公式速查表">附录 A  核心公式速查表</h2>
+<h2 id="附录">附录</h2>
+<h3 id="附录-a-核心公式速查表">附录 A  核心公式速查表</h3>
 <table>
 <thead>
 <tr>
@@ -1913,7 +1914,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <td>两书贯穿</td>
 </tr>
 </tbody></table>
-<h2 id="附录-b-术语中英对照表">附录 B  术语中英对照表</h2>
+<h3 id="附录-b-术语中英对照表">附录 B  术语中英对照表</h3>
 <table>
 <thead>
 <tr>
@@ -2283,7 +2284,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <td>复数相加，增益=N</td>
 </tr>
 </tbody></table>
-<h2 id="附录-c-两书对照学习路线建议-8-周">附录 C  两书对照学习路线（建议 8 周）</h2>
+<h3 id="附录-c-两书对照学习路线建议-8-周">附录 C  两书对照学习路线（建议 8 周）</h3>
 <table>
 <thead>
 <tr>
@@ -2352,7 +2353,7 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 </tr>
 </tbody></table>
 <p>时间紧的读者：第 1、2、6、7 周是主线，其余可跳读&quot;一句话小结&quot;。</p>
-<h2 id="附录-d-小白避坑清单十大高频误区">附录 D  小白避坑清单（十大高频误区）</h2>
+<h3 id="附录-d-小白避坑清单十大高频误区">附录 D  小白避坑清单（十大高频误区）</h3>
 <ol>
 <li><strong>R = c·t_R 忘了除 2</strong>：电波走往返，公式里是 c·t_R/2；记&quot;1 μs ↔ 150 m&quot;而不是 300 m。</li>
 <li><strong>以为功率翻倍作用距离翻倍</strong>：R_max 与 P_t 是四次方根关系，功率×16 距离才×2。</li>
@@ -2368,9 +2369,23 @@ D = 10 × cos30° = 10 × 0.866 = 8.66 km，H = 10 × sin30° = 10 × 0.5 = 5 km
 <hr>
 <p><em>本文件由三部分笔记合并而成：第零部分与附录为整理撰写；第一部分与第二部分分别基于《雷达原理》（第5版）与 POMR 原书逐章阅读摘要展开。文中类比与算例用于帮助理解，正式设计计算请以原书为准。</em></p>
 </div>
+      <div class="stats-bar" aria-label="文章统计">
+        <button class="like-btn" data-id="radar-principles-study-summary" type="button" aria-label="点赞">
+          <svg class="icon-heart" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10-9.2C.4 8.9 1.6 5.3 4.8 4.6c1.9-.4 3.7.6 4.8 2 1.1-1.4 2.9-2.4 4.8-2 3.2.7 4.4 4.3 2.8 7.2C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="like-count">0</span>
+        </button>
+        <span class="stat view-count" aria-label="浏览数">
+          <svg class="icon-eye" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M1 12.5C2.7 8.1 7 5 12 5s9.3 3.1 11 7.5C21.3 16.9 17 20 12 20S2.7 16.9 1 12.5z"/><circle cx="12" cy="12.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="view-count-num">0</span>
+        </span>
+      </div>
       <nav class="article-navigation" aria-label="文章导航"><a href="../posts/embedded-robotics-learning-roadmap.html">上一篇：嵌入式与机器人学习路线</a><a href="../posts/linux-driver-char-device.html">下一篇：嵌入式 Linux 驱动开发入门：从字符设备到设备树</a></nav>
     </article>
   </main>
   <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+  <script defer src="../assets/js/stats.js"></script>
+  <script defer src="../assets/js/likes-storage.js"></script>
+  <script defer src="../vendor/highlight.min.js"></script>
+  <script defer src="../assets/js/article-page.js"></script>
 </body>
 </html>

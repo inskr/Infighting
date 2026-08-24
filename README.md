@@ -26,7 +26,7 @@ Infighting 是一个面向嵌入式系统、边缘计算与边缘 AI 的个人�
 ├─ assets/images/           # Hero 高分辨率源图（不直接发布）
 ├─ posts/                   # Markdown 文章源文件
 ├─ scripts/
-│  ├─ build-posts.js        # 生成元数据索引与 public/assets/posts/*.json
+│  ├─ build-posts.js        # 发布静态文章 HTML、兼容 JSON/索引、sitemap 与 RSS
 │  ├─ build-images.js       # 生成 Hero 的 AVIF/WebP/PNG 响应式资源
 │  └─ fetch-feeds.js        # RSS/Atom -> 每日精选与归档数据
 ├─ src/

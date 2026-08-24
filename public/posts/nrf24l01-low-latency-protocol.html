@@ -19,6 +19,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"NRF24L01 2.4GHz 低延迟通信协议设计笔记","description":"遥控器与飞控之间的通信既要低延迟又要可靠：本文介绍基于 NRF24L01 的自定帧格式、ACK 重传策略、通道跳频与 PID 参数动态下调节点的设计。","url":"https://inskr.github.io/Infighting/posts/nrf24l01-low-latency-protocol.html","mainEntityOfPage":"https://inskr.github.io/Infighting/posts/nrf24l01-low-latency-protocol.html","datePublished":"2024-10-15","dateModified":"2024-10-15","keywords":["无线通信","STM32","飞控"]}</script>
   <script src="../assets/js/theme.js"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../vendor/highlight-theme.css">
 </head>
 <body>
   <header class="site-header">
@@ -42,14 +43,14 @@
   </header>
   <main class="container">
     <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
-    <article class="article glass-surface">
+    <article class="article glass-surface" data-article-id="nrf24l01-low-latency-protocol">
       <header class="article-header">
         <h1>NRF24L01 2.4GHz 低延迟通信协议设计笔记</h1>
         <div class="post-meta"><span>2024-10-15</span><a class="tag" href="../tags.html?tag=%E6%97%A0%E7%BA%BF%E9%80%9A%E4%BF%A1">无线通信</a><a class="tag" href="../tags.html?tag=STM32">STM32</a><a class="tag" href="../tags.html?tag=%E9%A3%9E%E6%8E%A7">飞控</a></div>
       </header>
-      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-2"><a href="#硬件与基础配置">硬件与基础配置</a></li><li class="article-toc-level-2"><a href="#自定义帧格式">自定义帧格式</a></li><li class="article-toc-level-2"><a href="#pid-参数动态调节">PID 参数动态调节</a></li><li class="article-toc-level-2"><a href="#抗干扰与失控保护">抗干扰与失控保护</a></li><li class="article-toc-level-2"><a href="#实测">实测</a></li></ol></nav>
+      <nav class="article-toc" aria-label="文章目录"><ol><li class="article-toc-level-3"><a href="#硬件与基础配置">硬件与基础配置</a></li><li class="article-toc-level-3"><a href="#自定义帧格式">自定义帧格式</a></li><li class="article-toc-level-3"><a href="#pid-参数动态调节">PID 参数动态调节</a></li><li class="article-toc-level-3"><a href="#抗干扰与失控保护">抗干扰与失控保护</a></li><li class="article-toc-level-3"><a href="#实测">实测</a></li></ol></nav>
       <div class="article-body"><p>四轴无人机的遥控链路如果延迟大、丢包高，飞得再稳的 PID 也救不回来。本文记录我基于 NRF24L01 设计的 2.4GHz 通信协议。</p>
-<h2 id="硬件与基础配置">硬件与基础配置</h2>
+<h3 id="硬件与基础配置">硬件与基础配置</h3>
 <p>NRF24L01 通过 SPI 与 STM32 连接，关键初始化参数：</p>
 <pre><code class="language-c">void nrf24_init(void)
 {
@@ -63,7 +64,7 @@
 <blockquote>
 <p><strong>为什么选 2Mbps</strong>：空中速率越高，单包占用时间越短，被 WiFi 干扰碰撞的概率越低，实测 2Mbps 下遥控延迟约 8ms。</p>
 </blockquote>
-<h2 id="自定义帧格式">自定义帧格式</h2>
+<h3 id="自定义帧格式">自定义帧格式</h3>
 <p>一包 32 字节（NRF24L01 最大有效载荷），布局如下：</p>
 <table>
 <thead>
@@ -129,7 +130,7 @@ bool radio_parse(const uint8_t *buf, radio_frame_t *frame)
 }
 </code></pre>
 <p>注意 <code>__attribute__((packed))</code> 防止结构体对齐填充导致帧布局错乱。</p>
-<h2 id="pid-参数动态调节">PID 参数动态调节</h2>
+<h3 id="pid-参数动态调节">PID 参数动态调节</h3>
 <p>调试期最痛苦的是每改一次 PID 都要重新烧录。我在协议里加了调参帧：上位机下发 <code>0x02</code> 类型帧，飞控在线更新参数并回传确认：</p>
 <pre><code class="language-c">void handle_tune_frame(const radio_frame_t *f)
 {
@@ -142,13 +143,13 @@ bool radio_parse(const uint8_t *buf, radio_frame_t *frame)
 }
 </code></pre>
 <p>配合地面站实时曲线，悬停调试效率提升了至少 5 倍。</p>
-<h2 id="抗干扰与失控保护">抗干扰与失控保护</h2>
+<h3 id="抗干扰与失控保护">抗干扰与失控保护</h3>
 <ul>
 <li><strong>序号检测</strong>：连续丢包 10 帧（约 200ms）判定失控，油门渐变到 0 并尝试降落</li>
 <li><strong>跳频预留</strong>：固定信道受干扰严重时，可按约定序列切换 <code>RF_CH</code></li>
 <li><strong>接收中断</strong>：用 IRQ 引脚触发 EXTI，避免轮询浪费 SPI 带宽</li>
 </ul>
-<h2 id="实测">实测</h2>
+<h3 id="实测">实测</h3>
 <ul>
 <li>端到端延迟：约 8ms（含飞控解析）</li>
 <li>开阔地距离：&gt; 200m（0dBm + PCB 天线）</li>
@@ -156,10 +157,24 @@ bool radio_parse(const uint8_t *buf, radio_frame_t *frame)
 </ul>
 <p>这套协议结构简单但够用，后续如果要上 MAVLink，帧解析层可以直接替换。</p>
 </div>
+      <div class="stats-bar" aria-label="文章统计">
+        <button class="like-btn" data-id="nrf24l01-low-latency-protocol" type="button" aria-label="点赞">
+          <svg class="icon-heart" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 21s-7.5-4.9-10-9.2C.4 8.9 1.6 5.3 4.8 4.6c1.9-.4 3.7.6 4.8 2 1.1-1.4 2.9-2.4 4.8-2 3.2.7 4.4 4.3 2.8 7.2C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="like-count">0</span>
+        </button>
+        <span class="stat view-count" aria-label="浏览数">
+          <svg class="icon-eye" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M1 12.5C2.7 8.1 7 5 12 5s9.3 3.1 11 7.5C21.3 16.9 17 20 12 20S2.7 16.9 1 12.5z"/><circle cx="12" cy="12.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="view-count-num">0</span>
+        </span>
+      </div>
       <nav class="article-navigation" aria-label="文章导航"><a href="../posts/esp32s3-lvgl-smartwatch.html">上一篇：在 ESP32-S3 上用 LVGL 构建流畅的智能手表 UI</a><a href="../posts/pid-control-practice.html">下一篇：PID 控制从入门到进阶：位置式与增量式的取舍</a></nav>
       <nav class="related-posts" aria-label="相关文章"><ol><li><a href="../posts/embedded-robotics-learning-roadmap.html">嵌入式与机器人学习路线</a></li><li><a href="../posts/stm32-baremetal-scheduler.html">STM32 裸机多任务调度框架设计与实践</a></li><li><a href="../posts/mpu6050-attitude-solution.html">MPU6050 姿态解算：四元数与卡尔曼滤波实战</a></li></ol></nav>
     </article>
   </main>
   <footer class="site-footer">© Infighting | 嵌入式与边缘计算开发笔记</footer>
+  <script defer src="../assets/js/stats.js"></script>
+  <script defer src="../assets/js/likes-storage.js"></script>
+  <script defer src="../vendor/highlight.min.js"></script>
+  <script defer src="../assets/js/article-page.js"></script>
 </body>
 </html>

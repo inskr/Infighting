@@ -24,7 +24,7 @@ summary: 一条约 60 周的嵌入式与机器人进阶路线，串联 Cortex-M�
 - [6. Linux 与现代 C++](#6-第四阶段linux-与现代-c)
 - [7. 嵌入式 Linux 与 BSP](#7-第五阶段嵌入式-linux-与-bsp)
 - [8. 机器人控制基础](#8-第六阶段机器人控制基础)
-- [9. ROS 2、ros2_control 与 micro-ROS](#9-第七阶段ros-2ros2_control-与-micro-ros)
+- [9. ROS 2、ros2_control 与 micro-ROS](#9-第七阶段ros-2ros2control-与-micro-ros)
 - [10. 综合毕业项目](#10-综合毕业项目)
 - [11. 每周学习安排](#11-每周学习安排)
 - [12. 通用排错方法](#12-通用排错方法)
