@@ -261,7 +261,14 @@ test('legacy post URL page stays a minimal redirect-and-recovery entry point', a
     assert.match(html, /<h1>文章跳转中<\/h1>/);
     assert.match(html, /href="index\.html"/);
     assert.match(html, /assets\/js\/posts-index\.js/);
+    assert.match(html, /assets\/js\/site-shell\.js/);
     assert.match(html, /assets\/js\/legacy-post\.js/);
+    const scriptOrder = [
+      'assets/js/posts-index.js',
+      'assets/js/site-shell.js',
+      'assets/js/legacy-post.js',
+    ].map((source) => html.indexOf(source));
+    assert.deepEqual(scriptOrder, [...scriptOrder].sort((left, right) => left - right));
     assert.doesNotMatch(html, /(?:marked|highlight|stats|likes-storage|post-loader|post-view|main|ui-effects)\.js/);
   } finally {
     await new Promise((resolve) => server.close(resolve));

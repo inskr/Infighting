@@ -72,6 +72,7 @@ test('initializes statistics from the trusted static article marker without load
     },
   };
   const calls = [];
+  const shellRoots = [];
   const root = {
     document: {
       querySelector: (selector) => selector === '[data-article-id]' ? article : null,
@@ -94,9 +95,11 @@ test('initializes statistics from the trusted static article marker without load
         return Promise.resolve(41);
       },
     },
+    SiteShell: { init(value) { shellRoots.push(value); } },
   };
 
   assert.equal(await ArticlePage.init(root), undefined);
+  assert.deepEqual(shellRoots, [root]);
   assert.deepEqual(calls, [['reportView', 'alpha'], ['fetchStats', 'alpha']]);
   assert.equal(viewCount.textContent, '41');
   assert.equal(likeCount.textContent, '7');

@@ -331,6 +331,9 @@
     if (!root || !root.document || typeof root.document.querySelector !== "function") {
       return Promise.resolve();
     }
+    if (root.SiteShell && typeof root.SiteShell.init === "function") {
+      root.SiteShell.init(root);
+    }
     var article = root.document.querySelector("[data-article-id]");
     if (!article || typeof article.getAttribute !== "function") {
       return Promise.resolve();

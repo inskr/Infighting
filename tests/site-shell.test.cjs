@@ -82,7 +82,8 @@ test('home loads only its page module after durable data and shared dependencies
     path.join(__dirname, '..', 'public', 'post.html'),
     'utf8'
   );
-  assert.doesNotMatch(compatibilityPage, /(?:site-shell|content-cards|main)\.js/);
+  assert.match(compatibilityPage, /assets\/js\/site-shell\.js/);
+  assert.doesNotMatch(compatibilityPage, /(?:content-cards|main)\.js/);
 });
 
 test('tags loads its page module after durable post and shared-card dependencies', () => {

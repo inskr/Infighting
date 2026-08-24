@@ -200,6 +200,7 @@ ${articleNavigation ? `      ${articleNavigation}\n` : ''}    </article>
   <script defer src="../assets/js/stats.js"></script>
   <script defer src="../assets/js/likes-storage.js"></script>
   <script defer src="../vendor/highlight.min.js"></script>
+  <script defer src="../assets/js/site-shell.js"></script>
   <script defer src="../assets/js/article-page.js"></script>
   <script defer src="../assets/js/ui-effects.js"></script>
 </body>

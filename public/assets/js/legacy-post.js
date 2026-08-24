@@ -11,7 +11,7 @@
   if (root) {
     root.LegacyPost = api;
     if (root.document && root.location) {
-      api.redirect(root);
+      api.init(root);
     }
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
@@ -66,7 +66,15 @@
     return target;
   }
 
+  function init(root) {
+    if (root.SiteShell && typeof root.SiteShell.init === "function") {
+      root.SiteShell.init(root);
+    }
+    return redirect(root);
+  }
+
   return {
+    init: init,
     redirect: redirect,
     resolveTarget: resolveTarget,
   };

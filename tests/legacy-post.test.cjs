@@ -58,3 +58,19 @@ test('redirect returns and replaces exactly once for a valid published legacy ID
   assert.equal(LegacyPost.redirect(root), 'posts/alpha.html');
   assert.deepEqual(redirects, ['posts/alpha.html']);
 });
+
+test('initializes the shared shell before redirecting the legacy entry page', () => {
+  const calls = [];
+  const root = {
+    POSTS: [{ id: 'alpha' }],
+    SiteShell: { init(value) { calls.push(['shell', value]); } },
+    document: { getElementById: () => null },
+    location: {
+      search: '?id=alpha',
+      replace(target) { calls.push(['redirect', target]); },
+    },
+  };
+
+  assert.equal(LegacyPost.init(root), 'posts/alpha.html');
+  assert.deepEqual(calls, [['shell', root], ['redirect', 'posts/alpha.html']]);
+});

@@ -14,6 +14,7 @@ const STATIC_ARTICLE_TARGETS = [
   path.join('assets', 'js', 'stats.js'),
   path.join('assets', 'js', 'likes-storage.js'),
   path.join('assets', 'js', 'article-page.js'),
+  path.join('assets', 'js', 'site-shell.js'),
   path.join('assets', 'js', 'ui-effects.js'),
   path.join('vendor', 'highlight-theme.css'),
   path.join('vendor', 'highlight.min.js'),

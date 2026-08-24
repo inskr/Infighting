@@ -29,8 +29,18 @@ test('generated article HTML owns its complete readable body and page-specific d
   assert.match(html, /\.\.\/assets\/js\/stats\.js/);
   assert.match(html, /\.\.\/assets\/js\/likes-storage\.js/);
   assert.match(html, /\.\.\/vendor\/highlight\.min\.js/);
+  assert.match(html, /\.\.\/assets\/js\/site-shell\.js/);
   assert.match(html, /\.\.\/assets\/js\/article-page\.js/);
   assert.match(html, /\.\.\/assets\/js\/ui-effects\.js/);
+  const scriptOrder = [
+    '../assets/js/stats.js',
+    '../assets/js/likes-storage.js',
+    '../vendor/highlight.min.js',
+    '../assets/js/site-shell.js',
+    '../assets/js/article-page.js',
+    '../assets/js/ui-effects.js',
+  ].map((source) => html.indexOf(source));
+  assert.deepEqual(scriptOrder, [...scriptOrder].sort((left, right) => left - right));
   assert.doesNotMatch(html, /marked(?:\.min)?\.js|posts-index\.js|post-loader\.js|post-view\.js|assets\/posts\/alpha\.json/);
 });
 
