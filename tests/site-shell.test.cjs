@@ -56,7 +56,7 @@ test('announce safely updates one shared polite status surface', () => {
 
 test('pages that load main load shared shell and card dependencies first', () => {
   // Break caught: main executes before one of its shared browser globals is available.
-  for (const page of ['index.html', 'tags.html', 'archive.html']) {
+  for (const page of ['index.html', 'tags.html']) {
     const html = fs.readFileSync(path.join(__dirname, '..', 'public', page), 'utf8');
     const mainIndex = html.indexOf('assets/js/main.js');
     assert.ok(mainIndex > 0, page);
@@ -71,4 +71,25 @@ test('pages that load main load shared shell and card dependencies first', () =>
     'utf8'
   );
   assert.doesNotMatch(compatibilityPage, /(?:site-shell|content-cards|main)\.js/);
+});
+
+test('archive loads only its feed, shell, policy, and visual-effect dependencies', () => {
+  // Break caught: archive pulls unrelated article modules or executes before its archive data dependencies.
+  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'archive.html'), 'utf8');
+  const sources = [
+    'assets/js/feed-data.js',
+    'assets/js/feed-archive.js',
+    'assets/js/url-policy.js',
+    'assets/js/site-shell.js',
+    'assets/js/archive-page.js',
+    'assets/js/ui-effects.js',
+  ];
+  const order = sources.map((source) => html.indexOf(source));
+
+  assert.ok(order.every((index) => index >= 0));
+  assert.deepEqual(order, [...order].sort((left, right) => left - right));
+  assert.doesNotMatch(
+    html,
+    /assets\/js\/(?:posts-index|stats|likes-storage|content-cards|main)\.js/
+  );
 });

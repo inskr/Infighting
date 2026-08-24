@@ -132,105 +132,6 @@
     });
   }
 
-  /* ---------- 精选归档页：最近 7 天每日精选 ---------- */
-  function renderArchive() {
-    var container = document.getElementById("archive-days");
-    if (!container) return;
-    window.SiteShell.init(window, "archive");
-
-    var updatedEl = document.getElementById("archive-updated");
-    var archive = window.FEED_ARCHIVE;
-
-    if (!archive || !Array.isArray(archive.days)) {
-      container.innerHTML = "";
-      if (updatedEl) updatedEl.textContent = "";
-      return;
-    }
-
-    // 排除"今日精选"对应的日期：当日内容在首页展示，归档页只保留历史，避免两模块重复
-    var todayKey = (window.FEEDS && window.FEEDS.updatedAt
-      ? window.FEEDS.updatedAt
-      : ""
-    ).slice(0, 10);
-    var days = archive.days.filter(function (d) {
-      return d && d.date && d.date !== todayKey;
-    });
-
-    // 无历史内容时不渲染任何占位元素
-    if (!days.length) {
-      container.innerHTML = "";
-      if (updatedEl) updatedEl.textContent = "";
-      return;
-    }
-
-    if (updatedEl && archive.updatedAt) {
-      var d = new Date(archive.updatedAt);
-      updatedEl.textContent =
-        "更新于 " +
-        d.getFullYear() +
-        "-" +
-        String(d.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(d.getDate()).padStart(2, "0");
-    }
-
-    function boardHtml(items, langKey) {
-      if (!items || !items.length) {
-        return '<ul class="feed-list"><li class="feed-empty">当日未获取到内容。</li></ul>';
-      }
-      return (
-        '<ul class="feed-list">' +
-        items
-          .map(function (item) {
-            return (
-              "<li>" +
-              '<a class="feed-link" href="' +
-              escapeHtml(safeFeedHref(item.link)) +
-              '" target="_blank" rel="noopener noreferrer">' +
-              escapeHtml(item.title) +
-              '</a><span class="feed-summary">' +
-              escapeHtml(item.summary || "") +
-              '</span><span class="feed-meta">' +
-              '<span class="feed-lang">' +
-              escapeHtml(feedLangLabel(item.lang || langKey)) +
-              "</span>" +
-              escapeHtml(item.source) +
-              (item.date ? " · " + escapeHtml(item.date) : "") +
-              "</span>" +
-              "</li>"
-            );
-          })
-          .join("") +
-        "</ul>"
-      );
-    }
-
-    // days 已是日期倒序（最新在前），直接按序渲染
-    container.innerHTML = days
-      .map(function (day) {
-        var boards = day.boards || {};
-        return (
-          '<div class="archive-day glass-surface">' +
-          '<h3 class="archive-date">' +
-          escapeHtml(day.date) +
-          "</h3>" +
-          '<div class="daily-boards">' +
-          '<div class="board board-en glass-surface">' +
-          '<h4 class="board-title"><span class="board-dot"></span>国外 <span class="lang-tag">国外</span></h4>' +
-          boardHtml(boards.en, "en") +
-          "</div>" +
-          '<div class="board-divider" role="separator"></div>' +
-          '<div class="board board-zh glass-surface">' +
-          '<h4 class="board-title"><span class="board-dot"></span>国内 <span class="lang-tag">国内</span></h4>' +
-          boardHtml(boards.zh, "zh") +
-          "</div>" +
-          "</div>" +
-          "</div>"
-        );
-      })
-      .join("");
-  }
-
   /* ---------- 首页：文章列表 + 分页 ---------- */
   function renderList() {
     var listEl = document.getElementById("post-list");
@@ -553,7 +454,6 @@
       await renderPost();
     }
     renderTags();
-    renderArchive();
     initReveal();
   }
 

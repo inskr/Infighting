@@ -131,6 +131,13 @@ test('published pages load only their page-specific resources and share the ackn
     assert.match(post, /assets\/js\/legacy-post\.js/);
     assert.doesNotMatch(post, /assets\/js\/(?:post-loader|post-view|stats|likes-storage|main|ui-effects)\.js/);
     assert.doesNotMatch(archive, /posts-index\.js/);
+    assert.match(archive, /assets\/js\/feed-data\.js/);
+    assert.match(archive, /assets\/js\/feed-archive\.js/);
+    assert.match(archive, /assets\/js\/url-policy\.js/);
+    assert.match(archive, /assets\/js\/site-shell\.js/);
+    assert.match(archive, /assets\/js\/archive-page\.js/);
+    assert.match(archive, /assets\/js\/ui-effects\.js/);
+    assert.doesNotMatch(archive, /assets\/js\/(?:stats|likes-storage|content-cards|main)\.js/);
     assert.match(search, /assets\/js\/site-shell\.js/);
     assert.match(search, /assets\/js\/content-cards\.js/);
     assert.match(search, /assets\/js\/search-core\.js/);
