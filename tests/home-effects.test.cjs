@@ -112,26 +112,34 @@ test('enabling reduced motion cancels an active hero animation frame', () => {
   assert.equal(values['--motion-y'], '0px');
 });
 
-test('simple-motion devices leave Hero and signal field unbound without animation frames', () => {
-  let bindings = 0;
-  let frames = 0;
-  const hero = { addEventListener() { bindings += 1; } };
-  const canvas = { getContext() { return {}; }, addEventListener() { bindings += 1; } };
-  const root = {
-    matchMedia(query) { return { matches: query === '(pointer: coarse)', addEventListener() {} }; },
-    requestAnimationFrame() { frames += 1; return frames; },
-    document: {
-      querySelector(selector) {
-        if (selector === '[data-motion-hero]') return hero;
-        if (selector === '[data-signal-field]') return canvas;
-        return null;
+test('simple-effect preferences skip Canvas, pointer listeners, and animation frames', () => {
+  // Break caught: coarse pointers or reduced-motion users pay setup cost before effects are disabled.
+  for (const preferredQuery of ['(pointer: coarse)', '(prefers-reduced-motion: reduce)']) {
+    let contexts = 0;
+    let bindings = 0;
+    let frames = 0;
+    const hero = { addEventListener() { bindings += 1; } };
+    const canvas = {
+      getContext() { contexts += 1; return {}; },
+      addEventListener() { bindings += 1; },
+    };
+    const root = {
+      matchMedia(query) { return { matches: query === preferredQuery, addEventListener() {} }; },
+      requestAnimationFrame() { frames += 1; return frames; },
+      document: {
+        querySelector(selector) {
+          if (selector === '[data-motion-hero]') return hero;
+          if (selector === '[data-signal-field]') return canvas;
+          return null;
+        },
       },
-    },
-  };
+    };
 
-  assert.equal(HomeEffects.init(root), false);
-  assert.equal(bindings, 0);
-  assert.equal(frames, 0);
+    assert.equal(HomeEffects.init(root), false, preferredQuery);
+    assert.equal(contexts, 0, preferredQuery);
+    assert.equal(bindings, 0, preferredQuery);
+    assert.equal(frames, 0, preferredQuery);
+  }
 });
 
 test('homepage loads its dedicated effect module and published pages do not reference main.js', () => {

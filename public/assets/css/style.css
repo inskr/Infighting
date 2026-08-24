@@ -93,7 +93,7 @@ html {
 
 body {
   min-height: 100vh;
-  overflow-x: hidden;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -234,6 +234,7 @@ a:focus-visible {
 
 .nav-shell {
   width: min(1280px, 100%);
+  min-width: 0;
   min-height: 64px;
   margin: 0 auto;
   padding: 9px 12px 9px 14px;
@@ -307,12 +308,14 @@ a:focus-visible {
 }
 
 .nav-actions {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .site-nav {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 3px;
@@ -320,9 +323,14 @@ a:focus-visible {
 
 .site-nav a {
   position: relative;
+  min-inline-size: 44px;
+  min-block-size: 44px;
   padding: 8px 13px;
   border: 1px solid transparent;
   border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--muted);
   font-size: 13.5px;
   font-weight: 620;
@@ -394,6 +402,7 @@ a:focus-visible {
 /* ================= Main layout ================= */
 .container {
   width: min(1280px, 100%);
+  min-width: 0;
   flex: 1 0 auto;
   margin: 0 auto;
   padding: 34px 20px 78px;
@@ -750,6 +759,14 @@ a:focus-visible {
   gap: 18px;
 }
 
+.daily-boards > *,
+.post-list > *,
+.section-head > *,
+.search-controls > *,
+.article-nav > * {
+  min-width: 0;
+}
+
 .board {
   overflow: hidden;
   padding: 23px 24px;
@@ -1027,6 +1044,12 @@ a.tag:hover {
   background: rgba(103, 232, 249, 0.16);
 }
 
+a.tag {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  justify-content: center;
+}
+
 .tag-cloud {
   margin-bottom: 30px;
   padding: 21px;
@@ -1037,7 +1060,8 @@ a.tag:hover {
 }
 
 .tag-cloud a {
-  min-height: 38px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
   padding: 7px 9px 7px 14px;
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -1111,6 +1135,7 @@ a.tag:hover {
 
 .search-controls input {
   min-width: 0;
+  min-block-size: 44px;
   flex: 1 1 320px;
   padding: 12px 15px;
   border: 1px solid var(--border);
@@ -1153,7 +1178,8 @@ a.tag:hover {
 .search-results .post-card:first-child .post-meta,
 .search-results .post-card:first-child .post-summary { max-width: none; }
 .search-retry {
-  min-height: 42px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
   padding: 9px 18px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
@@ -1177,8 +1203,8 @@ a.tag:hover {
 .pagination a,
 .pagination span.current,
 .pagination span.disabled {
-  min-width: 38px;
-  height: 38px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
   padding: 0 11px;
   border: 1px solid var(--border);
   border-radius: 11px;
@@ -1233,6 +1259,7 @@ a.tag:hover {
 }
 
 .article-body {
+  min-width: 0;
   color: var(--text);
   font-size: 15.5px;
   line-height: 1.9;
@@ -1280,6 +1307,7 @@ a.tag:hover {
 }
 
 .article-body pre {
+  max-width: 100%;
   margin: 1.4em 0;
   padding: 20px;
   overflow-x: auto;
@@ -1289,15 +1317,26 @@ a.tag:hover {
 }
 
 .article-body pre code {
+  min-width: 100%;
+  width: max-content;
   padding: 0;
   border: 0;
   color: #d7deea;
   background: transparent;
 }
 
+.article-body .table-wrapper {
+  max-width: 100%;
+  margin: 1.4em 0;
+  overflow-x: auto;
+  border-radius: 12px;
+  overscroll-behavior-inline: contain;
+}
+
 .article-body table {
   width: 100%;
-  margin: 1.4em 0;
+  min-width: max-content;
+  margin: 0;
   border-collapse: separate;
   border-spacing: 0;
   overflow: hidden;
@@ -1389,11 +1428,14 @@ a.tag:hover {
 }
 
 .like-btn {
+  min-inline-size: 44px;
+  min-block-size: 44px;
   margin: 0;
   padding: 0;
   border: 0;
   background: none;
   cursor: pointer;
+  justify-content: center;
 }
 
 .like-btn .icon-heart,
@@ -1481,20 +1523,19 @@ body { animation: pageFadeIn 360ms ease; }
     align-items: center;
     border-radius: 15px;
   }
-  .brand { padding: 2px; }
+  .brand { display: none; }
   .brand .logo { width: 36px; height: 36px; }
   .brand-copy { display: none; }
   .nav-actions { min-width: 0; flex: 1 1 auto; gap: 5px; }
   .site-nav {
-    width: 0;
+    width: auto;
     max-width: none;
     min-width: 0;
     flex: 1 1 auto;
-    overflow-x: auto;
-    scrollbar-width: none;
+    justify-content: space-between;
+    overflow-x: visible;
   }
-  .site-nav::-webkit-scrollbar { display: none; }
-  .site-nav a { min-width: max-content; padding: 8px 10px; font-size: 12px; }
+  .site-nav a { padding: 8px; font-size: 12px; }
 
   .glass-surface,
     .post-card,
@@ -1569,7 +1610,7 @@ body { animation: pageFadeIn 360ms ease; }
   .article { padding: 24px 20px; border-radius: 20px; }
   .article-header h1 { font-size: 31px; }
   .article-body { font-size: 14.5px; }
-  .article-body pre { margin-inline: -8px; padding: 15px; }
+  .article-body pre { margin-inline: 0; padding: 15px; }
   .article-nav { grid-template-columns: 1fr; }
   .article-nav .next { text-align: left; }
   .archive-day .daily-boards { gap: 12px; }

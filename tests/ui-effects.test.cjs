@@ -114,6 +114,39 @@ test('coarse pointers and reduced-motion users do not bind spotlight tracking', 
   assert.equal(listeners, 0);
 });
 
+test('reduced motion leaves reveal targets visible without observers', () => {
+  // Break caught: reduced motion hides content or constructs an observer that can animate it later.
+  const classes = new Set(['post-card']);
+  const target = {
+    classList: {
+      add(name) { classes.add(name); },
+      contains(name) { return classes.has(name); },
+    },
+    matches(selector) { return selector.includes('.post-card'); },
+    querySelectorAll() { return []; },
+  };
+  let observers = 0;
+  const root = {
+    IntersectionObserver: class {
+      constructor() { observers += 1; }
+    },
+    MutationObserver: class {
+      constructor() { observers += 1; }
+    },
+    matchMedia(query) {
+      return { matches: query === '(prefers-reduced-motion: reduce)' };
+    },
+    document: {
+      body: {},
+      querySelectorAll() { return [target]; },
+    },
+  };
+
+  assert.equal(Effects.createRevealController(root).bind(), false);
+  assert.equal(classes.has('reveal'), false);
+  assert.equal(observers, 0);
+});
+
 test('shared UI effects do not own homepage-only animation controllers', () => {
   assert.equal(Effects.createHeroMotionController, undefined);
   assert.equal(Effects.createSignalFieldController, undefined);
