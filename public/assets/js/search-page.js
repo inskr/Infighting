@@ -29,6 +29,8 @@
     var initialized = false;
     var runVersion = 0;
     var pendingRunTimer = null;
+    var activeRunPromise = null;
+    var activeRunState = null;
 
     function cancelPendingRun() {
       if (pendingRunTimer === null) return;
@@ -131,12 +133,8 @@
       root.history.replaceState(null, "", url.pathname + url.search + url.hash);
     }
 
-    async function run(query, runOptions) {
-      var version = ++runVersion;
-      var options = runOptions || {};
-      var normalized = String(query == null ? "" : query).trim();
-      input.value = normalized;
-      updateUrl(normalized);
+    async function executeRun(normalized, state) {
+      var version = state.version;
       if (!normalized) {
         results.textContent = "";
         results.setAttribute("aria-busy", "false");
@@ -160,9 +158,42 @@
       } catch (error) {
         if (version !== runVersion) return;
         results.setAttribute("aria-busy", "false");
-        showRetry(normalized, !!options.focusRetryOnError);
+        showRetry(normalized, !!state.focusRetryOnError);
         updateStatus("搜索暂时不可用，请重试。", true);
       }
+    }
+
+    function run(query, runOptions) {
+      var options = runOptions || {};
+      var normalized = String(query == null ? "" : query).trim();
+      input.value = normalized;
+      updateUrl(normalized);
+
+      if (
+        normalized &&
+        activeRunPromise &&
+        activeRunState.version === runVersion &&
+        activeRunState.query === normalized
+      ) {
+        if (options.focusRetryOnError) activeRunState.focusRetryOnError = true;
+        return activeRunPromise;
+      }
+
+      var state = {
+        focusRetryOnError: !!options.focusRetryOnError,
+        query: normalized,
+        version: ++runVersion,
+      };
+      activeRunState = state;
+      activeRunPromise = executeRun(normalized, state);
+      var promise = activeRunPromise;
+      var clearActiveRun = function () {
+        if (activeRunState !== state) return;
+        activeRunState = null;
+        activeRunPromise = null;
+      };
+      promise.then(clearActiveRun, clearActiveRun);
+      return promise;
     }
 
     function queryFromLocation() {

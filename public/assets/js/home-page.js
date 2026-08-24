@@ -203,7 +203,18 @@
       var button = event.target && event.target.closest ? event.target.closest(".like-btn") : null;
       if (!button || button.disabled || button.getAttribute("data-pending") === "true") return;
       var id = button.getAttribute("data-id");
-      if (!id || (root.LikesStorage && root.LikesStorage.hasLiked(id))) return;
+      if (!id) return;
+      var liked = false;
+      try {
+        liked = !!(
+          root.LikesStorage &&
+          typeof root.LikesStorage.hasLiked === "function" &&
+          root.LikesStorage.hasLiked(id)
+        );
+      } catch (error) {
+        liked = false;
+      }
+      if (liked) return;
 
       var cache = root.Stats.getCache();
       var cached = (cache || {})[id];

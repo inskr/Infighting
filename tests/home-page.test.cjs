@@ -293,6 +293,42 @@ test('rolls back failed optimistic likes and persists successful likes', async (
   assert.equal(succeededButton.getAttribute('aria-busy'), null);
 });
 
+test('confirms a Home like when optional storage reads and announcements fail', async () => {
+  // Break caught: an optional storage or live-region exception aborts a valid Home like action.
+  let storageReads = 0;
+  const view = fixture({
+    posts: [post('storage-isolation')],
+    likesStorage: {
+      hasLiked() {
+        storageReads += 1;
+        if (storageReads > 1) throw new Error('storage read unavailable');
+        return false;
+      },
+      markLiked() { throw new Error('storage write unavailable'); },
+    },
+    siteShell: {
+      init(target, activeNav) { SiteShell.init(target, activeNav); },
+      announce() { throw new Error('announcement unavailable'); },
+    },
+  });
+  api().init(view.root);
+  await settle();
+  const button = view.list.querySelector('.like-btn');
+
+  assert.doesNotThrow(() => {
+    view.listeners.get('click')({
+      target: { closest(selector) { return selector === '.like-btn' ? button : null; } },
+    });
+  });
+  await settle();
+
+  assert.equal(button.querySelector('.like-count').textContent, '1');
+  assert.equal(button.getAttribute('aria-label'), '已点赞');
+  assert.equal(button.getAttribute('disabled'), '');
+  assert.equal(button.getAttribute('aria-busy'), null);
+  assert.equal(view.list.querySelector('h2').textContent, 'Post storage-isolation');
+});
+
 test('browser loading exposes HomePage and auto-initializes the home surface', async () => {
   // Break caught: index.html loads the module but Home stays blank until an unavailable manual call.
   const view = fixture({ posts: [post('browser')] });

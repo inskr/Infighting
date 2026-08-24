@@ -527,6 +527,75 @@ test('typing a replacement query invalidates an older in-flight result set', asy
   assert.equal(view.results.children.length, 0);
 });
 
+test('an overlapping non-empty query owns busy state and the only completion announcement', async () => {
+  // Break caught: a stale active query clears the newer query's busy state or announces its outcome.
+  let resolveFetch;
+  const fetchResponse = new Promise((resolve) => { resolveFetch = resolve; });
+  const queries = [];
+  const view = fixture({
+    fetch: () => fetchResponse,
+    searchCore: {
+      search(index, query) {
+        assert.equal(view.results.getAttribute('aria-busy'), 'true');
+        assert.equal(view.status.textContent, '正在搜索“beta”。');
+        queries.push(query);
+        return [];
+      },
+    },
+  });
+
+  const first = view.controller.run('alpha');
+  const second = view.controller.run('beta');
+  const duplicate = view.controller.run('beta');
+  assert.equal(view.results.getAttribute('aria-busy'), 'true');
+  assert.deepEqual(view.announcements, [
+    '正在搜索“alpha”。',
+    '正在搜索“beta”。',
+  ]);
+
+  resolveFetch({ ok: true, async json() { return []; } });
+  await Promise.all([first, second, duplicate]);
+
+  assert.deepEqual(queries, ['beta']);
+  assert.equal(view.results.getAttribute('aria-busy'), 'false');
+  assert.equal(view.status.textContent, '没有找到与“beta”匹配的文章。');
+  assert.deepEqual(view.announcements, [
+    '正在搜索“alpha”。',
+    '正在搜索“beta”。',
+    '没有找到与“beta”匹配的文章。',
+  ]);
+});
+
+test('submit restarts a same-query run that input already invalidated', async () => {
+  // Break caught: active-query deduplication reuses a stale version and leaves the submitted search unfinished.
+  let resolveFetch;
+  const fetchResponse = new Promise((resolve) => { resolveFetch = resolve; });
+  const timers = fakeTimers();
+  const queries = [];
+  const view = fixture({
+    fetch: () => fetchResponse,
+    searchCore: { search(index, query) { queries.push(query); return []; } },
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+  });
+  view.controller.init();
+  const first = view.controller.run('alpha');
+  view.input.value = ' alpha ';
+  await view.input.dispatchEvent({ type: 'input' });
+  const submitted = view.form.dispatchEvent({ type: 'submit', preventDefault() {} });
+
+  resolveFetch({ ok: true, async json() { return []; } });
+  await Promise.all([first, submitted]);
+
+  assert.deepEqual(queries, ['alpha']);
+  assert.equal(view.results.getAttribute('aria-busy'), 'false');
+  assert.deepEqual(view.announcements, [
+    '正在搜索“alpha”。',
+    '正在搜索“alpha”。',
+    '没有找到与“alpha”匹配的文章。',
+  ]);
+});
+
 test('the browser script exposes SearchPage and initializes the page after its deferred dependencies', () => {
   // Break caught: static search.html loads the module but never binds its real controls.
   let fetchCalls = 0;
