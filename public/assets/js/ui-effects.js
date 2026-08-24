@@ -12,6 +12,7 @@
     api.createSpotlightController(root).bind();
     api.createHeroMotionController(root).bind();
     api.createSignalFieldController(root).bind();
+    api.createRevealController(root).bind();
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
@@ -36,6 +37,76 @@
       root.matchMedia("(pointer: coarse)").matches ||
       root.matchMedia("(prefers-reduced-motion: reduce)").matches
     );
+  }
+
+  function prefersReducedMotion(root) {
+    return !!(
+      typeof root.matchMedia === "function" &&
+      root.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
+
+  function createRevealController(root) {
+    var selector =
+      ".hero, .page-intro, .tag-cloud, .post-card, .article, .board, .archive-day";
+    var bound = false;
+    var observer = null;
+    var revealIndex = 0;
+
+    function enhance(target) {
+      if (!target || !target.classList || target.classList.contains("reveal")) return;
+      target.classList.add("reveal");
+      if (target.style) {
+        target.style.transitionDelay = Math.min(revealIndex % 6, 5) * 60 + "ms";
+      }
+      revealIndex += 1;
+
+      var documentElement = root.document.documentElement;
+      var viewportHeight =
+        root.innerHeight || (documentElement && documentElement.clientHeight) || 800;
+      if (target.getBoundingClientRect().top <= viewportHeight * 1.08) {
+        target.classList.add("visible");
+      } else {
+        observer.observe(target);
+      }
+    }
+
+    function scan(scope) {
+      if (!scope) return;
+      if (typeof scope.matches === "function" && scope.matches(selector)) enhance(scope);
+      if (typeof scope.querySelectorAll === "function") {
+        Array.prototype.forEach.call(scope.querySelectorAll(selector), enhance);
+      }
+    }
+
+    function bind() {
+      if (bound) return true;
+      if (typeof root.IntersectionObserver !== "function" || prefersReducedMotion(root)) {
+        return false;
+      }
+
+      observer = new root.IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0 });
+      scan(root.document);
+
+      if (typeof root.MutationObserver === "function" && root.document.body) {
+        new root.MutationObserver(function (mutations) {
+          mutations.forEach(function (mutation) {
+            Array.prototype.forEach.call(mutation.addedNodes || [], scan);
+          });
+        }).observe(root.document.body, { childList: true, subtree: true });
+      }
+      bound = true;
+      return true;
+    }
+
+    return { bind: bind };
   }
 
   function watchMotionPreferences(root, handler) {
@@ -452,5 +523,6 @@
     createParticleLayout: createParticleLayout,
     createHeroMotionController: createHeroMotionController,
     createSignalFieldController: createSignalFieldController,
+    createRevealController: createRevealController,
   };
 });

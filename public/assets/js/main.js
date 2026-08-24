@@ -1,4 +1,4 @@
-/* Infighting - transitional article rendering and reveal effects */
+/* Infighting - transitional article rendering */
 (function () {
   "use strict";
 
@@ -13,39 +13,6 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
-  }
-
-  /* ---------- 滚动渐入动效 ---------- */
-  function initReveal() {
-    if (!("IntersectionObserver" in window)) return;
-    var targets = document.querySelectorAll(
-      ".hero, .page-intro, .post-card, .article, .board, .archive-day"
-    );
-    targets.forEach(function (el, i) {
-      el.classList.add("reveal");
-      el.style.transitionDelay = Math.min(i % 6, 5) * 60 + "ms";
-    });
-    var observer = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0 }
-    );
-    var documentElement = document.documentElement;
-    var viewportHeight =
-      window.innerHeight || (documentElement && documentElement.clientHeight) || 800;
-    targets.forEach(function (el) {
-      if (el.getBoundingClientRect().top <= viewportHeight * 1.08) {
-        el.classList.add("visible");
-        return;
-      }
-      observer.observe(el);
-    });
   }
 
   /* ---------- 文章详情页 ---------- */
@@ -189,7 +156,6 @@
     if (document.getElementById("article")) {
       await renderPost();
     }
-    initReveal();
   }
 
   init();
