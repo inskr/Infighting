@@ -15,7 +15,7 @@ Tests were written before production CSS changes.
 - `npx playwright test tests/browser/reflow-motion.spec.cjs --workers=1`: 4 passed, 17 failed.
 - Concrete RED findings:
   - `body { overflow-x: hidden; }` globally masked horizontal layout mistakes.
-  - `.site-nav` was an internal horizontal scroller at 320px and 200%-zoom-equivalent layout.
+  - `.site-nav` was an internal horizontal scroller at the 320 CSS px automated boundary.
   - Primary navigation links were 38.39px high.
   - Interactive article/card tags were 24px high; tag-cloud links were 38px high.
   - Like buttons were approximately 26.94×18.69px.
@@ -27,26 +27,26 @@ Tests were written before production CSS changes.
 - Removed the global `body` horizontal clipping rule.
 - Added targeted `min-width: 0` rules to the relevant flex/grid containers and children.
 - Made `pre` and `.table-wrapper` the named article overflow surfaces; their content can scroll internally without widening the document.
-- Enforced 44×44 CSS-pixel minimums for primary navigation, pagination, search controls/retry, clickable tags, tag-cloud links, and like buttons.
-- Reflowed the narrow navigation without horizontal scrolling; the redundant brand block is hidden at `max-width: 680px` while the explicit Home navigation destination remains available.
+- Enforced 44×44 CSS-pixel minimums for site identity, primary navigation, article navigation, pagination, search controls/retry, clickable tags, tag-cloud links, and like buttons.
+- Reflowed the narrow header into a compact identity row plus navigation row. The linked logo and accessible `Infighting 首页` name remain visible without horizontal scrolling.
 - Left `home-effects.js`, `ui-effects.js`, and `home-page.js` unchanged because the base already implemented the required early simple-effects return, reveal fallback, reduced-motion Hero/Canvas shutdown, and pagination `behavior: "auto"`. The strengthened Node and Chromium tests now lock those behaviors.
 
 Focused GREEN evidence:
 
 - `node --test tests/home-effects.test.cjs tests/ui-effects.test.cjs tests/home-page.test.cjs`: 22/22 passed.
-- `npx playwright test tests/browser/reflow-motion.spec.cjs --workers=1`: 21/21 passed.
+- `npx playwright test tests/browser/reflow-motion.spec.cjs --workers=1`: 11/11 passed.
 
 ## Reflow and target matrix
 
-The 200% case uses a 640px viewport with CSS `zoom: 2`, yielding a 320px-equivalent reflow width. Target measurements are normalized back to CSS pixels before asserting 44×44.
+Automation uses a real 320 CSS px viewport. Chromium explicitly reports both `window.innerWidth === 320` and `document.documentElement.clientWidth === 320`, while `matchMedia("(max-width: 680px)").matches` is true. This is the automated reflow boundary corresponding to a 640 CSS px viewport viewed at 200% toolbar zoom; it is not an automated toolbar-zoom test.
 
-| Route | 320px document reflow | 320px targets | 200% equivalent reflow | 200% equivalent targets |
-| --- | --- | --- | --- | --- |
-| Home `/` | PASS | PASS | PASS | PASS |
-| Search `/search.html` | PASS | PASS | PASS | PASS |
-| Tags `/tags.html` | PASS | PASS | PASS | PASS |
-| Archive `/archive.html` | PASS | PASS | PASS | PASS |
-| Long article `/posts/embedded-robotics-learning-roadmap.html` | PASS | PASS | PASS | PASS |
+| Route | 320 CSS px document reflow | 320 CSS px targets | Compact identity visible |
+| --- | --- | --- | --- |
+| Home `/` | PASS | PASS | PASS |
+| Search `/search.html` | PASS | PASS | PASS |
+| Tags `/tags.html` | PASS | PASS | PASS |
+| Archive `/archive.html` | PASS | PASS | PASS |
+| Long article `/posts/embedded-robotics-learning-roadmap.html` | PASS | PASS | PASS |
 
 For each reflow check, the test first records the computed body overflow policy, then temporarily forces it visible so document overflow cannot be hidden. It asserts `scrollWidth <= clientWidth` and rejects internal horizontal scroll containers other than `.article-body pre` and `.article-body .table-wrapper`.
 
@@ -68,7 +68,7 @@ For each reflow check, the test first records the computed body overflow policy,
 
 - `npm run build`: PASS; posts index generated with 9 posts and 7 responsive Hero images generated; no generated-file diff remained.
 - `npm test`: PASS; main Node runner 203/203, plus standalone stats-format 6/6, likes-storage 64/64, and stats-fallback 7/7.
-- `npm run test:browser`: PASS; 31/31 Chromium tests.
+- `npm run test:browser`: PASS; 21/21 Chromium tests.
 - `git diff --check`: PASS (only Git line-ending notices; no whitespace errors).
 
 ## Self-review
@@ -76,11 +76,35 @@ For each reflow check, the test first records the computed body overflow policy,
 - No global `overflow-x: hidden` or equivalent document-level clipping was introduced.
 - Only named code/table surfaces are allowed to scroll internally in the browser regression test.
 - The 44px rule targets actual interactive tags (`a.tag`), not inert Hero label spans or language labels.
+- Article back, TOC, previous/next, and related-post navigation links are audited as non-inline 44px targets. Links embedded within `.article-body` prose remain inline and use the WCAG Target Size inline-link exception; they are intentionally excluded from this target audit.
 - Disabled liked buttons retain 44px styling even though the browser target audit only requires currently clickable controls.
 - Existing focus, skip-link, live-region, optimistic-like, and search-status behavior remained covered by the complete Node and browser suites.
 - Changes are limited to the visual CSS, focused tests, the new browser spec, and this report.
 
 ## Concerns
 
-- Playwright does not expose a stable cross-platform browser-toolbar zoom API; the 200% scenario is modeled with CSS `zoom: 2` and normalized CSS-pixel target measurements.
+- Playwright does not expose a stable cross-platform browser-toolbar zoom API. Actual browser-toolbar 200% zoom remains explicitly assigned to the Task 8 manual checklist; Task 4 automation proves the corresponding real 320 CSS px reflow boundary only.
 - Chromium prints the existing `NO_COLOR`/`FORCE_COLOR` warning during Playwright runs; it does not affect results.
+
+## Fix Round 1
+
+### RED
+
+Tests were changed before the CSS fix.
+
+- `npx playwright test tests/browser/reflow-motion.spec.cjs -g "visible interactive targets" --workers=1`: 0 passed, 5 failed. Every representative route reported `.brand` hidden at 320 CSS px.
+- `npx playwright test tests/browser/reflow-motion.spec.cjs -g "article visible interactive targets" --workers=1`: 0 passed, 1 failed. The real article reported `.back-link` at 85.64×20.39px and TOC links at 21px high, including a 32px-wide `目录` target.
+- The prior CSS `zoom: 2` scenario and divided target measurements were removed. The replacement test directly asserts 320px `innerWidth`, 320px root `clientWidth`, and the active narrow media query.
+
+### GREEN
+
+- Added `.back-link`, `.article-toc a`, `.article-navigation a`, and `.related-posts a` to the real-browser target audit and styled them as wrapping, block-level 44×44 minimum targets.
+- Replaced mobile `.brand { display: none; }` with a linked 44px compact logo row. Navigation occupies the following row, preserving DOM/focus order and preventing internal or document overflow.
+- `npx playwright test tests/browser/reflow-motion.spec.cjs --workers=1`: PASS, 11/11.
+
+### Fix Round 1 full verification
+
+- `npm run build`: PASS; 9-post index and 7 responsive Hero images generated with no generated-file diff.
+- `npm test`: PASS; main Node runner 203/203, plus standalone stats-format 6/6, likes-storage 64/64, and stats-fallback 7/7.
+- `npm run test:browser`: PASS; 21/21 Chromium tests.
+- `git diff --check`: PASS; no whitespace errors.

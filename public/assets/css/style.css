@@ -1231,12 +1231,31 @@ a.tag {
 /* ================= Article ================= */
 .back-link {
   margin-bottom: 15px;
-  display: inline-flex;
   color: var(--muted);
   font-size: 12px;
 }
 
 .back-link:hover { color: var(--accent); }
+
+.back-link,
+.article-toc a,
+.article-navigation a,
+.related-posts a {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+
+.article-toc,
+.article-toc li,
+.article-navigation,
+.related-posts,
+.related-posts li {
+  min-width: 0;
+}
 
 .article {
   padding: clamp(26px, 5vw, 58px);
@@ -1520,13 +1539,21 @@ body { animation: pageFadeIn 360ms ease; }
   .nav-shell {
     min-height: auto;
     padding: 8px;
+    flex-wrap: wrap;
     align-items: center;
+    gap: 4px;
     border-radius: 15px;
   }
-  .brand { display: none; }
+  .brand {
+    min-width: 0;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding: 4px;
+    flex: 1 0 100%;
+  }
   .brand .logo { width: 36px; height: 36px; }
   .brand-copy { display: none; }
-  .nav-actions { min-width: 0; flex: 1 1 auto; gap: 5px; }
+  .nav-actions { width: 100%; min-width: 0; flex: 1 1 100%; gap: 5px; }
   .site-nav {
     width: auto;
     max-width: none;

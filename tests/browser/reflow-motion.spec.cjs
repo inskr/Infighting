@@ -10,18 +10,19 @@ const routes = [
   { name: 'article', path: '/posts/embedded-robotics-learning-roadmap.html' },
 ];
 
-const layouts = [
-  { name: '320px', viewport: { width: 320, height: 800 }, zoom: 1 },
-  { name: '200%-zoom-equivalent', viewport: { width: 640, height: 800 }, zoom: 2 },
-];
+const automatedReflowBoundary = {
+  name: '320 CSS px automated reflow equivalent',
+  viewport: { width: 320, height: 800 },
+};
 
-async function applyLayout(page, layout) {
-  await page.setViewportSize(layout.viewport);
-  if (layout.zoom !== 1) {
-    await page.evaluate((zoom) => {
-      document.documentElement.style.zoom = String(zoom);
-    }, layout.zoom);
-  }
+async function applyAutomatedReflowBoundary(page) {
+  await page.setViewportSize(automatedReflowBoundary.viewport);
+  const state = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    innerWidth: window.innerWidth,
+    narrowMediaQuery: window.matchMedia('(max-width: 680px)').matches,
+  }));
+  expect(state).toEqual({ clientWidth: 320, innerWidth: 320, narrowMediaQuery: true });
 }
 
 async function reflowDiagnostics(page) {
@@ -68,9 +69,10 @@ async function reflowDiagnostics(page) {
   });
 }
 
-async function undersizedTargets(page, zoom) {
-  return page.evaluate((scale) => {
+async function undersizedTargets(page) {
+  return page.evaluate(() => {
     const selector = [
+      '.brand',
       '.site-nav a',
       '.theme-toggle',
       '.pagination a',
@@ -79,6 +81,10 @@ async function undersizedTargets(page, zoom) {
       'a.tag',
       '.tag-cloud a',
       '.like-btn:not([disabled])',
+      '.back-link',
+      '.article-toc a',
+      '.article-navigation a',
+      '.related-posts a',
     ].join(', ');
     return [...document.querySelectorAll(selector)]
       .filter((element) => {
@@ -90,33 +96,32 @@ async function undersizedTargets(page, zoom) {
         const rect = element.getBoundingClientRect();
         return {
           target: element.matches('input') ? `input#${element.id}` : element.outerHTML.slice(0, 100),
-          width: Math.round((rect.width / scale) * 100) / 100,
-          height: Math.round((rect.height / scale) * 100) / 100,
+          width: Math.round(rect.width * 100) / 100,
+          height: Math.round(rect.height * 100) / 100,
         };
       })
       .filter(({ width, height }) => width < 44 || height < 44);
-  }, zoom);
+  });
 }
 
-for (const layout of layouts) {
-  for (const route of routes) {
-    test(`${route.name} reflows without document overflow at ${layout.name}`, async ({ page }) => {
-      // Break caught: a real page child widens the document, including when body clipping masks it.
-      await page.goto(route.path);
-      await applyLayout(page, layout);
-      const diagnostics = await reflowDiagnostics(page);
-      expect(diagnostics.bodyOverflowX, JSON.stringify(diagnostics, null, 2)).not.toBe('hidden');
-      expect(diagnostics.scrollWidth, JSON.stringify(diagnostics, null, 2)).toBeLessThanOrEqual(diagnostics.clientWidth);
-      expect(diagnostics.internalOverflow, JSON.stringify(diagnostics, null, 2)).toEqual([]);
-    });
+for (const route of routes) {
+  test(`${route.name} reflows without document overflow at ${automatedReflowBoundary.name}`, async ({ page }) => {
+    // Break caught: a real page child widens the document, including when body clipping masks it.
+    await page.goto(route.path);
+    await applyAutomatedReflowBoundary(page);
+    const diagnostics = await reflowDiagnostics(page);
+    expect(diagnostics.bodyOverflowX, JSON.stringify(diagnostics, null, 2)).not.toBe('hidden');
+    expect(diagnostics.scrollWidth, JSON.stringify(diagnostics, null, 2)).toBeLessThanOrEqual(diagnostics.clientWidth);
+    expect(diagnostics.internalOverflow, JSON.stringify(diagnostics, null, 2)).toEqual([]);
+  });
 
-    test(`${route.name} visible interactive targets are at least 44px at ${layout.name}`, async ({ page }) => {
-      // Break caught: a required navigation, pagination, search, interactive tag, or like target is too small.
-      await page.goto(route.path);
-      await applyLayout(page, layout);
-      await expect.poll(() => undersizedTargets(page, layout.zoom)).toEqual([]);
-    });
-  }
+  test(`${route.name} visible interactive targets are at least 44px at ${automatedReflowBoundary.name}`, async ({ page }) => {
+    // Break caught: a required identity, navigation, search, interactive tag, or like target is missing or too small.
+    await page.goto(route.path);
+    await applyAutomatedReflowBoundary(page);
+    await expect.poll(() => undersizedTargets(page)).toEqual([]);
+    await expect(page.locator('.brand')).toBeVisible();
+  });
 }
 
 test('reduced motion skips animation work, reveals content, and paginates without smooth scrolling', async ({ page }) => {
