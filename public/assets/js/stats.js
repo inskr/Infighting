@@ -8,7 +8,7 @@
  *        跨设备真实计数，CORS 全开放，免注册。
  *
  * 接口形态两种模式一致：fetchAllStats / fetchStats / reportView / reportLike
- *   + getCache / formatCount，调用方（main.js）无需感知模式差异。
+ *   + getCache / formatCount，调用方（页面 Modules）无需感知模式差异。
  *
  * 兼容 UMD：浏览器挂到 window.Stats，Node 下可被 require（仅导出 formatCount 纯函数）。
  * 约定：window / fetch 只在函数体内引用，保证 Node 端 require 不报错。

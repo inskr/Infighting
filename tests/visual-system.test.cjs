@@ -126,6 +126,28 @@ test('published pages load only their page-specific resources and share the ackn
     assert.match(home, /fetchpriority="high"/);
     assert.doesNotMatch(home, /posts-data\.js/);
     assert.match(home, /assets\/js\/posts-index\.js/);
+    assert.match(home, /assets\/js\/feed-data\.js/);
+    assert.match(home, /assets\/js\/stats\.js/);
+    assert.match(home, /assets\/js\/likes-storage\.js/);
+    assert.match(home, /assets\/js\/url-policy\.js/);
+    assert.match(home, /assets\/js\/site-shell\.js/);
+    assert.match(home, /assets\/js\/content-cards\.js/);
+    assert.match(home, /assets\/js\/home-page\.js/);
+    assert.match(home, /assets\/js\/ui-effects\.js/);
+    assert.doesNotMatch(home, /assets\/js\/(?:feed-archive|main|search-core|search-page|archive-page|tags-page|article-page|legacy-post|post-loader|post-view)\.js/);
+    const homeOrder = [
+      'assets/js/feed-data.js',
+      'assets/js/posts-index.js',
+      'assets/js/stats.js',
+      'assets/js/likes-storage.js',
+      'assets/js/url-policy.js',
+      'assets/js/site-shell.js',
+      'assets/js/content-cards.js',
+      'assets/js/home-page.js',
+      'assets/js/ui-effects.js',
+    ].map((source) => home.indexOf(source));
+    assert.ok(homeOrder.every((index) => index >= 0));
+    assert.deepEqual(homeOrder, [...homeOrder].sort((left, right) => left - right));
     assert.match(tags, /assets\/js\/posts-index\.js/);
     assert.match(tags, /assets\/js\/site-shell\.js/);
     assert.match(tags, /assets\/js\/content-cards\.js/);

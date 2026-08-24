@@ -85,8 +85,8 @@ test('statBar uses zero counts and enabled like semantics without optional servi
   assert.equal(bar.querySelector('.view-count-num').textContent, '0');
 });
 
-test('main renders list cards through the shared DOM-safe module', async () => {
-  // Break caught: the transitional entry point falls back to string-interpolated card markup.
+test('home renders list cards through the shared DOM-safe module', async () => {
+  // Break caught: the Home entry point falls back to string-interpolated card markup.
   const document = new FakeDocument();
   document.documentElement = { clientHeight: 800 };
   document.addEventListener = () => {};
@@ -103,7 +103,7 @@ test('main renders list cards through the shared DOM-safe module', async () => {
   list.setAttribute('id', 'post-list');
   document.body.appendChild(list);
 
-  const window = {
+  const root = {
     POSTS: [post({ id: 'shared/card' })],
     ContentCards,
     SiteShell,
@@ -111,11 +111,15 @@ test('main renders list cards through the shared DOM-safe module', async () => {
     location: { search: '' },
     addEventListener() {},
   };
-  const source = fs.readFileSync(
-    path.join(__dirname, '..', 'public', 'assets', 'js', 'main.js'),
-    'utf8'
-  );
-  vm.runInNewContext(source, { document, encodeURIComponent, URLSearchParams, window });
+  const source = fs.readFileSync(path.join(
+    __dirname,
+    '..',
+    'public',
+    'assets',
+    'js',
+    'home-page.js'
+  ), 'utf8');
+  vm.runInNewContext(source, { globalThis: root, encodeURIComponent, URLSearchParams });
   await new Promise((resolve) => setImmediate(resolve));
 
   assert.equal(list.querySelectorAll('.post-card').length, 1);

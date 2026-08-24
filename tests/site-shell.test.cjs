@@ -54,15 +54,28 @@ test('announce safely updates one shared polite status surface', () => {
   assert.equal(surfaces[0].querySelectorAll('img').length, 0);
 });
 
-test('the homepage loads main after shared shell and card dependencies', () => {
-  // Break caught: home main executes before one of its shared browser globals is available.
+test('home loads only its page module after durable data and shared dependencies', () => {
+  // Break caught: HomePage executes without required globals or index retains unrelated page runtimes.
   const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
-  const mainIndex = html.indexOf('assets/js/main.js');
-  assert.ok(mainIndex > 0);
-  assert.ok(html.indexOf('assets/js/site-shell.js') > 0);
-  assert.ok(html.indexOf('assets/js/content-cards.js') > 0);
-  assert.ok(html.indexOf('assets/js/site-shell.js') < mainIndex);
-  assert.ok(html.indexOf('assets/js/content-cards.js') < mainIndex);
+  const sources = [
+    'assets/js/feed-data.js',
+    'assets/js/posts-index.js',
+    'assets/js/stats.js',
+    'assets/js/likes-storage.js',
+    'assets/js/url-policy.js',
+    'assets/js/site-shell.js',
+    'assets/js/content-cards.js',
+    'assets/js/home-page.js',
+    'assets/js/ui-effects.js',
+  ];
+  const order = sources.map((source) => html.indexOf(source));
+
+  assert.ok(order.every((index) => index >= 0));
+  assert.deepEqual(order, [...order].sort((left, right) => left - right));
+  assert.doesNotMatch(
+    html,
+    /assets\/js\/(?:main|feed-archive|search-core|search-page|archive-page|tags-page|article-page|legacy-post|post-loader|post-view)\.js/
+  );
 
   const compatibilityPage = fs.readFileSync(
     path.join(__dirname, '..', 'public', 'post.html'),

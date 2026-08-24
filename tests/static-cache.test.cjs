@@ -73,6 +73,7 @@ test('static resources use resource-specific cache lifetimes while APIs remain n
   const staticCases = [
     ['/assets/images/hero-ink-640.webp', 'public, max-age=604800, must-revalidate'],
     ['/assets/css/style.css', 'public, max-age=604800, must-revalidate'],
+    ['/assets/js/home-page.js', 'public, max-age=604800, must-revalidate'],
     ['/assets/js/main.js', 'public, max-age=604800, must-revalidate'],
     ['/vendor/marked.min.js', 'public, max-age=604800, must-revalidate'],
     ['/index.html', 'public, max-age=3600, must-revalidate'],
