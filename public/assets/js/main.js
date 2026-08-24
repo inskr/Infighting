@@ -7,54 +7,6 @@
   });
   var PAGE_SIZE = 4;
 
-  /* ---------- 统计图标 / 统计条（点赞 + 浏览） ---------- */
-  // 内联 SVG 图标，不依赖任何第三方图标库
-  var HEART_SVG =
-    '<svg class="icon-heart" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">' +
-    '<path d="M12 21s-7.5-4.9-10-9.2C.4 8.9 1.6 5.3 4.8 4.6c1.9-.4 3.7.6 4.8 2 1.1-1.4 2.9-2.4 4.8-2 3.2.7 4.4 4.3 2.8 7.2C19.5 16.1 12 21 12 21z"/>' +
-    "</svg>";
-  var EYE_SVG =
-    '<svg class="icon-eye" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">' +
-    '<path fill="none" stroke="currentColor" stroke-width="1.8" d="M1 12.5C2.7 8.1 7 5 12 5s9.3 3.1 11 7.5C21.3 16.9 17 20 12 20S2.7 16.9 1 12.5z"/>' +
-    '<circle cx="12" cy="12.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/>' +
-    "</svg>";
-
-  // 生成卡片/详情页底部的统计条（点赞按钮 + 浏览数）
-  // 数据从服务端缓存（Stats.getCache）实时读取，服务端统一计数。
-  function statBarHtml(p) {
-    var likeCount = 0;
-    var viewCount = 0;
-    if (window.Stats) {
-      var cached = (window.Stats.getCache() || {})[p.id];
-      if (cached) {
-        likeCount = cached.likeCount || 0;
-        viewCount = cached.viewCount || 0;
-      }
-    }
-    var likeNum = window.Stats ? window.Stats.formatCount(likeCount) : String(likeCount);
-    var viewNum = window.Stats ? window.Stats.formatCount(viewCount) : String(viewCount);
-    // 已点赞的文章：按钮渲染为禁用态，防止重复点赞
-    var liked = !!(window.LikesStorage && window.LikesStorage.hasLiked(p.id));
-    var likeBtnAttrs =
-      'class="like-btn' + (liked ? " is-liked" : "") + '"' +
-      ' data-id="' + p.id + '"' +
-      ' type="button"' +
-      ' aria-label="' + (liked ? "已点赞" : "点赞") + '"' +
-      (liked ? " disabled" : "");
-    return (
-      '<div class="stats-bar">' +
-      "<button " + likeBtnAttrs + ">" +
-      HEART_SVG +
-      '<span class="like-count">' + likeNum + "</span>" +
-      "</button>" +
-      '<span class="stat view-count" aria-label="浏览数">' +
-      EYE_SVG +
-      '<span class="view-count-num">' + viewNum + "</span>" +
-      "</span>" +
-      "</div>"
-    );
-  }
-
   /* ---------- 工具函数 ---------- */
   function getParam(name) {
     return new URLSearchParams(window.location.search).get(name);
@@ -73,54 +25,11 @@
     return window.UrlPolicy.safeExternalUrl(value) || "#";
   }
 
-  function formatDate(iso) {
-    return escapeHtml(iso || "");
-  }
-
-  function tagLinks(tags) {
-    return tags
-      .map(function (t) {
-        return (
-          '<a class="tag" href="tags.html?tag=' +
-          encodeURIComponent(t) +
-          '">' +
-          escapeHtml(t) +
-          "</a>"
-        );
-      })
-      .join("");
-  }
-
-  function postCardHtml(p) {
-    return (
-      '<article class="post-card glass-surface">' +
-      "<h2><a href=\"posts/" +
-      encodeURIComponent(p.id) +
-      '.html">' +
-      escapeHtml(p.title) +
-      "</a></h2>" +
-      '<div class="post-meta"><span>' +
-      formatDate(p.date) +
-      "</span>" +
-      tagLinks(p.tags) +
-      "</div>" +
-      '<p class="post-summary">' +
-      escapeHtml(p.summary) +
-      "</p>" +
-      statBarHtml(p) +
-      "</article>"
-    );
-  }
-
-  function setActiveNav(key) {
-    document.querySelectorAll(".site-nav a").forEach(function (a) {
-      if (a.getAttribute("data-nav") === key) a.classList.add("active");
+  function replaceWithPostCards(container, posts) {
+    container.textContent = "";
+    posts.forEach(function (post) {
+      container.appendChild(window.ContentCards.postCard(window, post));
     });
-  }
-
-  function setYear() {
-    var el = document.getElementById("year");
-    if (el) el.textContent = new Date().getFullYear();
   }
 
   /* ---------- 滚动渐入动效 ---------- */
@@ -227,7 +136,7 @@
   function renderArchive() {
     var container = document.getElementById("archive-days");
     if (!container) return;
-    setActiveNav("archive");
+    window.SiteShell.init(window, "archive");
 
     var updatedEl = document.getElementById("archive-updated");
     var archive = window.FEED_ARCHIVE;
@@ -332,7 +241,7 @@
     if (page > totalPages) page = totalPages;
 
     var slice = POSTS.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-    listEl.innerHTML = slice.map(postCardHtml).join("");
+    replaceWithPostCards(listEl, slice);
 
     var navEl = document.getElementById("pagination");
     if (navEl && totalPages > 1) {
@@ -369,7 +278,7 @@
       });
     }
 
-    setActiveNav("home");
+    window.SiteShell.init(window, "home");
     renderFeeds();
   }
 
@@ -403,7 +312,7 @@
     }
 
     document.title = post.title + " · Infighting";
-    setActiveNav(post.type === "page" ? "" : "home");
+    window.SiteShell.init(window, post.type === "page" ? "" : "home");
 
     var html =
       '<a class="back-link" href="index.html">&larr; 返回文章列表</a>' +
@@ -412,16 +321,12 @@
       "<h1>" +
       escapeHtml(post.title) +
       "</h1>" +
-      '<div class="post-meta"><span>' +
-      formatDate(post.date) +
-      "</span>" +
-      tagLinks(post.tags) +
-      "</div>" +
+      '<div class="post-meta" data-shared-meta></div>' +
       "</header>" +
       '<div class="article-body">' +
       marked.parse(post.content) +
       "</div>" +
-      statBarHtml(post) +
+      '<div data-shared-stats></div>' +
       "</article>";
 
     // 上一篇 / 下一篇（仅普通文章之间导航）
@@ -459,6 +364,18 @@
 
     container.innerHTML = html;
 
+    // Reuse the shared DOM-safe metadata and cached-stat renderers while this
+    // transitional dynamic article path remains in main.js.
+    var metaPlaceholder = container.querySelector("[data-shared-meta]");
+    var statsPlaceholder = container.querySelector("[data-shared-stats]");
+    if (metaPlaceholder || statsPlaceholder) {
+      var sharedCard = window.ContentCards.postCard(window, post);
+      var sharedMeta = sharedCard.querySelector(".post-meta");
+      if (metaPlaceholder && sharedMeta) metaPlaceholder.replaceWith(sharedMeta);
+      var sharedStats = sharedCard.querySelector(".stats-bar");
+      if (statsPlaceholder && sharedStats) statsPlaceholder.replaceWith(sharedStats);
+    }
+
     window.PostView.decorateArticleImages(container);
 
     // 进入详情页：上报浏览（+1）并回填最新浏览数
@@ -470,7 +387,7 @@
           if (viewEl) viewEl.textContent = window.Stats.formatCount(viewCount);
         })
         .catch(function () {
-          /* 网络失败：维持 statBarHtml 初始渲染值 */
+          /* 网络失败：维持共享统计条的初始缓存值 */
         });
 
       // 同时拉取最新统计，回填点赞数（浏览数交由 reportView 负责，
@@ -544,15 +461,19 @@
       });
       titleEl.textContent =
         '标签 "' + active + '" 下的文章（' + filtered.length + " 篇）";
-      listEl.innerHTML =
-        filtered.map(postCardHtml).join("") ||
-        '<p style="color:var(--muted)">该标签下暂无文章。</p>';
+      replaceWithPostCards(listEl, filtered);
+      if (!filtered.length) {
+        var empty = document.createElement("p");
+        empty.setAttribute("style", "color:var(--muted)");
+        empty.textContent = "该标签下暂无文章。";
+        listEl.appendChild(empty);
+      }
     } else {
       titleEl.textContent = "点击上方标签筛选文章";
       listEl.innerHTML = "";
     }
 
-    setActiveNav("tags");
+    window.SiteShell.init(window, "tags");
   }
 
   /* ---------- 点赞事件委托（全局仅绑定一次） ---------- */
@@ -615,7 +536,7 @@
 
   /* ---------- 启动（异步：先拉取统计缓存，再渲染） ---------- */
   async function init() {
-    setYear();
+    window.SiteShell.init(window, "");
     initLikeDelegation();
 
     // 列表 / 标签页渲染前先批量拉取统计，使卡片初始即显示真实计数

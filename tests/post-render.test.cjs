@@ -6,8 +6,10 @@ const path = require('node:path');
 const test = require('node:test');
 const vm = require('node:vm');
 const marked = require('../public/vendor/marked.min.js');
+const ContentCards = require('../public/assets/js/content-cards.js');
 const PostLoader = require('../public/assets/js/post-loader.js');
 const PostView = require('../public/assets/js/post-view.js');
+const SiteShell = require('../public/assets/js/site-shell.js');
 
 const mainSource = fs.readFileSync(
   path.join(__dirname, '..', 'public', 'assets', 'js', 'main.js'),
@@ -96,8 +98,11 @@ async function renderArticle({ id = 'alpha', posts = [fullPost('alpha')], fetch 
   const fetchCalls = [];
   const window = {
     POSTS: posts,
+    ContentCards,
+    document,
     PostLoader,
     PostView,
+    SiteShell,
     Stats,
     LikesStorage: { hasLiked() { return false; } },
     location: { search: `?id=${encodeURIComponent(id)}` },
@@ -204,7 +209,6 @@ test('successful article rendering decorates images before reporting the view', 
   assert.deepEqual(result.fetchStatsCalls, ['alpha']);
 });
 
-test('runtime article links target generated static pages', () => {
-  assert.match(mainSource, /function postCardHtml\(p\)[\s\S]*?href=\\"posts\//);
+test('transitional runtime does not retain legacy article URLs', () => {
   assert.doesNotMatch(mainSource, /post\.html\?id=/);
 });

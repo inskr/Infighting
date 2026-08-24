@@ -5,6 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const vm = require('node:vm');
+const ContentCards = require('../public/assets/js/content-cards.js');
+const SiteShell = require('../public/assets/js/site-shell.js');
 
 test('a very tall article becomes visible when it intersects the viewport', () => {
   const classes = new Set();
@@ -63,8 +65,11 @@ test('a very tall article becomes visible when it intersects the viewport', () =
     }
   };
   const window = {
+    ContentCards,
+    document,
     IntersectionObserver: FakeIntersectionObserver,
     POSTS: [],
+    SiteShell,
     addEventListener() {},
     location: { search: '' }
   };
