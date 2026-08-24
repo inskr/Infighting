@@ -19,6 +19,7 @@
   --accent-alt: #818cf8;
   --accent-alt-rgb: 129, 140, 248;
   --accent-bg: rgba(34, 211, 238, 0.1);
+  --focus-ring: #fef08a;
   --danger: #fb7185;
   --code-bg: #080b14;
   --radius-sm: 12px;
@@ -61,6 +62,7 @@
   --accent-alt: #4f46e5;
   --accent-alt-rgb: 79, 70, 229;
   --accent-bg: rgba(8, 145, 178, 0.09);
+  --focus-ring: #075985;
   --danger: #e11d48;
   --code-bg: #111827;
   --shadow: 0 24px 70px rgba(38, 55, 86, 0.13);
@@ -143,8 +145,26 @@ a {
 
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 4px;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 101;
+  padding: 10px 16px;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  color: #071018;
+  background: var(--focus-ring);
+  font-weight: 750;
+  transform: translate(-50%, -160%);
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus-visible {
+  transform: translate(-50%, 12px);
 }
 
 .visually-hidden {
@@ -1064,6 +1084,10 @@ a.tag:hover {
   background: rgba(4, 16, 21, 0.68);
 }
 
+#main-content {
+  scroll-margin-top: 124px;
+}
+
 /* ================= Article search ================= */
 .search-panel {
   margin-bottom: 28px;
@@ -1217,11 +1241,14 @@ a.tag:hover {
 .article-body h1,
 .article-body h2,
 .article-body h3,
-.article-body h4 {
+.article-body h4,
+.article-body h5,
+.article-body h6 {
   margin: 1.8em 0 0.65em;
   color: var(--ink);
   line-height: 1.35;
   letter-spacing: -0.025em;
+  scroll-margin-top: 124px;
 }
 
 .article-body h2 { font-size: 24px; }

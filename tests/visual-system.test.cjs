@@ -251,6 +251,45 @@ test('every published main navigation includes the Search destination', async ()
   }
 });
 
+test('published pages provide a skip target and identify their top-level navigation destination', async () => {
+  // Break caught: keyboard users must traverse the sticky navigation before reaching page content.
+  const { server, baseUrl } = await createStaticServer();
+  const pages = [
+    { name: 'index.html', current: 'home' },
+    { name: 'search.html', current: 'search' },
+    { name: 'tags.html', current: 'tags' },
+    { name: 'archive.html', current: 'archive' },
+    { name: 'post.html', current: null },
+    ...fs.readdirSync(path.join(__dirname, '..', 'public', 'posts'))
+      .filter((name) => name.endsWith('.html'))
+      .map((name) => ({ name: `posts/${name}`, current: null })),
+  ];
+
+  try {
+    for (const { name, current } of pages) {
+      const response = await fetch(`${baseUrl}/${name}`);
+      assert.equal(response.status, 200, name);
+      const html = await response.text();
+
+      assert.match(
+        html,
+        /<body[^>]*>\s*<a class="skip-link" href="#main-content">跳到主要内容<\/a>/,
+        `${name} starts with the skip link`
+      );
+      assert.match(
+        html,
+        /<main\b[^>]*\bid="main-content"[^>]*\btabindex="-1"[^>]*>/,
+        `${name} exposes a programmatic main target`
+      );
+      if (current) {
+        assert.match(html, new RegExp(`<a\\b[^>]*\\bdata-nav="${current}"[^>]*>`), name);
+      }
+    }
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test('legacy post URL page stays a minimal redirect-and-recovery entry point', async () => {
   const { server, baseUrl } = await createStaticServer();
   try {

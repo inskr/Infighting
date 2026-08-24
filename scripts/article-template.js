@@ -164,6 +164,7 @@ function renderArticlePage({ post, posts, siteUrl }) {
   <link rel="stylesheet" href="../vendor/highlight-theme.css">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
   <header class="site-header">
     <div class="nav-shell glass-surface">
       <a class="brand" href="../index.html" aria-label="Infighting 首页">
@@ -172,9 +173,9 @@ function renderArticlePage({ post, posts, siteUrl }) {
       </a>
       <div class="nav-actions">
         <nav class="site-nav" aria-label="主导航">
-          <a href="../index.html">首页</a>
-          <a href="../tags.html">标签</a>
-          <a href="../archive.html">精选归档</a>
+          <a href="../index.html" data-nav="home">首页</a>
+          <a href="../tags.html" data-nav="tags">标签</a>
+          <a href="../archive.html" data-nav="archive">精选归档</a>
           <a href="../search.html" data-nav="search">搜索</a>
         </nav>
         <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换到浅色主题" aria-pressed="false">
@@ -184,7 +185,7 @@ function renderArticlePage({ post, posts, siteUrl }) {
       </div>
     </div>
   </header>
-  <main class="container">
+  <main class="container" id="main-content" tabindex="-1">
     <a class="back-link" href="../index.html">&larr; 返回文章列表</a>
     <article class="article glass-surface" data-article-id="${escapeHtml(post.id)}">
       <header class="article-header">
