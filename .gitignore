@@ -5,3 +5,5 @@ Thumbs.db
 .workbuddy/
 .worktrees/
 data/
+/playwright-report/
+/test-results/
