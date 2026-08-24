@@ -88,7 +88,30 @@
       });
     }
 
-    function showRetry(query) {
+    function announce(message) {
+      if (!settings.siteShell || typeof settings.siteShell.announce !== "function") return false;
+      try {
+        settings.siteShell.announce(root, message);
+        return true;
+      } catch (error) {
+        /* The visible search state remains usable when announcement enhancement fails. */
+        return false;
+      }
+    }
+
+    function updateStatus(message, shouldAnnounce) {
+      if (
+        shouldAnnounce &&
+        announce(message) &&
+        typeof status.getAttribute === "function" &&
+        status.getAttribute("data-site-announcement") !== null
+      ) {
+        return;
+      }
+      status.textContent = message;
+    }
+
+    function showRetry(query, shouldFocus) {
       results.textContent = "";
       var retry = document.createElement("button");
       retry.setAttribute("type", "button");
@@ -98,6 +121,7 @@
         return run(query);
       });
       results.appendChild(retry);
+      if (shouldFocus && typeof retry.focus === "function") retry.focus();
     }
 
     function updateUrl(query) {
@@ -107,31 +131,37 @@
       root.history.replaceState(null, "", url.pathname + url.search + url.hash);
     }
 
-    async function run(query) {
+    async function run(query, runOptions) {
       var version = ++runVersion;
+      var options = runOptions || {};
       var normalized = String(query == null ? "" : query).trim();
       input.value = normalized;
       updateUrl(normalized);
       if (!normalized) {
         results.textContent = "";
-        status.textContent = "输入关键词开始搜索。";
+        results.setAttribute("aria-busy", "false");
+        updateStatus("输入关键词开始搜索。", false);
         return;
       }
 
+      results.setAttribute("aria-busy", "true");
+      updateStatus("正在搜索“" + normalized + "”。", true);
       try {
         var index = await loadIndex();
         if (version !== runVersion) return;
         var matches = settings.searchCore.search(index, normalized);
         renderMatches(matches);
+        results.setAttribute("aria-busy", "false");
         if (!matches.length) {
-          status.textContent = "没有找到与“" + normalized + "”匹配的文章。";
+          updateStatus("没有找到与“" + normalized + "”匹配的文章。", true);
         } else {
-          status.textContent = "找到 " + matches.length + " 篇与“" + normalized + "”匹配的文章。";
+          updateStatus("找到 " + matches.length + " 篇与“" + normalized + "”匹配的文章。", true);
         }
       } catch (error) {
         if (version !== runVersion) return;
-        showRetry(normalized);
-        status.textContent = "搜索暂时不可用，请重试。";
+        results.setAttribute("aria-busy", "false");
+        showRetry(normalized, !!options.focusRetryOnError);
+        updateStatus("搜索暂时不可用，请重试。", true);
       }
     }
 
@@ -146,11 +176,12 @@
       form.addEventListener("submit", function (event) {
         event.preventDefault();
         cancelPendingRun();
-        return run(input.value);
+        return run(input.value, { focusRetryOnError: true });
       });
       input.addEventListener("input", function () {
         cancelPendingRun();
         runVersion += 1;
+        results.setAttribute("aria-busy", "false");
         var query = String(input.value == null ? "" : input.value).trim();
         updateUrl(query);
         pendingRunTimer = settings.setTimeout(function () {

@@ -202,6 +202,7 @@ test('persists a successful optimistic like from the static article button', asy
   const button = fakeLikeButton();
   const cache = { alpha: { viewCount: 10, likeCount: 5 } };
   const marked = [];
+  const announcements = [];
   let resolveLike;
   const root = {
     LikesStorage: {
@@ -214,6 +215,7 @@ test('persists a successful optimistic like from the static article button', asy
       reportLike: () => new Promise((resolve) => { resolveLike = resolve; }),
     },
     setTimeout: (callback) => callback(),
+    SiteShell: { announce(target, message) { announcements.push(message); } },
   };
 
   const result = ArticlePage.handleLike(root, button, 'alpha');
@@ -229,12 +231,14 @@ test('persists a successful optimistic like from the static article button', asy
   assert.deepEqual(marked, ['alpha']);
   assert.equal(button.classList.contains('is-liked'), true);
   assert.equal(button.attributes.get('aria-label'), '已点赞');
+  assert.deepEqual(announcements, ['点赞成功，当前点赞数 9。']);
 });
 
 test('rolls back an optimistic like when statistics reporting fails', async () => {
   const button = fakeLikeButton();
   const cache = { alpha: { viewCount: 10, likeCount: 5 } };
   const marked = [];
+  const announcements = [];
   const root = {
     LikesStorage: {
       hasLiked: () => false,
@@ -246,6 +250,7 @@ test('rolls back an optimistic like when statistics reporting fails', async () =
       reportLike: () => Promise.reject(new Error('offline')),
     },
     setTimeout: (callback) => callback(),
+    SiteShell: { announce(target, message) { announcements.push(message); } },
   };
 
   assert.equal(await ArticlePage.handleLike(root, button, 'alpha'), false);
@@ -256,6 +261,7 @@ test('rolls back an optimistic like when statistics reporting fails', async () =
   assert.equal(button.attributes.has('aria-busy'), false);
   assert.deepEqual(marked, []);
   assert.equal(button.classList.contains('is-liked'), false);
+  assert.deepEqual(announcements, ['点赞失败，已恢复到 5，请重试。']);
 });
 
 test('rejects an untrusted generated article marker before enhancing or reporting it', async () => {

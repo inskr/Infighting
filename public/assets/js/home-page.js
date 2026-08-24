@@ -13,6 +13,15 @@
   var likeBoundRoots = [];
   var navigationBoundRoots = [];
 
+  function announce(root, message) {
+    if (!root.SiteShell || typeof root.SiteShell.announce !== "function") return;
+    try {
+      root.SiteShell.announce(root, message);
+    } catch (error) {
+      /* Announcements are optional progressive enhancement. */
+    }
+  }
+
   function durablePosts(root) {
     return (root.POSTS || []).filter(function (post) {
       return post && post.type !== "page";
@@ -211,15 +220,28 @@
         button.classList.remove("is-bumping");
       }, 300);
 
-      root.Stats.reportLike(id)
+      var reportLike;
+      try {
+        reportLike = root.Stats.reportLike(id);
+      } catch (error) {
+        reportLike = Promise.reject(error);
+      }
+      Promise.resolve(reportLike)
         .then(function (likeCount) {
           if (number) number.textContent = root.Stats.formatCount(likeCount);
-          if (root.LikesStorage) root.LikesStorage.markLiked(id);
+          if (root.LikesStorage && typeof root.LikesStorage.markLiked === "function") {
+            try {
+              root.LikesStorage.markLiked(id);
+            } catch (error) {
+              /* A confirmed server like must survive optional storage failure. */
+            }
+          }
           button.classList.add("is-liked");
           button.removeAttribute("data-pending");
           button.removeAttribute("aria-busy");
           button.setAttribute("disabled", "");
           button.setAttribute("aria-label", "已点赞");
+          announce(root, "点赞成功，当前点赞数 " + root.Stats.formatCount(likeCount) + "。");
         })
         .catch(function () {
           cache[id].likeCount = current;
@@ -227,6 +249,7 @@
           button.disabled = false;
           button.removeAttribute("data-pending");
           button.removeAttribute("aria-busy");
+          announce(root, "点赞失败，已恢复到 " + root.Stats.formatCount(current) + "，请重试。");
         });
     });
   }

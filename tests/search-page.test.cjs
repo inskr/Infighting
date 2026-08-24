@@ -58,6 +58,12 @@ function fakeTimers() {
 
 function fixture(overrides = {}) {
   const document = new FakeDocument();
+  const createElement = document.createElement.bind(document);
+  document.createElement = (tagName) => {
+    const element = createElement(tagName);
+    element.focus = () => { document.activeElement = element; };
+    return element;
+  };
   const form = append(document, 'form', 'search-form');
   const input = append(document, 'input', 'search-input');
   const clear = append(document, 'button', 'search-clear');
@@ -83,16 +89,103 @@ function fixture(overrides = {}) {
   const fetch = overrides.fetch || (async () => {
     throw new Error('unexpected fetch');
   });
+  const announcements = [];
   const controller = api().createController(root, {
     fetch,
     searchCore: overrides.searchCore || { search() { return []; } },
     contentCards: overrides.contentCards || { postCard() { throw new Error('unexpected card'); } },
-    siteShell: overrides.siteShell || { init() {}, announce() {} },
+    siteShell: overrides.siteShell || {
+      init() {},
+      announce(target, message) { announcements.push(message); },
+    },
     setTimeout: overrides.setTimeout,
     clearTimeout: overrides.clearTimeout,
   });
-  return { clear, controller, document, form, history, input, location, results, root, status };
+  return {
+    announcements,
+    clear,
+    controller,
+    document,
+    form,
+    history,
+    input,
+    location,
+    results,
+    root,
+    status,
+  };
 }
+
+test('marks only active index loading busy and announces one aggregate completion', async () => {
+  // Break caught: loading is silent, busy survives completion, or each result is announced separately.
+  let resolveFetch;
+  const fetchResponse = new Promise((resolve) => { resolveFetch = resolve; });
+  const view = fixture({
+    fetch: () => fetchResponse,
+    searchCore: {
+      search() {
+        return [
+          { document: { id: 'alpha', title: 'Alpha', date: '2026-08-24', tags: [] }, snippet: '', ranges: [] },
+          { document: { id: 'beta', title: 'Beta', date: '2026-08-24', tags: [] }, snippet: '', ranges: [] },
+        ];
+      },
+    },
+    contentCards: ContentCards,
+  });
+
+  const pending = view.controller.run('radar');
+  assert.equal(view.results.getAttribute('aria-busy'), 'true');
+  assert.deepEqual(view.announcements, ['正在搜索“radar”。']);
+
+  resolveFetch({ ok: true, async json() { return []; } });
+  await pending;
+
+  assert.equal(view.results.getAttribute('aria-busy'), 'false');
+  assert.deepEqual(view.announcements, [
+    '正在搜索“radar”。',
+    '找到 2 篇与“radar”匹配的文章。',
+  ]);
+  assert.equal(view.announcements.filter((message) => message.startsWith('找到')).length, 1);
+});
+
+test('focuses Retry only after an explicit submitted search fails', async () => {
+  // Break caught: failures steal focus while typing, or a submitted failure leaves recovery undiscoverable.
+  const submitted = fixture({
+    fetch: async () => ({ ok: false, status: 503, async json() { return []; } }),
+    setTimeout,
+    clearTimeout,
+  });
+  submitted.controller.init();
+  submitted.input.value = 'submitted';
+  submitted.input.focus();
+  await submitted.form.dispatchEvent({ type: 'submit', preventDefault() {} });
+
+  const submittedRetry = submitted.results.querySelector('button');
+  assert.equal(submitted.document.activeElement, submittedRetry);
+  assert.equal(submitted.results.getAttribute('aria-busy'), 'false');
+  assert.equal(submitted.input.value, 'submitted');
+  assert.equal(submitted.location.search, '?q=submitted');
+  assert.deepEqual(submitted.announcements.slice(-2), [
+    '正在搜索“submitted”。',
+    '搜索暂时不可用，请重试。',
+  ]);
+
+  const timers = fakeTimers();
+  const typed = fixture({
+    fetch: async () => ({ ok: false, status: 503, async json() { return []; } }),
+    setTimeout: timers.setTimeout,
+    clearTimeout: timers.clearTimeout,
+  });
+  typed.controller.init();
+  typed.input.focus();
+  typed.input.value = 'typed';
+  await typed.input.dispatchEvent({ type: 'input' });
+  await timers.runAll();
+
+  assert.equal(typed.document.activeElement, typed.input);
+  assert.ok(typed.results.querySelector('button'));
+  assert.equal(typed.results.getAttribute('aria-busy'), 'false');
+});
 
 test('an empty normalized query clears the view without fetching the index', async () => {
   // Break caught: opening or clearing Search downloads the article index unnecessarily.

@@ -45,11 +45,17 @@
     surface.setAttribute("role", "status");
     surface.setAttribute("aria-live", "polite");
     surface.setAttribute("aria-atomic", "true");
+    if (surface.classList && typeof surface.classList.add === "function") {
+      surface.classList.add("visually-hidden");
+    } else if (!(" " + surface.className + " ").includes(" visually-hidden ")) {
+      surface.className = (surface.className ? surface.className + " " : "") + "visually-hidden";
+    }
     return surface;
   }
 
   function init(root, activeNav) {
     var document = getDocument(root);
+    ensureAnnouncement(document);
     var year = document.getElementById("year");
     if (year) year.textContent = String(new Date().getFullYear());
 

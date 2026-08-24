@@ -102,6 +102,15 @@
     return String(count || 0);
   }
 
+  function announce(root, message) {
+    if (!root || !root.SiteShell || typeof root.SiteShell.announce !== "function") return;
+    try {
+      root.SiteShell.announce(root, message);
+    } catch (error) {
+      /* Announcements are optional progressive enhancement. */
+    }
+  }
+
   function renderCachedStats(root, stats, id, viewElement, likeElement) {
     if (typeof stats.getCache !== "function") return;
 
@@ -279,6 +288,7 @@
         button.removeAttribute("aria-busy");
         button.setAttribute("disabled", "");
         button.setAttribute("aria-label", "已点赞");
+        announce(root, "点赞成功，当前点赞数 " + formatCount(root, count) + "。");
         return true;
       })
       .catch(function () {
@@ -287,6 +297,7 @@
         button.disabled = false;
         button.removeAttribute("data-pending");
         button.removeAttribute("aria-busy");
+        announce(root, "点赞失败，已恢复到 " + formatCount(root, current) + "，请重试。");
         return false;
       });
   }
