@@ -1,4 +1,4 @@
-/* Infighting - 主逻辑：文章列表分页、详情渲染、标签筛选、每日精选、动效 */
+/* Infighting - 主逻辑：文章列表分页、详情渲染、每日精选、动效 */
 (function () {
   "use strict";
 
@@ -36,7 +36,7 @@
   function initReveal() {
     if (!("IntersectionObserver" in window)) return;
     var targets = document.querySelectorAll(
-      ".hero, .page-intro, .post-card, .article, .board, .tag-cloud, .archive-day"
+      ".hero, .page-intro, .post-card, .article, .board, .archive-day"
     );
     targets.forEach(function (el, i) {
       el.classList.add("reveal");
@@ -319,64 +319,6 @@
     });
   }
 
-  /* ---------- 标签页 ---------- */
-  function renderTags() {
-    var cloudEl = document.getElementById("tag-cloud");
-    if (!cloudEl) return;
-
-    var counts = {};
-    POSTS.forEach(function (p) {
-      p.tags.forEach(function (t) {
-        counts[t] = (counts[t] || 0) + 1;
-      });
-    });
-
-    var tags = Object.keys(counts).sort(function (a, b) {
-      return counts[b] - counts[a] || a.localeCompare(b, "zh");
-    });
-
-    var active = getParam("tag") || "";
-
-    cloudEl.innerHTML = tags
-      .map(function (t) {
-        var cls = t === active ? ' class="active"' : "";
-        return (
-          "<a" +
-          cls +
-          ' href="tags.html?tag=' +
-          encodeURIComponent(t) +
-          '">' +
-          escapeHtml(t) +
-          '<span class="count">' +
-          counts[t] +
-          "</span></a>"
-        );
-      })
-      .join("");
-
-    var titleEl = document.getElementById("tag-result-title");
-    var listEl = document.getElementById("tag-post-list");
-    if (active) {
-      var filtered = POSTS.filter(function (p) {
-        return p.tags.indexOf(active) !== -1;
-      });
-      titleEl.textContent =
-        '标签 "' + active + '" 下的文章（' + filtered.length + " 篇）";
-      replaceWithPostCards(listEl, filtered);
-      if (!filtered.length) {
-        var empty = document.createElement("p");
-        empty.setAttribute("style", "color:var(--muted)");
-        empty.textContent = "该标签下暂无文章。";
-        listEl.appendChild(empty);
-      }
-    } else {
-      titleEl.textContent = "点击上方标签筛选文章";
-      listEl.innerHTML = "";
-    }
-
-    window.SiteShell.init(window, "tags");
-  }
-
   /* ---------- 点赞事件委托（全局仅绑定一次） ---------- */
   function initLikeDelegation() {
     if (!window.Stats) return;
@@ -440,7 +382,7 @@
     window.SiteShell.init(window, "");
     initLikeDelegation();
 
-    // 列表 / 标签页渲染前先批量拉取统计，使卡片初始即显示真实计数
+    // 列表渲染前先批量拉取统计，使卡片初始即显示真实计数
     if (window.Stats && !document.getElementById("article")) {
       try {
         await window.Stats.fetchAllStats();
@@ -453,7 +395,6 @@
     if (document.getElementById("article")) {
       await renderPost();
     }
-    renderTags();
     initReveal();
   }
 

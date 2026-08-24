@@ -127,6 +127,23 @@ test('published pages load only their page-specific resources and share the ackn
     assert.doesNotMatch(home, /posts-data\.js/);
     assert.match(home, /assets\/js\/posts-index\.js/);
     assert.match(tags, /assets\/js\/posts-index\.js/);
+    assert.match(tags, /assets\/js\/site-shell\.js/);
+    assert.match(tags, /assets\/js\/content-cards\.js/);
+    assert.match(tags, /assets\/js\/stats\.js/);
+    assert.match(tags, /assets\/js\/likes-storage\.js/);
+    assert.match(tags, /assets\/js\/tags-page\.js/);
+    assert.match(tags, /assets\/js\/ui-effects\.js/);
+    assert.doesNotMatch(tags, /assets\/js\/(?:feed-data|feed-archive|url-policy|archive-page|main|search-core|search-page|article-page|legacy-post)\.js/);
+    const tagsOrder = [
+      'assets/js/site-shell.js',
+      'assets/js/content-cards.js',
+      'assets/js/posts-index.js',
+      'assets/js/stats.js',
+      'assets/js/likes-storage.js',
+      'assets/js/tags-page.js',
+    ].map((source) => tags.indexOf(source));
+    assert.ok(tagsOrder.every((index) => index >= 0));
+    assert.deepEqual(tagsOrder, [...tagsOrder].sort((left, right) => left - right));
     assert.match(post, /assets\/js\/posts-index\.js/);
     assert.match(post, /assets\/js\/legacy-post\.js/);
     assert.doesNotMatch(post, /assets\/js\/(?:post-loader|post-view|stats|likes-storage|main|ui-effects)\.js/);

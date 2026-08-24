@@ -54,23 +54,39 @@ test('announce safely updates one shared polite status surface', () => {
   assert.equal(surfaces[0].querySelectorAll('img').length, 0);
 });
 
-test('pages that load main load shared shell and card dependencies first', () => {
-  // Break caught: main executes before one of its shared browser globals is available.
-  for (const page of ['index.html', 'tags.html']) {
-    const html = fs.readFileSync(path.join(__dirname, '..', 'public', page), 'utf8');
-    const mainIndex = html.indexOf('assets/js/main.js');
-    assert.ok(mainIndex > 0, page);
-    assert.ok(html.indexOf('assets/js/site-shell.js') > 0, page);
-    assert.ok(html.indexOf('assets/js/content-cards.js') > 0, page);
-    assert.ok(html.indexOf('assets/js/site-shell.js') < mainIndex, page);
-    assert.ok(html.indexOf('assets/js/content-cards.js') < mainIndex, page);
-  }
+test('the homepage loads main after shared shell and card dependencies', () => {
+  // Break caught: home main executes before one of its shared browser globals is available.
+  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+  const mainIndex = html.indexOf('assets/js/main.js');
+  assert.ok(mainIndex > 0);
+  assert.ok(html.indexOf('assets/js/site-shell.js') > 0);
+  assert.ok(html.indexOf('assets/js/content-cards.js') > 0);
+  assert.ok(html.indexOf('assets/js/site-shell.js') < mainIndex);
+  assert.ok(html.indexOf('assets/js/content-cards.js') < mainIndex);
 
   const compatibilityPage = fs.readFileSync(
     path.join(__dirname, '..', 'public', 'post.html'),
     'utf8'
   );
   assert.doesNotMatch(compatibilityPage, /(?:site-shell|content-cards|main)\.js/);
+});
+
+test('tags loads its page module after durable post and shared-card dependencies', () => {
+  // Break caught: TagsPage executes without its shell, cards, durable posts, stats, or liked-state services.
+  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'tags.html'), 'utf8');
+  const sources = [
+    'assets/js/site-shell.js',
+    'assets/js/content-cards.js',
+    'assets/js/posts-index.js',
+    'assets/js/stats.js',
+    'assets/js/likes-storage.js',
+    'assets/js/tags-page.js',
+  ];
+  const order = sources.map((source) => html.indexOf(source));
+
+  assert.ok(order.every((index) => index >= 0));
+  assert.deepEqual(order, [...order].sort((left, right) => left - right));
+  assert.doesNotMatch(html, /assets\/js\/(?:main|feed-data|feed-archive|url-policy|archive-page|search-core|search-page|article-page|legacy-post)\.js/);
 });
 
 test('archive loads only its feed, shell, policy, and visual-effect dependencies', () => {
