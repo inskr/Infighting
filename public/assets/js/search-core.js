@@ -17,7 +17,7 @@
   };
 
   function normalizeText(value) {
-    return foldText(normalizeDisplayText(value)).text;
+    return normalizeDisplayText(value).toLowerCase();
   }
 
   function normalizeDisplayText(value) {
@@ -37,6 +37,8 @@
 
   function foldText(displayText) {
     var text = displayText.toLowerCase();
+    // Common case: lowercasing preserves UTF-16 offsets, so avoid allocating one object per body character.
+    if (text.length === displayText.length) return { text: text, offsets: null };
     var offsets = [];
     var index = 0;
 
@@ -93,6 +95,7 @@
   }
 
   function mapRangesToDisplay(ranges, offsets) {
+    if (!offsets) return mergeRanges(ranges);
     return mergeRanges(
       ranges.map(function (range) {
         var first = offsets[range.start];

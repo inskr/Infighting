@@ -111,6 +111,7 @@ test('newer non-empty search exclusively owns busy completion and announcement',
 });
 
 test('search failure preserves recovery state and only submitted failure focuses Retry', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
   await page.route('**/assets/search-index.json', (route) => route.fulfill({
     status: 503,
     contentType: 'application/json',
@@ -124,6 +125,13 @@ test('search failure preserves recovery state and only submitted failure focuses
   await page.getByRole('button', { name: '搜索', exact: true }).click();
   const submittedRetry = page.getByRole('button', { name: '重试' });
   await expect(submittedRetry).toBeFocused();
+  const errorState = page.locator('.search-error-state');
+  await expect(errorState).toBeVisible();
+  await expect(errorState).toContainText('搜索暂时不可用。请检查网络连接后重试。');
+  const retryBox = await submittedRetry.boundingBox();
+  expect(retryBox.width).toBeGreaterThanOrEqual(44);
+  expect(retryBox.height).toBeGreaterThanOrEqual(44);
+  expect(retryBox.height).toBeLessThan(100);
   await expect(results).toHaveAttribute('aria-busy', 'false');
   await expect(input).toHaveValue('submitted');
   await expect(page).toHaveURL(/\?q=submitted$/);
@@ -135,6 +143,31 @@ test('search failure preserves recovery state and only submitted failure focuses
   await expect(input).toBeFocused();
   await expect(input).toHaveValue('typed');
   await expect(page).toHaveURL(/\?q=typed$/);
+});
+
+test('no-result search visibly explains recovery and clears or opens tags at 320px', async ({ page }) => {
+  // Break caught: no matches produce an empty visual region with recovery available only to assistive technology.
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.route('**/assets/search-index.json', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.goto('/search.html');
+
+  const input = page.getByRole('searchbox', { name: '搜索关键词' });
+  await input.fill('missing');
+  await page.getByRole('button', { name: '搜索', exact: true }).click();
+
+  const emptyState = page.locator('.search-empty-state');
+  await expect(emptyState).toBeVisible();
+  await expect(emptyState).toContainText('没有找到与“missing”匹配的文章。');
+  await expect(emptyState.getByRole('link', { name: '浏览标签' })).toHaveAttribute('href', 'tags.html');
+  await emptyState.getByRole('button', { name: '清除查询' }).click();
+  await expect(input).toBeFocused();
+  await expect(input).toHaveValue('');
+  await expect(page).toHaveURL(/\/search\.html$/);
+  await expect(emptyState).toHaveCount(0);
 });
 
 test('home success and article rollback announce through the single shared status', async ({ page }) => {

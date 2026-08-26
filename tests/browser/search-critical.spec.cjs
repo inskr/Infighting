@@ -169,6 +169,8 @@ test('loading the delayed full stylesheet changes neither Search geometry nor it
   const navigation = page.goto('/search.html?q=STM32');
   await control.requested;
   await expect(page.locator('#search-results .post-card')).toHaveCount(5);
+  // Compare stylesheet states only after the required authoritative handoff has replaced preview summaries.
+  await expect(page.locator('#search-results')).toHaveAttribute('aria-busy', 'false');
   const criticalOnly = await criticalSnapshot(page);
 
   expect(criticalOnly.theme).toBe('light');

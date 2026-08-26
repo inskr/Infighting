@@ -276,12 +276,20 @@
     function visibleFingerprint(matches) {
       return JSON.stringify(matches.map(function (match) {
         var document = match && match.document || {};
+        var renderedSnippet = match && match.snippet || document.summary || "";
+        var renderedRanges = Array.isArray(match && match.ranges)
+          ? match.ranges.map(function (range) {
+            return [Number(range.start) || 0, Number(range.end) || 0];
+          })
+          : [];
         return [
           String(document.id == null ? "" : document.id),
           String(document.title == null ? "" : document.title),
           String(document.date == null ? "" : document.date),
           Array.isArray(document.tags) ? document.tags.map(function (tag) { return String(tag); }) : [],
           String(document.summary == null ? "" : document.summary),
+          String(renderedSnippet),
+          renderedRanges,
         ];
       }));
     }
@@ -300,8 +308,38 @@
       });
     }
 
+    function cardMetadataMatches(card, match) {
+      var document = match && match.document || {};
+      var heading = card.querySelector("h3");
+      var link = heading && heading.querySelector("a");
+      var meta = card.querySelector(".post-meta");
+      var metaChildren = meta ? Array.prototype.slice.call(meta.children || []) : [];
+      var date = metaChildren[0];
+      var tags = metaChildren.slice(1);
+      var expectedTags = Array.isArray(document.tags) ? document.tags : [];
+      return !!(
+        link &&
+        link.textContent === String(document.title == null ? "" : document.title) &&
+        date &&
+        date.textContent === String(document.date == null ? "" : document.date) &&
+        tags.length === expectedTags.length &&
+        tags.every(function (tag, index) {
+          return tag.textContent === String(expectedTags[index]);
+        })
+      );
+    }
+
     function reconcileMatches(matches) {
       var cards = Array.prototype.slice.call(results.querySelectorAll(".post-card"));
+      if (cards.length === matches.length && cards.every(function (card, index) {
+        return cardMetadataMatches(card, matches[index]);
+      })) {
+        matches.forEach(function (match, index) {
+          var summary = match.snippet || "";
+          renderHighlightedText(cards[index].querySelector(".post-summary"), summary, match.ranges);
+        });
+        return;
+      }
       matches.forEach(function (match, index) {
         var currentCard = cards[index];
         var finalCard = createMatchCard(match, false);
@@ -393,17 +431,56 @@
       status.textContent = message;
     }
 
+    function createSearchState(kind, message) {
+      var state = document.createElement("div");
+      state.className = "search-state search-" + kind + "-state";
+      appendTextElement(state, "p", message);
+      var actions = document.createElement("div");
+      actions.className = "search-state-actions";
+      state.appendChild(actions);
+      results.appendChild(state);
+      return actions;
+    }
+
+    function showNoResults(query) {
+      results.textContent = "";
+      results.removeAttribute("data-search-preview");
+      var actions = createSearchState(
+        "empty",
+        "没有找到与“" + query + "”匹配的文章。可以尝试其他关键词。"
+      );
+      var clearQuery = document.createElement("button");
+      clearQuery.setAttribute("type", "button");
+      clearQuery.className = "button button-ghost search-clear-query";
+      clearQuery.textContent = "清除查询";
+      clearQuery.addEventListener("click", function () {
+        var pending = run("");
+        if (typeof input.focus === "function") input.focus();
+        return pending;
+      });
+      actions.appendChild(clearQuery);
+      var tags = document.createElement("a");
+      tags.className = "button button-ghost";
+      tags.setAttribute("href", "tags.html");
+      tags.textContent = "浏览标签";
+      actions.appendChild(tags);
+    }
+
     function showRetry(query, shouldFocus) {
       results.textContent = "";
       results.removeAttribute("data-search-preview");
+      var actions = createSearchState(
+        "error",
+        "搜索暂时不可用。请检查网络连接后重试。"
+      );
       var retry = document.createElement("button");
       retry.setAttribute("type", "button");
-      retry.className = "search-retry";
+      retry.className = "button button-primary search-retry";
       retry.textContent = "重试";
       retry.addEventListener("click", function () {
         return run(query);
       });
-      results.appendChild(retry);
+      actions.appendChild(retry);
       if (shouldFocus && typeof retry.focus === "function") retry.focus();
     }
 
@@ -441,6 +518,7 @@
         results.removeAttribute("data-search-preview");
         results.setAttribute("aria-busy", "false");
         if (!matches.length) {
+          showNoResults(normalized);
           updateStatus("没有找到与“" + normalized + "”匹配的文章。", true);
         } else {
           updateStatus("找到 " + matches.length + " 篇与“" + normalized + "”匹配的文章。", true);

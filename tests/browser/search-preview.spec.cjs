@@ -2,8 +2,8 @@
 
 const { test, expect } = require('@playwright/test');
 
-test('initial valid q paints the generated preview during parsing before deferred Search dependencies execute', async ({ page }) => {
-  // Break caught: a generated file exists but still waits for posts-index, SearchCore, ContentCards, or SearchPage.
+test('initial valid q paints during parsing then hands matching cards to authoritative highlighted snippets', async ({ page }) => {
+  // Break caught: matching preview IDs/order keep metadata summaries and discard full-text highlight ranges.
   let releaseIndex;
   const indexReleased = new Promise((resolve) => { releaseIndex = resolve; });
   let fullIndexRequests = 0;
@@ -44,7 +44,7 @@ test('initial valid q paints the generated preview during parsing before deferre
     busy: 'true',
     text: '边缘端神经网络部署：从模型压缩到 STM32H7 推理优化',
   });
-  expect(fullIndexRequests).toBe(1);
+  await expect.poll(() => fullIndexRequests).toBe(1);
   await results.evaluate((container) => {
     window.__searchCompletionMutations = 0;
     window.__searchCompletionCardBuilds = 0;
@@ -68,16 +68,27 @@ test('initial valid q paints the generated preview during parsing before deferre
   await expect(results).toHaveAttribute('aria-busy', 'false');
   await expect(results).not.toHaveAttribute('data-search-preview');
   await expect(results.locator('.post-card')).toHaveCount(5);
-  expect(await results.evaluate((container) => ({
+  const completion = await results.evaluate((container) => ({
     cardBuilds: window.__searchCompletionCardBuilds,
     childListMutations: window.__searchCompletionMutations,
+    highlighted: container.querySelectorAll('mark').length,
     preservedCards: container.querySelectorAll('[data-parser-preview-card]').length,
     preservedChildren: container.querySelectorAll('[data-parser-preview-child]').length,
-  }))).toEqual({
-    cardBuilds: 0,
-    childListMutations: 0,
+    summaries: Array.from(container.querySelectorAll('.post-summary'), (summary) => summary.textContent),
+  }));
+  expect(completion.cardBuilds).toBe(5);
+  expect(completion.childListMutations).toBeGreaterThan(0);
+  expect(completion).toMatchObject({
+    highlighted: 5,
     preservedCards: 5,
-    preservedChildren: 15,
+    preservedChildren: 5,
+    summaries: [
+      '…做边缘视觉识别。最终系统在 STM32H743 上实现了摄像头图…',
+      '…人机飞控项目中,我选择基于 STM32F103 裸机开发,而不是…',
+      '…入式与机器人学习路线 方向:STM32/RTOS + 嵌入式 L…',
+      '…6050 通过 I2C 与 STM32F103 通信,挂载在 I…',
+      '…4L01 通过 SPI 与 STM32 连接,关键初始化参数:…',
+    ],
   });
   expect(fullIndexRequests).toBe(1);
 });

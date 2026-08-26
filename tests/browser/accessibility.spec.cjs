@@ -1,9 +1,15 @@
 'use strict';
 
+const fs = require('node:fs');
+const path = require('node:path');
 const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 
 const blockingImpacts = new Set(['serious', 'critical']);
+const generatedArticleRoutes = fs.readdirSync(path.join(__dirname, '..', '..', 'public', 'posts'))
+  .filter((name) => name.endsWith('.html'))
+  .sort()
+  .map((name) => `/posts/${name}`);
 
 function findingReport(state, violations) {
   return violations.map((violation) => ({
@@ -150,10 +156,12 @@ test('legacy invalid-id error has no serious or critical axe violations', async 
   await analyzeStableState(page, testInfo, 'legacy invalid-id error — /post.html?id=does-not-exist');
 });
 
-test('static article has no serious or critical axe violations', async ({ page }, testInfo) => {
-  // Break caught: the complete article body, table of contents, code, or like control regresses.
-  await page.goto('/posts/stm32-baremetal-scheduler.html');
-  await expect(page.locator('.article-body')).toBeVisible();
-  await expect(page.locator('.like-btn')).not.toHaveAttribute('aria-busy', 'true');
-  await analyzeStableState(page, testInfo, 'static article — /posts/stm32-baremetal-scheduler.html');
+test('every generated article has no serious or critical axe violations', async ({ page }, testInfo) => {
+  // Break caught: a content feature present only in one generated article bypasses the accessibility gate.
+  for (const route of generatedArticleRoutes) {
+    await page.goto(route);
+    await expect(page.locator('.article-body')).toBeVisible();
+    await expect(page.locator('.like-btn')).not.toHaveAttribute('aria-busy', 'true');
+    await analyzeStableState(page, testInfo, `static article — ${route}`);
+  }
 });

@@ -53,7 +53,8 @@ async function reflowDiagnostics(page) {
       .map(label);
     const boundsOverflow = visibleElements
       .filter((element) => {
-        if (element.matches(allowedInternalOverflow)) return false;
+        // The scroller and its clipped descendants are intentional; reduced motion removes transient entrance transforms.
+        if (element.matches(allowedInternalOverflow) || element.closest(allowedInternalOverflow)) return false;
         const rect = element.getBoundingClientRect();
         return rect.left < -1 || rect.right > viewportWidth + 1;
       })
@@ -107,13 +108,15 @@ async function undersizedTargets(page) {
 
 for (const route of routes) {
   test(`${route.name} reflows without document overflow at ${automatedReflowBoundary.name}`, async ({ page }) => {
-    // Break caught: a real page child widens the document, including when body clipping masks it.
+    // Break caught: a descendant paints outside the viewport without widening the document or activating an unapproved scroller.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto(route.path);
     await applyAutomatedReflowBoundary(page);
     const diagnostics = await reflowDiagnostics(page);
     expect(diagnostics.bodyOverflowX, JSON.stringify(diagnostics, null, 2)).not.toBe('hidden');
     expect(diagnostics.scrollWidth, JSON.stringify(diagnostics, null, 2)).toBeLessThanOrEqual(diagnostics.clientWidth);
     expect(diagnostics.internalOverflow, JSON.stringify(diagnostics, null, 2)).toEqual([]);
+    expect(diagnostics.boundsOverflow, JSON.stringify(diagnostics, null, 2)).toEqual([]);
   });
 
   test(`${route.name} visible interactive targets are at least 44px at ${automatedReflowBoundary.name}`, async ({ page }) => {

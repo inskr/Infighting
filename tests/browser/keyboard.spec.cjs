@@ -79,3 +79,45 @@ for (const theme of ['dark', 'light']) {
     expect(focusStyle.outlineColor).not.toBe('rgba(0, 0, 0, 0)');
   });
 }
+
+for (const theme of ['dark', 'light']) {
+  test(`${theme} theme gives Tab-reachable overflowing article scrollers a high-contrast focus ring`, async ({ page }) => {
+    // Break caught: Chromium tabs to overflowing code/table scrollers whose browser-default ring disappears on dark surfaces.
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto('/posts/stm32-baremetal-scheduler.html');
+    await page.evaluate((selectedTheme) => {
+      document.documentElement.dataset.theme = selectedTheme;
+    }, theme);
+
+    const expected = await page.locator('.article-body pre, .article-body .table-wrapper').evaluateAll((elements) => (
+      elements.filter((element) => element.scrollWidth > element.clientWidth + 1).length
+    ));
+    expect(expected).toBeGreaterThan(0);
+
+    const focused = [];
+    for (let step = 0; step < 80 && focused.length < expected; step += 1) {
+      await page.keyboard.press('Tab');
+      const state = await page.evaluate(() => {
+        const active = document.activeElement;
+        if (!active || !active.matches('.article-body pre, .article-body .table-wrapper')) return null;
+        const style = getComputedStyle(active);
+        return {
+          tagName: active.tagName,
+          outlineStyle: style.outlineStyle,
+          outlineWidth: Number.parseFloat(style.outlineWidth),
+          outlineOffset: Number.parseFloat(style.outlineOffset),
+          outlineColor: style.outlineColor,
+        };
+      });
+      if (state) focused.push(state);
+    }
+
+    expect(focused).toHaveLength(expected);
+    for (const state of focused) {
+      expect(state.outlineStyle).toBe('solid');
+      expect(state.outlineWidth).toBeGreaterThanOrEqual(2);
+      expect(state.outlineOffset).toBeGreaterThanOrEqual(2);
+      expect(state.outlineColor).not.toBe('rgba(0, 0, 0, 0)');
+    }
+  });
+}

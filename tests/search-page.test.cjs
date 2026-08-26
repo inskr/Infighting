@@ -265,7 +265,7 @@ for (const exitPath of ['pagehide', 'hidden']) {
   });
 }
 
-test('identical preview fingerprint reuses the complete result tree with one completion announcement', async () => {
+test('identical rendered preview fingerprint reuses the complete result tree with one completion announcement', async () => {
   // Break caught: authoritative completion rebuilds cards or mutates descendants even when every visible field is unchanged.
   const documents = [
     { id: 'alpha', title: 'Alpha needle', date: '2026-08-24', tags: ['needle'], summary: 'Alpha summary' },
@@ -279,8 +279,8 @@ test('identical preview fingerprint reuses the complete result tree with one com
       search() {
         return documents.map((document) => ({
           document: { ...document, body: 'needle body' },
-          snippet: `authoritative ${document.id} needle`,
-          ranges: [{ start: 14 + document.id.length, end: 20 + document.id.length }],
+          snippet: document.summary,
+          ranges: [],
         }));
       },
     },
@@ -309,7 +309,7 @@ test('identical preview fingerprint reuses the complete result tree with one com
         preview: true,
         query: 'needle',
         resultIds: ['alpha', 'beta'],
-        fingerprint: '[["alpha","Alpha needle","2026-08-24",["needle"],"Alpha summary"],["beta","Beta needle","2026-08-23",[],"Beta summary"]]',
+        fingerprint: '[["alpha","Alpha needle","2026-08-24",["needle"],"Alpha summary","Alpha summary",[]],["beta","Beta needle","2026-08-23",[],"Beta summary","Beta summary",[]]]',
         results,
       };
     },
@@ -598,9 +598,10 @@ test('a body-only match appears in the authoritative final results after an empt
   assert.equal(view.status.textContent, '找到 1 篇与“bodyneedle”匹配的文章。');
 });
 
-test('identical authoritative fingerprint waits for preview paint and preserves the metadata result subtree', async () => {
-  // Break caught: no-op completion starts before the preview checkpoint or replaces metadata content with a body snippet.
+test('authoritative handoff waits for preview paint then replaces stale summaries with highlighted body snippets', async () => {
+  // Break caught: matching IDs and metadata suppress the authoritative snippet/range reconciliation.
   let releasePaint;
+  let authoritativeCardBuilds = 0;
   const paintCheckpoint = new Promise((resolve) => { releasePaint = resolve; });
   const view = fixture({
     fetch: async () => ({
@@ -624,7 +625,12 @@ test('identical authoritative fingerprint waits for preview paint and preserves 
       date: '2026-08-24',
     }],
     searchCore: SearchCore,
-    contentCards: ContentCards,
+    contentCards: {
+      postCard(root, post, options) {
+        authoritativeCardBuilds += 1;
+        return ContentCards.postCard(root, post, options);
+      },
+    },
     waitForPreviewPaint: () => paintCheckpoint,
   });
 
@@ -634,12 +640,18 @@ test('identical authoritative fingerprint waits for preview paint and preserves 
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(view.results.getAttribute('data-search-preview'), 'true');
   assert.equal(view.results.querySelector('h3'), previewHeading);
+  authoritativeCardBuilds = 0;
 
   releasePaint();
   await pending;
 
   assert.equal(view.results.querySelector('h3'), previewHeading);
-  assert.equal(view.results.querySelector('.post-summary').textContent, 'Metadata summary');
+  assert.equal(
+    view.results.querySelector('.post-summary').textContent,
+    '…uthoritative needle body excerpt…'
+  );
+  assert.equal(view.results.querySelector('mark').textContent, 'needle');
+  assert.equal(authoritativeCardBuilds, 0);
   assert.equal(view.results.getAttribute('data-search-preview'), null);
   assert.equal(view.results.getAttribute('aria-busy'), 'false');
 });
@@ -834,6 +846,30 @@ test('valid queries fetch the index once, reuse it, and replace the shareable UR
   assert.equal(view.status.textContent, '没有找到与“beta”匹配的文章。');
 });
 
+test('no-result state visibly explains the outcome and offers clear-query and tag recovery', async () => {
+  // Break caught: a no-match search leaves the visible results region blank while only the live region changes.
+  const view = fixture({
+    fetch: async () => ({ ok: true, async json() { return []; } }),
+  });
+
+  await view.controller.run('missing');
+
+  const state = view.results.querySelector('.search-empty-state');
+  assert.ok(state);
+  assert.match(state.querySelector('p').textContent, /没有找到.*missing.*尝试其他关键词/);
+  const clearQuery = state.querySelector('button');
+  assert.equal(clearQuery.textContent, '清除查询');
+  const tags = state.querySelector('a');
+  assert.equal(tags.textContent, '浏览标签');
+  assert.equal(tags.getAttribute('href'), 'tags.html');
+
+  await clearQuery.click();
+  assert.equal(view.input.value, '');
+  assert.equal(view.location.search, '');
+  assert.equal(view.results.children.length, 0);
+  assert.equal(view.document.activeElement, view.input);
+});
+
 test('results navigate to static articles and render hostile index fields as text with highlights', async () => {
   // Break caught: result HTML interpolation executes index content or loses snippet highlights/navigation.
   const view = fixture({
@@ -881,6 +917,9 @@ test('HTTP and JSON failures retain the query and expose a retry button', async 
     await view.controller.run('radar');
 
     const retry = view.results.querySelector('button');
+    const state = view.results.querySelector('.search-error-state');
+    assert.ok(state);
+    assert.equal(state.querySelector('p').textContent, '搜索暂时不可用。请检查网络连接后重试。');
     assert.ok(retry);
     assert.equal(retry.getAttribute('type'), 'button');
     assert.equal(retry.textContent, '重试');
@@ -905,7 +944,7 @@ test('the rendered retry control refetches after a failure and recovers in place
   await view.results.querySelector('button').click();
 
   assert.equal(fetchCalls, 2);
-  assert.equal(view.results.querySelector('button'), null);
+  assert.equal(view.results.querySelector('.search-retry'), null);
   assert.equal(view.status.textContent, '没有找到与“radar”匹配的文章。');
   assert.equal(view.input.value, 'radar');
 });

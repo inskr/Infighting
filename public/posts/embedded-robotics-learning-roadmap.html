@@ -146,13 +146,13 @@
 <h4 id="14-开始前的基础自测">1.4 开始前的基础自测</h4>
 <p>先尝试独立完成以下任务。不会的项目就是第一阶段需要重点补齐的内容：</p>
 <ul>
-<li><input disabled="" type="checkbox"> 使用 C 编写环形缓冲区，并处理缓冲区满和空；</li>
-<li><input disabled="" type="checkbox"> 解释指针、数组、结构体和函数指针的常见用法；</li>
-<li><input disabled="" type="checkbox"> 使用 STM32 完成 GPIO、UART、定时器中断；</li>
-<li><input disabled="" type="checkbox"> 看懂芯片原理图中的电源、时钟、复位和调试接口；</li>
-<li><input disabled="" type="checkbox"> 使用断点、单步和变量观察定位简单错误；</li>
-<li><input disabled="" type="checkbox"> 使用 Python 打开串口、收发数据并保存文件；</li>
-<li><input disabled="" type="checkbox"> 使用 Git 创建仓库、提交修改并查看历史。</li>
+<li><label><input disabled="" type="checkbox"> 使用 C 编写环形缓冲区，并处理缓冲区满和空；</label></li>
+<li><label><input disabled="" type="checkbox"> 解释指针、数组、结构体和函数指针的常见用法；</label></li>
+<li><label><input disabled="" type="checkbox"> 使用 STM32 完成 GPIO、UART、定时器中断；</label></li>
+<li><label><input disabled="" type="checkbox"> 看懂芯片原理图中的电源、时钟、复位和调试接口；</label></li>
+<li><label><input disabled="" type="checkbox"> 使用断点、单步和变量观察定位简单错误；</label></li>
+<li><label><input disabled="" type="checkbox"> 使用 Python 打开串口、收发数据并保存文件；</label></li>
+<li><label><input disabled="" type="checkbox"> 使用 Git 创建仓库、提交修改并查看历史。</label></li>
 </ul>
 <p>自测不要求全部通过。它的作用是确定起点，不是考试。</p>
 <h4 id="15-软硬件准备">1.5 软硬件准备</h4>
@@ -421,12 +421,12 @@
 </ul>
 <h4 id="35-验收标准">3.5 验收标准</h4>
 <ul>
-<li><input disabled="" type="checkbox"> 可以解释 MCU 从复位到 <code>main()</code> 的过程；</li>
-<li><input disabled="" type="checkbox"> 可以说明栈、堆、<code>.data</code>、<code>.bss</code> 和 <code>.text</code> 的位置；</li>
-<li><input disabled="" type="checkbox"> 可以根据参考手册配置一个未学过的简单外设；</li>
-<li><input disabled="" type="checkbox"> 可以用 DMA 和环形缓冲区接收不定长数据；</li>
-<li><input disabled="" type="checkbox"> 可以通过 HardFault 现场和 map 文件定位错误；</li>
-<li><input disabled="" type="checkbox"> 可以解释 HAL、LL、CMSIS 和寄存器之间的关系。</li>
+<li><label><input disabled="" type="checkbox"> 可以解释 MCU 从复位到 <code>main()</code> 的过程；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以说明栈、堆、<code>.data</code>、<code>.bss</code> 和 <code>.text</code> 的位置；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以根据参考手册配置一个未学过的简单外设；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以用 DMA 和环形缓冲区接收不定长数据；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以通过 HardFault 现场和 map 文件定位错误；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以解释 HAL、LL、CMSIS 和寄存器之间的关系。</label></li>
 </ul>
 <h4 id="36-四类芯片文档分别怎么看">3.6 四类芯片文档分别怎么看</h4>
 <table>
@@ -581,12 +581,12 @@ DiagnosticsTask
 </ul>
 <h4 id="45-验收标准">4.5 验收标准</h4>
 <ul>
-<li><input disabled="" type="checkbox"> 可以画出所有任务和通信关系；</li>
-<li><input disabled="" type="checkbox"> 可以解释队列、任务通知、信号量和互斥锁的区别；</li>
-<li><input disabled="" type="checkbox"> 可以解释优先级反转并给出解决方法；</li>
-<li><input disabled="" type="checkbox"> 可以发现并修复一次人为制造的竞态条件；</li>
-<li><input disabled="" type="checkbox"> 可以检测任务栈溢出和任务卡死；</li>
-<li><input disabled="" type="checkbox"> 控制周期不会被 Flash 写入或串口输出长时间阻塞。</li>
+<li><label><input disabled="" type="checkbox"> 可以画出所有任务和通信关系；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以解释队列、任务通知、信号量和互斥锁的区别；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以解释优先级反转并给出解决方法；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以发现并修复一次人为制造的竞态条件；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以检测任务栈溢出和任务卡死；</label></li>
+<li><label><input disabled="" type="checkbox"> 控制周期不会被 Flash 写入或串口输出长时间阻塞。</label></li>
 </ul>
 <h4 id="46-常见误区">4.6 常见误区</h4>
 <ul>
@@ -683,12 +683,12 @@ DiagnosticsTask
 </ul>
 <h4 id="56-验收标准">5.6 验收标准</h4>
 <ul>
-<li><input disabled="" type="checkbox"> 可以解释从源文件到 ELF/HEX/BIN 的过程；</li>
-<li><input disabled="" type="checkbox"> 可以在命令行完成编译和调试；</li>
-<li><input disabled="" type="checkbox"> 可以使用断点、条件断点、观察点和调用栈；</li>
-<li><input disabled="" type="checkbox"> 可以使用 Python 自动执行至少一组固件测试；</li>
-<li><input disabled="" type="checkbox"> 项目有 README、架构图、协议和测试说明；</li>
-<li><input disabled="" type="checkbox"> 可以执行一次失败升级并安全恢复。</li>
+<li><label><input disabled="" type="checkbox"> 可以解释从源文件到 ELF/HEX/BIN 的过程；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以在命令行完成编译和调试；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以使用断点、条件断点、观察点和调用栈；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以使用 Python 自动执行至少一组固件测试；</label></li>
+<li><label><input disabled="" type="checkbox"> 项目有 README、架构图、协议和测试说明；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以执行一次失败升级并安全恢复。</label></li>
 </ul>
 <h4 id="57-常见误区">5.7 常见误区</h4>
 <ul>
@@ -789,12 +789,12 @@ DiagnosticsTask
 </ul>
 <h4 id="65-验收标准">6.5 验收标准</h4>
 <ul>
-<li><input disabled="" type="checkbox"> 可以编写并调试多线程 C++ 程序；</li>
-<li><input disabled="" type="checkbox"> 可以解释 RAII 如何避免资源泄漏；</li>
-<li><input disabled="" type="checkbox"> 可以处理串口粘包、拆包和校验错误；</li>
-<li><input disabled="" type="checkbox"> 可以通过 gdbserver 远程调试目标程序；</li>
-<li><input disabled="" type="checkbox"> 可以用 Python 模拟设备并完成自动测试；</li>
-<li><input disabled="" type="checkbox"> 程序退出和异常路径不会泄漏文件描述符或线程。</li>
+<li><label><input disabled="" type="checkbox"> 可以编写并调试多线程 C++ 程序；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以解释 RAII 如何避免资源泄漏；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以处理串口粘包、拆包和校验错误；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以通过 gdbserver 远程调试目标程序；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以用 Python 模拟设备并完成自动测试；</label></li>
+<li><label><input disabled="" type="checkbox"> 程序退出和异常路径不会泄漏文件描述符或线程。</label></li>
 </ul>
 <h4 id="66-常见误区">6.6 常见误区</h4>
 <ul>
@@ -906,12 +906,12 @@ DiagnosticsTask
 </ul>
 <h4 id="75-验收标准">7.5 验收标准</h4>
 <ul>
-<li><input disabled="" type="checkbox"> 可以解释 Bootloader、Kernel、DTB 和 RootFS 的加载关系；</li>
-<li><input disabled="" type="checkbox"> 可以交叉编译并运行 C/C++ 程序；</li>
-<li><input disabled="" type="checkbox"> 可以修改设备树启用或禁用外设；</li>
-<li><input disabled="" type="checkbox"> 可以构建并加载外部内核模块；</li>
-<li><input disabled="" type="checkbox"> 可以将自己的程序加入 Buildroot；</li>
-<li><input disabled="" type="checkbox"> 可以分析一次内核启动或驱动 probe 失败。</li>
+<li><label><input disabled="" type="checkbox"> 可以解释 Bootloader、Kernel、DTB 和 RootFS 的加载关系；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以交叉编译并运行 C/C++ 程序；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以修改设备树启用或禁用外设；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以构建并加载外部内核模块；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以将自己的程序加入 Buildroot；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以分析一次内核启动或驱动 probe 失败。</label></li>
 </ul>
 <h4 id="76-常见误区">7.6 常见误区</h4>
 <ul>
@@ -1033,13 +1033,13 @@ DiagnosticsTask
 </ul>
 <h4 id="86-验收标准">8.6 验收标准</h4>
 <ul>
-<li><input disabled="" type="checkbox"> 电机能够稳定跟踪目标速度；</li>
-<li><input disabled="" type="checkbox"> 左右轮速度单位和方向定义一致；</li>
-<li><input disabled="" type="checkbox"> 控制周期可以测量并记录；</li>
-<li><input disabled="" type="checkbox"> 机器人可以完成直行、旋转和停止；</li>
-<li><input disabled="" type="checkbox"> 通信中断后能够安全停车；</li>
-<li><input disabled="" type="checkbox"> 里程计数据能够发送给 Linux；</li>
-<li><input disabled="" type="checkbox"> 能解释 PID 参数变化对系统的影响。</li>
+<li><label><input disabled="" type="checkbox"> 电机能够稳定跟踪目标速度；</label></li>
+<li><label><input disabled="" type="checkbox"> 左右轮速度单位和方向定义一致；</label></li>
+<li><label><input disabled="" type="checkbox"> 控制周期可以测量并记录；</label></li>
+<li><label><input disabled="" type="checkbox"> 机器人可以完成直行、旋转和停止；</label></li>
+<li><label><input disabled="" type="checkbox"> 通信中断后能够安全停车；</label></li>
+<li><label><input disabled="" type="checkbox"> 里程计数据能够发送给 Linux；</label></li>
+<li><label><input disabled="" type="checkbox"> 能解释 PID 参数变化对系统的影响。</label></li>
 </ul>
 <h4 id="87-常见误区">8.7 常见误区</h4>
 <ul>
@@ -1150,12 +1150,12 @@ DiagnosticsTask
 <p>STM32 端继续独立负责实时闭环控制；不要把硬实时 PID 循环放到普通 Linux ROS 节点中。</p>
 <h4 id="96-验收标准">9.6 验收标准</h4>
 <ul>
-<li><input disabled="" type="checkbox"> 能解释 Topic、Service 和 Action 的适用场景；</li>
-<li><input disabled="" type="checkbox"> 能正确建立 <code>base_link</code>、轮子和传感器坐标系；</li>
-<li><input disabled="" type="checkbox"> 能使用 RViz 查看机器人状态；</li>
-<li><input disabled="" type="checkbox"> 能使用 rosbag 记录并回放问题；</li>
-<li><input disabled="" type="checkbox"> 能实现 <code>ros2_control</code> 硬件接口；</li>
-<li><input disabled="" type="checkbox"> Linux/ROS 2 异常退出时 STM32 仍会安全停车。</li>
+<li><label><input disabled="" type="checkbox"> 能解释 Topic、Service 和 Action 的适用场景；</label></li>
+<li><label><input disabled="" type="checkbox"> 能正确建立 <code>base_link</code>、轮子和传感器坐标系；</label></li>
+<li><label><input disabled="" type="checkbox"> 能使用 RViz 查看机器人状态；</label></li>
+<li><label><input disabled="" type="checkbox"> 能使用 rosbag 记录并回放问题；</label></li>
+<li><label><input disabled="" type="checkbox"> 能实现 <code>ros2_control</code> 硬件接口；</label></li>
+<li><label><input disabled="" type="checkbox"> Linux/ROS 2 异常退出时 STM32 仍会安全停车。</label></li>
 </ul>
 <h4 id="97-常见误区">9.7 常见误区</h4>
 <ul>
@@ -1599,28 +1599,28 @@ ROS 2 配置与通信
 <h3 id="16-阶段性能力检查">16. 阶段性能力检查</h3>
 <h4 id="stm32rtos-合格线">STM32/RTOS 合格线</h4>
 <ul>
-<li><input disabled="" type="checkbox"> 可以独立编写和调试外设驱动；</li>
-<li><input disabled="" type="checkbox"> 可以解释中断、DMA、栈和内存布局；</li>
-<li><input disabled="" type="checkbox"> 可以设计 FreeRTOS 任务和通信关系；</li>
-<li><input disabled="" type="checkbox"> 可以定位 HardFault、竞态和栈溢出；</li>
-<li><input disabled="" type="checkbox"> 可以完成 Bootloader 和自动测试工具。</li>
+<li><label><input disabled="" type="checkbox"> 可以独立编写和调试外设驱动；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以解释中断、DMA、栈和内存布局；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以设计 FreeRTOS 任务和通信关系；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以定位 HardFault、竞态和栈溢出；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以完成 Bootloader 和自动测试工具。</label></li>
 </ul>
 <h4 id="嵌入式-linux-合格线">嵌入式 Linux 合格线</h4>
 <ul>
-<li><input disabled="" type="checkbox"> 可以交叉编译 C/C++ 程序；</li>
-<li><input disabled="" type="checkbox"> 可以构建最小 Linux 系统；</li>
-<li><input disabled="" type="checkbox"> 可以修改设备树；</li>
-<li><input disabled="" type="checkbox"> 可以构建和调试内核模块；</li>
-<li><input disabled="" type="checkbox"> 可以将自研程序加入系统镜像。</li>
+<li><label><input disabled="" type="checkbox"> 可以交叉编译 C/C++ 程序；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以构建最小 Linux 系统；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以修改设备树；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以构建和调试内核模块；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以将自研程序加入系统镜像。</label></li>
 </ul>
 <h4 id="机器人方向合格线">机器人方向合格线</h4>
 <ul>
-<li><input disabled="" type="checkbox"> 可以实现电机闭环调速；</li>
-<li><input disabled="" type="checkbox"> 可以读取编码器和 IMU；</li>
-<li><input disabled="" type="checkbox"> 可以计算差速底盘里程计；</li>
-<li><input disabled="" type="checkbox"> 可以连接 STM32 与 ROS 2；</li>
-<li><input disabled="" type="checkbox"> 可以实现安全停车和故障诊断；</li>
-<li><input disabled="" type="checkbox"> 可以交付一套可复现的完整机器人项目。</li>
+<li><label><input disabled="" type="checkbox"> 可以实现电机闭环调速；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以读取编码器和 IMU；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以计算差速底盘里程计；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以连接 STM32 与 ROS 2；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以实现安全停车和故障诊断；</label></li>
+<li><label><input disabled="" type="checkbox"> 可以交付一套可复现的完整机器人项目。</label></li>
 </ul>
 <hr>
 <h3 id="17-文档索引">17. 文档索引</h3>

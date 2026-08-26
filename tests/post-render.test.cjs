@@ -44,6 +44,32 @@ test('generated article HTML owns its complete readable body and page-specific d
   assert.doesNotMatch(html, /marked(?:\.min)?\.js|posts-index\.js|post-loader\.js|post-view\.js|assets\/posts\/alpha\.json/);
 });
 
+test('generated task-list checkboxes are labelled by their task text and expose checked state', () => {
+  // Break caught: Marked emits disabled checkboxes whose adjacent task text is not their accessible name.
+  const html = renderArticlePage({
+    post: {
+      id: 'tasks',
+      title: 'Task article',
+      date: '2026-08-11',
+      tags: ['testing'],
+      summary: 'Task fixture',
+      type: 'post',
+      content: '- [ ] Calibrate the sensor\n- [x] Record the result',
+    },
+    posts: [],
+    siteUrl: 'https://example.test/',
+  });
+
+  assert.match(
+    html,
+    /<li><label><input disabled="" type="checkbox"> Calibrate the sensor<\/label><\/li>/
+  );
+  assert.match(
+    html,
+    /<li><label><input checked="" disabled="" type="checkbox"> Record the result<\/label><\/li>/
+  );
+});
+
 test('normalizes body headings from the shallowest Markdown level and preserves relative depth', () => {
   // Break caught: fixed heading demotion skips h2 when a source starts below Markdown h1.
   const cases = [
@@ -100,6 +126,30 @@ test('normalizes body headings from the shallowest Markdown level and preserves 
       fixture.name
     );
   }
+});
+
+test('radar learning article keeps consecutive published body heading levels', () => {
+  // Break caught: the source jumps from the Part heading to Chapter 1, publishing h2 then h4.
+  const source = fs.readFileSync(
+    path.join(__dirname, '..', 'posts', '2026-07-20-radar-principles-study-summary.md'),
+    'utf8'
+  ).replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+  const html = renderArticlePage({
+    post: {
+      id: 'radar-principles-study-summary',
+      title: 'Radar learning article',
+      date: '2026-07-20',
+      tags: [],
+      content: source,
+    },
+    posts: [],
+    siteUrl: 'https://example.test/',
+  });
+  const body = html.match(/<div class="article-body">([\s\S]*?)<\/div>/)[1];
+
+  assert.match(body, /<h2 id="第一部分-雷达原理第5版逐章详细笔记">/);
+  assert.match(body, /<h3 id="第1章-绪论">第1章 绪论<\/h3>/);
+  assert.doesNotMatch(body, /<h4 id="第1章-绪论">/);
 });
 
 test('keeps a heading-free body below the single page heading', () => {

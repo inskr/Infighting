@@ -45,6 +45,13 @@ function renderArticleContent(content) {
     return `<h${outputDepth} id="${id}">${html}</h${outputDepth}>\n`;
   };
 
+  renderer.listitem = function renderListItem(item) {
+    const html = this.parser.parse(item.tokens);
+    return item.task
+      ? `<li><label>${html}</label></li>\n`
+      : `<li>${html}</li>\n`;
+  };
+
   return { articleHtml: marked.parser(tokens, { renderer }), headings };
 }
 

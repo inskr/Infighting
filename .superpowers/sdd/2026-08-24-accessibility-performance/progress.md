@@ -1,0 +1,73 @@
+# SDD ledger — plan: docs/superpowers/plans/2026-08-24-accessibility-performance.md
+
+Worktree: F:/项目/个人网站-WorkBuddy/.worktrees/static-site-upgrade
+Branch: codex/static-site-upgrade
+Plan start: 4dbac577ec2277280c51837afd4288f800b75356
+Spec: docs/superpowers/specs/2026-08-24-static-seo-search-accessibility-design.md
+
+## Pre-flight dependency scan
+
+| Tasks | Producer / consumer or shared file | Finding |
+| --- | --- | --- |
+| 1 → 2,3,4,5 | Playwright config/server/browser harness consumed by keyboard, status, reflow and axe specs | Clean. |
+| 2 → 3 | SiteShell navigation/landmark work precedes shared live announcements | Clean. |
+| 2 → 4,5 | Semantic markup and focus CSS are exercised by reflow and axe | Clean. |
+| 3 → 5 | Dynamic status states become axe matrix inputs | Clean. |
+| 4 → 5 | Reduced-motion/reflow fixes precede accessibility matrix | Clean. |
+| 1,5,6 → 7 | Lighthouse/CI consumes server, a11y script and deterministic budgets | Clean. |
+| 1–7 → 8 | Final production verification consumes every preceding gate | Clean. |
+| 1,5,6,7 | Sequential `package.json`/lockfile changes | Clean when executed in plan order. |
+| 2,4,5 | Sequential `style.css` and semantic fixes | Clean; later axe fixes must remain scoped to observed failures. |
+| 2 | Skip/main contracts apply to every page, but forcing exactly one top-level `aria-current` on article/legacy pages conflicts with their lack of a matching destination | Resolve by testing one current item on top-level destination pages and none on article/legacy. |
+| 3 | Live-region/retry requirements agree with SearchPage and ArticlePage interfaces | Internally consistent. |
+| 4 | HomeEffects/UiEffects simple-motion responsibilities agree with existing Phase 2 interfaces | Internally consistent. |
+| 5 | axe gate and manual checklist explicitly avoid claiming full conformance | Internally consistent. |
+| 6 | Budget tests may already pass against current artifacts, so a production-artifact RED is not guaranteed | Use controlled boundary sensitivity evidence rather than intentionally bloating artifacts. |
+| 7 | Lighthouse thresholds match the plan's fixed profile and CI gate | Internally consistent. |
+| 8 | Screen-reader manual verification depends on assistive technology available on this workstation | Record unavailable items honestly; automation is not certification. |
+
+Ruling: for top-level pages, SiteShell sets exactly one matching `aria-current="page"`; article and transient legacy pages intentionally set none because no top-level navigation destination represents them — cost if wrong: those two page types expose no current top-level navigation state.
+Ruling: if current production resources already satisfy Task 6 budgets, prove the tests can fail at controlled over-budget/script-map boundaries and keep production green instead of degrading production to manufacture RED — cost if wrong: direct RED evidence comes from controlled fixtures rather than the current artifact.
+Ruling: final manual verification will execute all browser-observable checks available in this environment and record screen-reader-only checks as not verified when no controllable screen reader is available — cost if wrong: release evidence remains incomplete for actual assistive-technology speech output and must be finished by a human with that tool.
+
+Task 1: complete (commits 4dbac57..f305685, review clean)
+Task 2: minor (deferred): full static-page contracts do not precisely count the single `main` landmark and single `h1` on every published page.
+Task 2: complete (commits f305685..ad781bd, review approved with one deferred minor)
+Task 3: fix round 1/5 (3 addressed, 0 open — optional Home storage isolation, real-DOM stale search status race, and exact like announcement/count contracts; commits 2af9254..946f434)
+Task 3: complete (commits ad781bd..946f434, review clean)
+Task 4: minor (deferred): `boundsOverflow` diagnostics are collected but not asserted, and clipping checks do not cover every root/body clipping variant.
+Task 4: minor (deferred): pagination target sizing also enlarges inert current/disabled indicators.
+Task 4: minor (deferred): initial-state target audit does not instantiate and measure the dynamic search Retry button.
+Task 4: fix round 1/5 (3 addressed, 0 open — article navigation targets, compact mobile identity, and honest 320px/tool-bar-zoom evidence split; commits e8c1c8a..8a0b58e)
+Task 4: complete (commits 946f434..8a0b58e, review clean with three deferred minors)
+Task 5: Ruling: supersede the Phase 1 fixed one-level heading demotion with per-article normalization that maps the shallowest body heading to `h2`, preserves relative depth, and caps at `h6` — the accessibility spec requires a coherent outline as well as exactly one page `h1` — cost if wrong: absolute Markdown heading levels are interpreted relative to each article rather than identically across all sources.
+Task 5: fix round 1/5 (3 addressed, 0 open — archive/article heading hierarchy, hard 44×44 checklist contract, and footer target audit; commits 69f9f7c..b0a6f5b)
+Task 5: complete (commits 8a0b58e..b0a6f5b, review clean)
+Task 6: minor (deferred): report gzip byte count differed from the reviewer's fresh Node measurement; both remained below budget, but measurement runtime/command should be recorded more precisely.
+Task 6: fix round 1/5 (1 addressed, 1 open — deterministic gzip fixed; script parser still vulnerable to attribute/tag regex bypasses; commits 05e4f8e..9253f26)
+Task 6: fix round 2/5 (0 addressed, 1 open — exact src/tag parsing fixed but non-script raw-text/RCDATA false positives remained; commits 9253f26..2f15d00)
+Task 6: fix round 3/5 (1 addressed, 0 open — full token flow skips comments and raw-text/RCDATA containers while preserving real scripts; commits 2f15d00..f1c1590)
+Task 6: complete (commits b0a6f5b..f1c1590, review clean with one deferred minor)
+Task 7: Ruling: preserve the required whole-page fade visually with a theme-colored, pointer-transparent overlay fading out while page content remains paintable at opacity 1 — cost if wrong: the fade is implemented as a departing curtain rather than content opacity, which may differ subtly in compositing but preserves the perceived whole-page entrance.
+Task 7: Ruling: use the existing lightweight article metadata for an unannounced, busy-state search preview, then replace it with the full-body index's authoritative final ranking and single completion announcement; reserve stable query-result geometry to prevent footer CLS — cost if wrong: preview ordering can briefly differ from the final full-text ranking while `aria-busy` remains true.
+Task 7: Ruling: give the Search results region a parser-present semantic `h2` and render individual result titles as `h3`, providing a stable section/LCP anchor while metadata preview and full-text results progressively populate beneath it — cost if wrong: Lighthouse may represent the stable results section heading rather than the later individual result title, while final result availability remains separately covered by browser tests.
+Task 7: Ruling: execute the initial valid-query metadata preview at parser time through a dedicated small Search helper and preloaded existing dependencies, while SearchPage remains the sole owner of authoritative full-index results and announcements — cost if wrong: Search gains an additional page-specific bootstrap seam and a few small scripts are fetched even when the query is empty, though the 242 KiB full index remains valid-query-only.
+Task 7: Ruling: generate the self-contained metadata preview deterministically into an inline script maintained inside `public/search.html`, replacing the external parser bundle while preserving the curtain and authoritative SearchPage/full-index behavior — cost if wrong: `search.html` grows by about 5 KiB raw and CSP/cache granularity becomes coarser, but one parser-blocking request leaves the dynamic H3 LCP dependency chain.
+Task 7: Ruling: for a valid query with a usable metadata preview, release the existing preview-paint checkpoint before starting the 242 KiB authoritative index request, so the full index cannot enter the inline H3's Lantern LCP chain — cost if wrong: authoritative full-text completion is delayed by roughly one paint checkpoint while the visible preview remains available and `aria-busy` stays true.
+Task 7: Ruling: render every ordered metadata match in the parser-time preview and compare an ordered fingerprint of count, ID, title, date, tags, and summary after authoritative full-text ranking; when identical, reuse the complete result subtree and only clear preview/busy state before the single completion announcement, otherwise retain the existing authoritative replacement path — cost if wrong: the initial parser DOM grows from top-1 to the full metadata result set (five cards for the fixed `STM32` profile) in exchange for zero card construction and zero result-subtree child-list coordination when the final visible set is identical.
+Task 7: trace-boundary TDD fix: RED 27/29 focused Node contracts (top-1 preview and two authoritative card builds), GREEN 29/29; generated/build/budget focused contracts 63/63 excluding the intentionally deferred workflow gate; real parser handoff browser contracts 2/2.
+Task 7: Ruling: keep the fixed mobile profile, three-run/fixed-URL collection, and all numeric assertions unchanged, but set Lighthouse `throttlingMethod: 'devtools'` so the deployment gate measures browser-applied controlled mobile throttling after Search's critical network and authoritative DOM mutation boundaries were removed — cost if wrong: DevTools throttling is more sensitive than Lantern simulation to CI-host timing noise, mitigated by Lighthouse CI's median of three runs.
+Task 7: measurement-method TDD: the resolved Lighthouse configuration contract failed with `throttlingMethod === undefined`, then passed with the explicit `devtools` setting; no URL, run count, mobile form factor, or assertion threshold changed.
+Task 7: Ruling: supersede the temporary DevTools measurement-method ruling and restore the original Lighthouse mobile baseline by omitting `throttlingMethod`, which resolves to `simulate`; retain the fixed three URLs, three runs, mobile form factor, and every assertion threshold unchanged — cost if wrong: Lantern estimates performance from the observed trace rather than applying browser-level throttling, while the three-run median keeps the gate reproducible.
+Task 7: measurement-method restoration TDD: the new contract failed while the configured override remained `devtools`, then passed with no configured override and a resolved runtime method of `simulate`.
+Task 7: Ruling: make Lighthouse assertion aggregation explicitly `median-run`, matching the plan rather than LHCI 0.15.1's implicit optimistic best-value behavior — cost if wrong: one favorable run can no longer hide the representative run, so a genuinely unstable Search metric blocks deployment.
+Task 7: assertion-integrity TDD: the configuration contract failed 8/9 with an undefined aggregation method, then passed 9/9 with `median-run`; reasserting the saved 3×3 matrix correctly exposed Search representative LCP 2857.201 ms > 2500 ms instead of accepting the 1653.317 ms optimistic value.
+Task 7: Ruling: delay authoritative Search index loading until a buffered Largest Contentful Paint entry identifies the static `#search-hero-title`; use the prior frame checkpoint only when the observer is unsupported/throws, with an 800 ms hard fallback and cleanup on success, timeout, `pagehide`, or hidden visibility — cost if wrong: full-text results begin a few hundred milliseconds later, while the complete metadata preview remains usable and busy.
+Task 7: paint-checkpoint TDD: RED 25/29 Node because `waitForHeroPaint` was absent and real Chromium observed one full-index request before the controlled Hero LCP entry; GREEN SearchPage 29/29, focused Node 102/102, focused browser 43/43, with Hero-only release, one fetch, busy preview, one final announcement, and cleanup contracts.
+Task 7: final Lighthouse evidence: Search-only simulated median-run probe passed at Performance 1.00, Accessibility 1.00, LCP 1655.176 ms, CLS 0, and TBT 7 ms with `#search-hero-title` as LCP; the single formal simulated 3×3 median-run matrix passed, with Search representative Performance 1.00, Accessibility 1.00, LCP 1653.194 ms, CLS 0, and TBT 5 ms.
+Task 7: final local gates: build passed; Node 252/252 plus standalone format/likes/stats checks passed; axe 13/13; browser 48/48; `git diff --check` clean apart from Windows line-ending notices.
+Task 7: complete (commits f1c1590..993a6f1, strict self-review clean)
+Task 8: Ruling: retain pinned `@lhci/cli@0.15.1` despite `npm audit` reporting 10 development-only transitive findings (2 low, 1 moderate, 7 high), because `npm audit --omit=dev` is clean and the offered forced remediation installs breaking `@lhci/cli@0.1.0` that invalidates the verified Lighthouse gate — cost if wrong: CI processes trusted local build artifacts with known vulnerable transitive tooling until upstream publishes a compatible fix.
+Task 8: complete (HEAD 993a6f1, no correction commit; automated/browser-observable verification complete, screen-reader speech and actual browser-toolbar 200% zoom not verified)
+Phase 3 final fix wave: four Important findings addressed (task-list axe labels, authoritative Search snippets/highlights, visible Search recovery/320px Retry, Tab-visible overflow scrollers) and three deferred Minor findings addressed (radar heading rank, settled descendant bounds, exact all-page main/h1/skip counts). RED/GREEN evidence and generated outputs are in `final-fix-report.md`.
+Phase 3 final fix wave: formal Lighthouse 3×3 first failed Search median-run TBT at 203 ms (threshold <=200), and the allocation-only follow-up failed at 204 ms. A final minimal reconciliation optimization has focused Node RED/GREEN but, per explicit user instruction, Lighthouse and all gates must not be rerun. Performance-gate status is unverified/not passing; preserve `median-run` profile and rerun only with user authorization.
