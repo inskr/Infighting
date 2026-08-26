@@ -263,6 +263,23 @@ test('Lighthouse collection uses the simulated mobile baseline for three runs on
   assert.equal(resolvedConfig.settings.screenEmulation.mobile, true);
 });
 
+test('Lighthouse disables the Chrome sandbox only inside GitHub Actions', () => {
+  const previous = process.env.GITHUB_ACTIONS;
+  try {
+    delete process.env.GITHUB_ACTIONS;
+    assert.equal(loadLighthouseConfig().ci.collect.settings.chromeFlags, undefined);
+
+    process.env.GITHUB_ACTIONS = 'true';
+    assert.equal(
+      loadLighthouseConfig().ci.collect.settings.chromeFlags,
+      '--no-sandbox'
+    );
+  } finally {
+    if (previous === undefined) delete process.env.GITHUB_ACTIONS;
+    else process.env.GITHUB_ACTIONS = previous;
+  }
+});
+
 test('Lighthouse assertions keep every performance and accessibility failure blocking', () => {
   const config = loadLighthouseConfig();
   assert.equal(config.ci.assert.aggregationMethod, 'median-run');

@@ -3,6 +3,9 @@
 const { chromium } = require('@playwright/test');
 
 const baseUrl = 'http://127.0.0.1:4173';
+const githubActionsChromeFlags = process.env.GITHUB_ACTIONS === 'true'
+  ? '--no-sandbox'
+  : undefined;
 
 module.exports = {
   ci: {
@@ -19,7 +22,8 @@ module.exports = {
       settings: {
         // Lighthouse's supported mobile profile is its default form factor;
         // there is no valid `preset: 'mobile'` CLI value.
-        formFactor: 'mobile'
+        formFactor: 'mobile',
+        ...(githubActionsChromeFlags ? { chromeFlags: githubActionsChromeFlags } : {})
       }
     },
     assert: {
