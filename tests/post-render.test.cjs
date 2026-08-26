@@ -146,10 +146,16 @@ test('radar learning article keeps consecutive published body heading levels', (
     siteUrl: 'https://example.test/',
   });
   const body = html.match(/<div class="article-body">([\s\S]*?)<\/div>/)[1];
+  const firstPartStart = body.indexOf('<h2 id="第一部分-雷达原理第5版逐章详细笔记">');
+  const secondPartStart = body.indexOf('<h2 id="第二部分-pomrprinciples-of-modern-radar-basic-principles逐章详细笔记">');
+  const firstPart = body.slice(firstPartStart, secondPartStart);
 
   assert.match(body, /<h2 id="第一部分-雷达原理第5版逐章详细笔记">/);
   assert.match(body, /<h3 id="第1章-绪论">第1章 绪论<\/h3>/);
   assert.doesNotMatch(body, /<h4 id="第1章-绪论">/);
+  assert.equal((firstPart.match(/<h3 id="第[1-9]章-/g) || []).length, 9);
+  assert.match(firstPart, /<h4 id="1-雷达是什么定义与任务">/);
+  assert.doesNotMatch(firstPart, /<h[56]\b/);
 });
 
 test('keeps a heading-free body below the single page heading', () => {

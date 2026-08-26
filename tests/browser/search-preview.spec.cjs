@@ -47,6 +47,7 @@ test('initial valid q paints during parsing then hands matching cards to authori
   await expect.poll(() => fullIndexRequests).toBe(1);
   await results.evaluate((container) => {
     window.__searchCompletionMutations = 0;
+    window.__searchCompletionSummaryMutations = 0;
     window.__searchCompletionCardBuilds = 0;
     const originalPostCard = window.ContentCards.postCard;
     window.ContentCards.postCard = function (...args) {
@@ -61,6 +62,9 @@ test('initial valid q paints during parsing then hands matching cards to authori
     });
     new MutationObserver((records) => {
       window.__searchCompletionMutations += records.filter((record) => record.type === 'childList').length;
+      window.__searchCompletionSummaryMutations += records.filter((record) => (
+        record.type === 'childList' && record.target.classList.contains('post-summary')
+      )).length;
     }).observe(container, { childList: true, subtree: true });
   });
 
@@ -71,17 +75,19 @@ test('initial valid q paints during parsing then hands matching cards to authori
   const completion = await results.evaluate((container) => ({
     cardBuilds: window.__searchCompletionCardBuilds,
     childListMutations: window.__searchCompletionMutations,
+    summaryChildListMutations: window.__searchCompletionSummaryMutations,
     highlighted: container.querySelectorAll('mark').length,
     preservedCards: container.querySelectorAll('[data-parser-preview-card]').length,
     preservedChildren: container.querySelectorAll('[data-parser-preview-child]').length,
     summaries: Array.from(container.querySelectorAll('.post-summary'), (summary) => summary.textContent),
   }));
-  expect(completion.cardBuilds).toBe(5);
+  expect(completion.cardBuilds).toBe(0);
   expect(completion.childListMutations).toBeGreaterThan(0);
+  expect(completion.summaryChildListMutations).toBeGreaterThan(0);
   expect(completion).toMatchObject({
     highlighted: 5,
     preservedCards: 5,
-    preservedChildren: 5,
+    preservedChildren: 15,
     summaries: [
       '…做边缘视觉识别。最终系统在 STM32H743 上实现了摄像头图…',
       '…人机飞控项目中,我选择基于 STM32F103 裸机开发,而不是…',

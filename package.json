@@ -21,6 +21,7 @@
     "@lhci/cli": "0.15.1",
     "@playwright/test": "^1.62.1",
     "marked": "^18.0.10",
+    "parse5": "^7.2.1",
     "sharp": "^0.35.3"
   }
 }

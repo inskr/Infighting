@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { parse } = require('parse5');
 const { createApp } = require('../src/app');
 
 const stylesheet = fs.readFileSync(
@@ -313,16 +314,25 @@ test('every published page has exactly one parsed main, h1, and skip link, plus 
       assert.equal(response.status, 200, name);
       const html = await response.text();
 
-      const elements = [...html.matchAll(/<([a-z][\w-]*)(?:\s[^<>]*)?>/gi)]
-        .map((match) => ({ tag: match[1].toLowerCase(), source: match[0] }));
-      const mainTargets = elements.filter(({ tag, source }) => tag === 'main' && /\bid="main-content"/i.test(source));
-      const headings = elements.filter(({ tag }) => tag === 'h1');
-      const skipLinks = elements.filter(({ tag, source }) => (
-        tag === 'a' && /\bclass="skip-link"/i.test(source) && /\bhref="#main-content"/i.test(source)
+      const document = parse(html);
+      const elements = [];
+      const visit = (node) => {
+        if (node.tagName) elements.push(node);
+        for (const child of node.childNodes || []) visit(child);
+      };
+      visit(document);
+      const attribute = (node, name) => (node.attrs || []).find((entry) => entry.name === name)?.value;
+      const mainTargets = elements.filter((node) => node.tagName === 'main');
+      const headings = elements.filter((node) => node.tagName === 'h1');
+      const skipLinks = elements.filter((node) => (
+        node.tagName === 'a' &&
+        attribute(node, 'class')?.split(/\s+/).includes('skip-link') &&
+        attribute(node, 'href') === '#main-content'
       ));
 
-      assert.equal(mainTargets.length, 1, `${name} has one main landmark targeting main-content`);
-      assert.match(mainTargets[0].source, /\btabindex="-1"/i, `${name} exposes a programmatic main target`);
+      assert.equal(mainTargets.length, 1, `${name} has one main landmark`);
+      assert.equal(attribute(mainTargets[0], 'id'), 'main-content', `${name} targets its main landmark`);
+      assert.equal(attribute(mainTargets[0], 'tabindex'), '-1', `${name} exposes a programmatic main target`);
       assert.equal(headings.length, 1, `${name} has one page h1`);
       assert.equal(skipLinks.length, 1, `${name} has one skip link targeting its main landmark`);
       if (current) {

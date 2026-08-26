@@ -36,3 +36,10 @@ The user then explicitly instructed that no gates be rerun. Therefore the final 
 - Read-only diff audit found only the seven requested finding areas, generated publication outputs, and the Search critical-style test adjustment required because authoritative content now settles before the CSS-only geometry comparison.
 - No Lighthouse/test-server/LHCI process remained when execution stopped. Ignored `.lighthouseci` artifacts were left untouched rather than broadly deleted.
 - Remaining release concern: rerun the formal Lighthouse 3×3 and assertion after the user permits it. Do not report the performance gate as passing until then.
+
+## Post-review static contract cleanup
+
+- The Search parser-preview browser contract now asserts the settled authoritative reconciliation: it builds zero replacement cards, preserves all 15 parser-preview children, updates the summary in place, and keeps five final highlights.
+- The first part of the radar study source now uses chapter rank `##` and subsection rank `###`; `npm run build:posts` regenerated its published HTML and JSON. Static inspection confirms the published first Part has its Part `h2`, nine chapter `h3`s, subsection `h4`s, and no `h5`/`h6` descendants before the second Part.
+- The rendered-page landmark contract now uses `parse5@7.2.1` for DOM traversal, rather than regular-expression tag matching, to assert one `main#main-content` with `tabindex="-1"`, one `h1`, and one skip link on each published page.
+- No test, browser/axe run, audit, Lighthouse collection, or other quality gate was rerun after this cleanup, by explicit user instruction. The formal Lighthouse performance gate remains unverified and must not be reported as passing.
