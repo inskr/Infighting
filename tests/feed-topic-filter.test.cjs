@@ -6,13 +6,23 @@ const {
   assertPublishableBoards,
   classifyTopic,
   collectBoard,
+  extractArticleText,
+  isDeepDomesticTechnicalContent,
   isDomesticTechnicalContent,
   isTopicRelevant,
   mergeDomesticWithPrevious,
   mergeArchive,
+  parseCnblogsCategoryPage,
   parseGeneratedFeeds,
   selectBoardItems,
 } = require('../scripts/fetch-feeds');
+
+const DEEP_EMBEDDED_BODY = `
+  本文在 STM32H7 与 FreeRTOS 开发板上实现摄像头边缘 AI 推理。首先配置设备树、
+  DMA 与中断，再交叉编译固件并烧录。模型经过 INT8 量化后通过 TFLite Micro 部署，
+  文中给出驱动代码、寄存器配置、内存映射、编译参数和串口调试日志。性能测试包含
+  推理延迟、RAM 占用、Flash 占用、功耗与准确率对比，并分析缓存、算子和线程调度优化。
+`.repeat(8);
 
 function feedItem(title, age, slug) {
   return {
@@ -351,7 +361,7 @@ test('archive merge removes domestic news and legacy relaxed fallbacks', () => {
     title: 'ESP32 driver source code analysis and debugging tutorial',
     link: 'https://example.com/zh-practice',
     source: 'Fixture', date: '2026-08-02',
-    summary: 'Includes code and debugging steps.', lang: 'zh',
+    summary: 'Includes code and debugging steps.', lang: 'zh', depthVerified: true,
   };
   const domesticRelease = {
     title: 'ESP32 new edge AI developer board release',
@@ -385,6 +395,29 @@ test('archive merge removes domestic news and legacy relaxed fallbacks', () => {
     domesticPractice.title,
   ]);
   assert.deepEqual(previous.boards.en.map((item) => item.title), [internationalRelease.title]);
+});
+
+test('archive removes domestic items that were never verified from article bodies', () => {
+  const verified = {
+    title: 'STM32 固件驱动调试实战', link: 'https://example.com/verified',
+    source: 'Fixture', date: '2026-08-02', summary: '', lang: 'zh', depthVerified: true,
+  };
+  const shallowOnly = {
+    title: '边缘 AI 模型部署实战', link: 'https://example.com/shallow',
+    source: 'Fixture', date: '2026-08-02',
+    summary: '包含配置、部署和性能测试。', lang: 'zh',
+  };
+
+  const merged = mergeArchive(
+    { days: [{ date: '2026-08-02', boards: { zh: [verified, shallowOnly] } }] },
+    { zh: [] },
+    '2026-08-03T12:00:00.000Z'
+  );
+
+  assert.deepEqual(
+    merged.days.find((day) => day.date === '2026-08-02').boards.zh,
+    [verified]
+  );
 });
 
 test('sanitizes archived boards while merging today within the seven-day window', () => {
@@ -513,13 +546,13 @@ test('domestic selection does not add relaxed items after four strict items', ()
   );
 });
 
-test('publication gate rejects fewer than four final domestic items', () => {
+test('publication gate rejects fewer than eight final domestic items', () => {
   assert.throws(
-    () => assertPublishableBoards({ en: [], zh: [{}, {}, {}] }),
-    /Domestic daily picks require at least 4 items; got 3/
+    () => assertPublishableBoards({ en: [], zh: [{}, {}, {}, {}, {}, {}, {}] }),
+    /Domestic daily picks require at least 8 items; got 7/
   );
   assert.doesNotThrow(() =>
-    assertPublishableBoards({ en: [], zh: [{}, {}, {}, {}] })
+    assertPublishableBoards({ en: [], zh: [{}, {}, {}, {}, {}, {}, {}, {}] })
   );
 });
 
@@ -540,11 +573,148 @@ test('one failed domestic source does not discard successful sources', async () 
   const selected = await collectBoard([
     { name: 'Failed', url: 'https://example.com/failed' },
     { name: 'Working', url: 'https://example.com/working' },
-  ], 'zh', fetcher, now);
+  ], 'zh', fetcher, now, async () => `<article>${DEEP_EMBEDDED_BODY}</article>`);
 
   assert.deepEqual(selected.map((item) => item.title), [
     'STM32 FreeRTOS firmware development tutorial',
   ]);
+});
+
+test('extracts readable article text without scripts, styles, or navigation', () => {
+  const html = `<!doctype html><html><body>
+    <nav>首页 产品 新闻</nav>
+    <article><h1>STM32 边缘 AI 部署实战</h1><p>配置 DMA 与摄像头驱动。</p>
+    <pre><code>HAL_DMA_Start(&amp;hdma);</code></pre></article>
+    <script>window.tracker = 'noise';</script><style>.ad { display:none }</style>
+    <footer>版权信息</footer></body></html>`;
+
+  assert.equal(
+    extractArticleText(html),
+    'STM32 边缘 AI 部署实战 配置 DMA 与摄像头驱动。 HAL_DMA_Start(&hdma);'
+  );
+});
+
+test('extracts only the post body from a cnblogs page', () => {
+  const html = `<html><body>
+    <div class="postBody"><div id="cnblogs_post_body" class="blogpost-body">
+      <h2>Linux 嵌入式 I2S 驱动调试</h2><p>配置设备树并检查 DMA 中断日志。</p>
+      <div><pre>devm_snd_soc_register_component()</pre></div>
+    </div></div>
+    <div id="MySignature"></div>
+    <div class="sidebar">某公司发布新品并举办行业峰会活动</div>
+  </body></html>`;
+
+  assert.equal(
+    extractArticleText(html),
+    'Linux 嵌入式 I2S 驱动调试 配置设备树并检查 DMA 中断日志。 devm_snd_soc_register_component()'
+  );
+});
+
+test('deep domestic gate requires an embedded or edge AI topic with engineering evidence', () => {
+  assert.equal(isDeepDomesticTechnicalContent({
+    title: 'STM32H7 摄像头边缘 AI 部署与性能优化实战',
+    summary: '包含模型量化、固件部署与性能测试。',
+    articleText: DEEP_EMBEDDED_BODY,
+  }), true);
+
+  assert.equal(isDeepDomesticTechnicalContent({
+    title: '某芯片公司发布全新 MCU 产品',
+    summary: '新品在行业峰会正式亮相。',
+    articleText: '该公司宣布新品发布并介绍市场计划。'.repeat(80),
+  }), false);
+
+  assert.equal(isDeepDomesticTechnicalContent({
+    title: 'Milvus 向量数据库集群调优实战',
+    summary: '包含索引、检索和服务部署。',
+    articleText: '本文给出 API、索引、集群日志与性能测试步骤。'.repeat(80),
+  }), false);
+});
+
+test('deep domestic gate accepts a long MCU analysis with two concrete evidence types', () => {
+  const articleText = (
+    '本文解析 MCU 深度休眠的寄存器配置、唤醒顺序与时钟门控，并给出性能对比。'
+  ).repeat(30);
+
+  assert.equal(isDeepDomesticTechnicalContent({
+    title: 'MCU 低功耗模式解析：时钟门控与深度休眠',
+    summary: '从硬件状态机分析低功耗工作模式。',
+    articleText,
+  }), true);
+});
+
+test('domestic collection verifies candidate article bodies before publishing them', async () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const xml = `<rss><channel><item>
+    <title>STM32H7 边缘 AI 模型部署实战</title>
+    <link>https://example.com/deep-article</link>
+    <pubDate>Mon, 03 Aug 2026 00:00:00 GMT</pubDate>
+    <description>固件开发与模型量化教程。</description>
+  </item></channel></rss>`;
+  const fetchedArticles = [];
+
+  const selected = await collectBoard(
+    [{ name: '专业嵌入式源', url: 'https://example.com/feed' }],
+    'zh',
+    async () => xml,
+    now,
+    async (url) => {
+      fetchedArticles.push(url);
+      return `<article>${DEEP_EMBEDDED_BODY}</article>`;
+    }
+  );
+
+  assert.deepEqual(fetchedArticles, ['https://example.com/deep-article']);
+  assert.equal(selected.length, 1);
+  assert.equal(selected[0].depthVerified, true);
+  assert.equal(Object.hasOwn(selected[0], 'articleText'), false);
+});
+
+test('domestic collection does not fetch stale candidate article bodies', async () => {
+  const now = Date.parse('2026-08-23T00:00:00Z');
+  const xml = `<rss><channel><item>
+    <title>STM32 FreeRTOS 固件开发教程</title>
+    <link>https://example.com/stale-article</link>
+    <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
+    <description>包含源码、配置和调试步骤。</description>
+  </item></channel></rss>`;
+  let articleFetchCount = 0;
+
+  const selected = await collectBoard(
+    [{ name: '普通源', url: 'https://example.com/feed' }],
+    'zh',
+    async () => xml,
+    now,
+    async () => {
+      articleFetchCount += 1;
+      return `<article>${DEEP_EMBEDDED_BODY}</article>`;
+    }
+  );
+
+  assert.equal(articleFetchCount, 0);
+  assert.deepEqual(selected, []);
+});
+
+test('parses cnblogs category cards into dated feed candidates', () => {
+  const html = `<section>
+    <article class="post-item">
+      <a class="post-item-title" href="https://www.cnblogs.com/demo/p/100" target="_blank">STM32 DMA 驱动调试实战</a>
+      <p class="post-item-summary"><a href="/demo"><img alt="头像"></a>包含设备树配置、源码和性能测试。</p>
+      <footer><span>2026-08-21 17:34</span></footer>
+    </article>
+    <article class="post-item">
+      <a class="post-item-title" href="javascript:alert(1)">不安全链接</a>
+      <p class="post-item-summary">应被丢弃</p><footer><span>2026-08-20 09:00</span></footer>
+    </article>
+  </section>`;
+
+  assert.deepEqual(parseCnblogsCategoryPage(html, '博客园嵌入式'), [{
+    title: 'STM32 DMA 驱动调试实战',
+    link: 'https://www.cnblogs.com/demo/p/100',
+    source: '博客园嵌入式',
+    date: '2026-08-21',
+    summary: '包含设备树配置、源码和性能测试。',
+    _ts: Date.parse('2026-08-21T17:34:00+08:00'),
+  }]);
 });
 
 test('international selection keeps the existing product-release policy', () => {
@@ -862,7 +1032,7 @@ test('parses only the generated window.FEEDS assignment shape', () => {
   assert.equal(parseGeneratedFeeds('window.OTHER = {};'), null);
 });
 
-test('fills the domestic minimum only with revalidated previous technical items', () => {
+test('fills the domestic minimum only with previously depth-verified technical items', () => {
   const current = [
     feedItem('STM32 FreeRTOS 固件开发教程', 1000, 'current-one'),
     feedItem('边缘 AI 模型部署实战', 2000, 'current-two'),
@@ -875,16 +1045,16 @@ test('fills the domestic minimum only with revalidated previous technical items'
     {
       ...feedItem('鸿蒙 ArkUI 组件性能优化与开发实践', 4000, 'arkui'),
       summary: '边缘计算端侧应用的组件性能调试实践。',
-      source: 'Previous Tech', date: '2026-07-31', lang: 'zh',
+      source: 'Previous Tech', date: '2026-07-31', lang: 'zh', depthVerified: true,
     },
     {
       ...feedItem('鸿蒙 ArkUI 组件性能优化与开发实践（二）', 5000, 'arkui-duplicate'),
       summary: '边缘计算端侧应用的组件性能调试实践。',
-      source: 'Duplicate', date: '2026-07-30', lang: 'zh',
+      source: 'Duplicate', date: '2026-07-30', lang: 'zh', depthVerified: true,
     },
     {
       ...feedItem('RuleGo 工业协议固件驱动开发实战', 6000, 'rulego'),
-      source: 'Previous Tech', date: '2026-07-29', lang: 'zh',
+      source: 'Previous Tech', date: '2026-07-29', lang: 'zh', depthVerified: true,
     },
   ];
 
@@ -901,13 +1071,49 @@ test('fills the domestic minimum only with revalidated previous technical items'
   assert.ok(merged.every((entry) => entry.lang === 'zh'));
 });
 
+test('allows an explicitly curated domestic engineering source to use its longer freshness window', () => {
+  const now = Date.parse('2026-08-03T00:00:00Z');
+  const oldTimestamp = now - 300 * 86400000;
+  const items = [
+    {
+      title: 'STM32 设备树驱动开发实战',
+      summary: '包含源码、配置与调试步骤。',
+      link: 'https://example.com/default-window', source: 'General',
+      date: '2025-10-07', _ts: oldTimestamp,
+    },
+    {
+      title: 'Linux 嵌入式设备树驱动开发实战',
+      summary: '包含源码、配置与调试步骤。',
+      link: 'https://example.com/curated-window', source: 'Curated',
+      date: '2025-10-07', _ts: oldTimestamp, maxAgeDays: 730,
+    },
+  ];
+
+  assert.deepEqual(
+    selectBoardItems(items, 'zh', now).map((item) => item.title),
+    ['Linux 嵌入式设备树驱动开发实战']
+  );
+});
+
+test('does not reuse a previous domestic item that lacks body-depth verification', () => {
+  const previous = [
+    feedItem('STM32 固件开发教程', 1000, 'legacy-unverified'),
+    { ...feedItem('ESP32 驱动调试实战', 2000, 'verified'), depthVerified: true },
+  ];
+
+  assert.deepEqual(
+    mergeDomesticWithPrevious([], previous, 2).map((entry) => entry.title),
+    ['ESP32 驱动调试实战']
+  );
+});
+
 test('deduplicates identical and near-identical short previous titles', () => {
   const previous = [
-    { ...feedItem('固件教程', 1000, 'short-one'), date: '2026-07-31' },
-    { ...feedItem('固件教程', 2000, 'short-two'), date: '2026-07-30' },
-    { ...feedItem('固件教程上', 3000, 'short-near'), date: '2026-07-29' },
-    { ...feedItem('固件调试', 4000, 'short-debug'), date: '2026-07-28' },
-    { ...feedItem('STM32 驱动实战', 5000, 'short-driver'), date: '2026-07-27' },
+    { ...feedItem('固件教程', 1000, 'short-one'), date: '2026-07-31', depthVerified: true },
+    { ...feedItem('固件教程', 2000, 'short-two'), date: '2026-07-30', depthVerified: true },
+    { ...feedItem('固件教程上', 3000, 'short-near'), date: '2026-07-29', depthVerified: true },
+    { ...feedItem('固件调试', 4000, 'short-debug'), date: '2026-07-28', depthVerified: true },
+    { ...feedItem('STM32 驱动实战', 5000, 'short-driver'), date: '2026-07-27', depthVerified: true },
   ];
 
   const merged = mergeDomesticWithPrevious([], previous, 3);
