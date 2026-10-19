@@ -187,7 +187,8 @@ test('popstate restores the page represented by the current URL', async () => {
   assert.equal(view.pagination.querySelector('.current').textContent, '2');
 });
 
-test('renders safe dated EN and ZH feeds without trusting generated item markup', async () => {
+test('renders safe dated EN and ZH feeds without trusting generated item markup', async (t) => {
+  t.mock.method(Date, 'now', () => Date.parse('2026-08-24T12:00:00.000Z'));
   // Break caught: hostile feed text becomes markup, unsafe links execute, or feed language/date metadata disappears.
   const view = fixture({
     feeds: {
@@ -243,6 +244,42 @@ test('keeps missing and empty feed states readable', async () => {
   await settle();
   assert.match(empty.feedEn.innerHTML, /暂未获取到内容/);
   assert.match(empty.feedZh.innerHTML, /暂未获取到内容/);
+});
+
+test('a domestic shortage is visible without hiding qualified cards or their original dates', async () => {
+  const view = fixture({ feeds: {
+    updatedAt: new Date().toISOString(),
+    boards: {
+      en: [{ title: 'New STM32 board', link: 'https://example.test/en', source: 'Fixture' }],
+      zh: Array.from({ length: 6 }, (_, i) => ({
+        title: `国内精选 ${i + 1}`, link: `https://example.test/zh-${i}`,
+        source: 'Fixture', date: '2026-10-08',
+      })),
+    },
+  } });
+  api().init(view.root);
+  await settle();
+  assert.match(view.feedZh.innerHTML, /role="status"[^>]*>本期收录 6 条精选/);
+  assert.doesNotMatch(view.feedZh.innerHTML, /<li[^>]*role="status"/);
+  assert.equal((view.feedZh.innerHTML.match(/class="feed-link"/g) || []).length, 6);
+  assert.match(view.feedZh.innerHTML, /2026-10-08/);
+  assert.match(view.feedEn.innerHTML, /New STM32 board/);
+  assert.doesNotMatch(view.feedEn.innerHTML, /本期收录/);
+});
+
+test('flags stale feeds after 48 hours and handles invalid update timestamps', async (t) => {
+  const updatedAt = '2026-10-08T03:00:00.000Z';
+  for (const [elapsed, stale] of [[48 * 3600000, false], [48 * 3600000 + 1, true]]) {
+    t.mock.method(Date, 'now', () => Date.parse(updatedAt) + elapsed);
+    const view = fixture({ feeds: { updatedAt, boards: { en: [], zh: [] } } });
+    api().init(view.root);
+    await settle();
+    assert.equal(view.feedUpdated.textContent.includes('已超过 48 小时未更新'), stale);
+  }
+  const invalid = fixture({ feeds: { updatedAt: 'not-a-date', boards: { en: [], zh: [] } } });
+  api().init(invalid.root);
+  await settle();
+  assert.equal(invalid.feedUpdated.textContent, '待更新');
 });
 
 test('rolls back failed optimistic likes and persists successful likes', async () => {

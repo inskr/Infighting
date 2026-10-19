@@ -326,6 +326,18 @@ test('deployment preserves Pages settings and runs every gate before volatile fe
     (step) => step.run === 'node scripts/fetch-feeds.js',
     'volatile feed fetch'
   );
+  const commitFeeds = findStepIndex(
+    steps,
+    (step) => step.name === 'Commit updated feed data',
+    'feed data persistence'
+  );
+  for (const index of [feeds, commitFeeds]) {
+    assert.notEqual(
+      (steps[index]['continue-on-error'] || 'false').split(/\s/)[0],
+      'true',
+      `${steps[index].name} failures must make the run fail instead of silently deploying stale data`
+    );
+  }
   const configure = findStepIndex(
     steps,
     (step) => step.uses === 'actions/configure-pages@v5',

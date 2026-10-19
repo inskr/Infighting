@@ -127,13 +127,15 @@
 
   function formatUpdatedAt(value) {
     var date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return "待更新";
     return (
       "更新于 " +
       date.getFullYear() +
       "-" +
       String(date.getMonth() + 1).padStart(2, "0") +
       "-" +
-      String(date.getDate()).padStart(2, "0")
+      String(date.getDate()).padStart(2, "0") +
+      (Date.now() - date.getTime() > 48 * 3600000 ? " · 已超过 48 小时未更新" : "")
     );
   }
 
@@ -144,7 +146,10 @@
 
   function boardHtml(root, items, langKey) {
     if (!items.length) return '<li class="feed-empty">暂未获取到内容。</li>';
-    return items
+    var status = langKey === "zh" && items.length < 8
+      ? '<li class="feed-empty"><span role="status">本期收录 ' + items.length + ' 条精选，更多内容更新中。</span></li>'
+      : "";
+    return status + items
       .slice(0, 8)
       .map(function (item) {
         return (
@@ -181,14 +186,14 @@
       boards.forEach(function (board) {
         if (board.element) {
           board.element.innerHTML =
-            '<li class="feed-empty">今日内容尚未更新，请运行 fetch-feeds.js 抓取最新资讯。</li>';
+            '<li class="feed-empty">今日内容尚未更新，请稍后再来查看。</li>';
         }
       });
       if (updated) updated.textContent = "待更新";
       return;
     }
 
-    if (updated) updated.textContent = feeds.updatedAt ? formatUpdatedAt(feeds.updatedAt) : "";
+    if (updated) updated.textContent = feeds.updatedAt ? formatUpdatedAt(feeds.updatedAt) : "待更新";
     boards.forEach(function (board) {
       if (!board.element) return;
       var items = Array.isArray(feeds.boards[board.key]) ? feeds.boards[board.key] : [];
