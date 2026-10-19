@@ -14,7 +14,7 @@ const ARCHIVE_FILE = path.join(PUBLIC_DIR, "assets", "js", "feed-archive.js");
 const ARCHIVE_DAYS = 7; // 归档只保留最近 7 天的每日精选
 const ITEMS_PER_BOARD = 8;
 const DOMESTIC_ITEMS_LIMIT = 10;
-const MIN_DOMESTIC_ITEMS = 8;
+const DOMESTIC_TARGET_ITEMS = 8; // 补位目标；不足时发布合格条目，不阻断另一个栏目
 const SUMMARY_MAX_LEN = 180;
 const TIMEOUT_MS = 15000;
 const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
@@ -684,11 +684,17 @@ async function collectBoard(
 }
 
 function assertPublishableBoards(boards) {
+  const total = Object.values(boards || {}).reduce(
+    (sum, items) => sum + (Array.isArray(items) ? items.length : 0), 0
+  );
+  if (total === 0) {
+    throw new Error('No feed items to publish; existing generated data was preserved.');
+  }
   const domesticCount = Array.isArray(boards.zh) ? boards.zh.length : 0;
-  if (domesticCount < MIN_DOMESTIC_ITEMS) {
-    throw new Error(
-      "Domestic daily picks require at least " + MIN_DOMESTIC_ITEMS +
-        " items; got " + domesticCount + ". Existing generated data was preserved."
+  if (domesticCount < DOMESTIC_TARGET_ITEMS) {
+    console.warn(
+      "::warning::Domestic daily picks: " + domesticCount + "/" + DOMESTIC_TARGET_ITEMS +
+        " qualified items. Publishing available content without relaxing quality filters."
     );
   }
 }
@@ -715,7 +721,7 @@ function readPreviousFeeds() {
   }
 }
 
-function mergeDomesticWithPrevious(current, previous, minimum = MIN_DOMESTIC_ITEMS) {
+function mergeDomesticWithPrevious(current, previous, minimum = DOMESTIC_TARGET_ITEMS) {
   const merged = (Array.isArray(current) ? current : []).map((entry) => ({
     ...entry,
     lang: 'zh',
@@ -837,7 +843,7 @@ async function main() {
   boards.zh = mergeDomesticWithPrevious(
     boards.zh,
     previousDomestic,
-    MIN_DOMESTIC_ITEMS
+    DOMESTIC_TARGET_ITEMS
   );
   const fallbackCount = boards.zh.length - freshDomesticCount;
   if (fallbackCount > 0) {

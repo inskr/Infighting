@@ -44,6 +44,25 @@ async function selectThemeBeforeNavigation(page, theme) {
   }, theme);
 }
 
+async function seedHistoricalArchive(page) {
+  // A recovery after a long outage legitimately has no past days inside its seven-day window.
+  // Exercise archive semantics with a fixed prior day, independent of the live feed snapshot.
+  const boards = {
+    en: [{ title: 'STM32 DMA tutorial', link: 'https://example.test/en', source: 'Fixture', lang: 'en' }],
+    zh: [{ title: '嵌入式驱动调试实践', link: 'https://example.test/zh', source: 'Fixture', lang: 'zh' }],
+  };
+  await page.route('**/assets/js/feed-data.js', (route) => route.fulfill({
+    contentType: 'application/javascript',
+    body: `window.FEEDS = ${JSON.stringify({ updatedAt: '2026-10-19T03:00:00.000Z', boards })};`,
+  }));
+  await page.route('**/assets/js/feed-archive.js', (route) => route.fulfill({
+    contentType: 'application/javascript',
+    body: `window.FEED_ARCHIVE = ${JSON.stringify({
+      updatedAt: '2026-10-19T03:00:00.000Z', days: [{ date: '2026-10-18', boards }],
+    })};`,
+  }));
+}
+
 for (const theme of ['dark', 'light']) {
   test(`home ${theme} theme has no serious or critical axe violations`, async ({ page }, testInfo) => {
     // Break caught: the selected home theme introduces a blocking contrast or semantic regression.
@@ -130,6 +149,7 @@ test('tags page has no serious or critical axe violations', async ({ page }, tes
 
 test('archive page has no serious or critical axe violations', async ({ page }, testInfo) => {
   // Break caught: generated archive days introduce blocking heading or list semantics.
+  await seedHistoricalArchive(page);
   await page.goto('/archive.html');
   await expect(page.locator('#archive-days .archive-day').first()).toBeVisible();
   await analyzeStableState(page, testInfo, 'archive — /archive.html');
@@ -137,6 +157,7 @@ test('archive page has no serious or critical axe violations', async ({ page }, 
 
 test('archive generated headings preserve the page, day, and board hierarchy', async ({ page }) => {
   // Break caught: real archive DOM skips directly from its page h1 to generated h3/h4 headings.
+  await seedHistoricalArchive(page);
   await page.goto('/archive.html');
   await expect(page.locator('#archive-days .archive-day').first()).toBeVisible();
   const levels = await page.locator('main h1, main h2, main h3, main h4, main h5, main h6')

@@ -1,7 +1,12 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const { EventEmitter } = require('node:events');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const test = require('node:test');
+const vm = require('node:vm');
 const {
   assertPublishableBoards,
   classifyTopic,
@@ -546,13 +551,129 @@ test('domestic selection does not add relaxed items after four strict items', ()
   );
 });
 
-test('publication gate rejects fewer than eight final domestic items', () => {
-  assert.throws(
-    () => assertPublishableBoards({ en: [], zh: [{}, {}, {}, {}, {}, {}, {}] }),
-    /Domestic daily picks require at least 8 items; got 7/
-  );
-  assert.doesNotThrow(() =>
-    assertPublishableBoards({ en: [], zh: [{}, {}, {}, {}, {}, {}, {}, {}] })
+test('a domestic shortage does not veto a nonempty publication', () => {
+  // Break caught: a domestic count target freezes both boards despite qualified content.
+  for (const boards of [
+    { en: [{}], zh: [] },
+    { en: [{}], zh: [{}, {}, {}, {}, {}, {}] },
+    { en: [], zh: [{}] },
+  ]) assert.doesNotThrow(() => assertPublishableBoards(boards));
+  assert.throws(() => assertPublishableBoards({ en: [], zh: [] }), /No feed items/);
+});
+
+function publicationFixture(t, { domestic = true, international = true, failAll = false } = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'infighting-feeds-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const jsDir = path.join(root, 'public', 'assets', 'js');
+  fs.mkdirSync(jsDir, { recursive: true });
+  const feedFile = path.join(jsDir, 'feed-data.js');
+  const archiveFile = path.join(jsDir, 'feed-archive.js');
+  const oldItems = [
+    'Zephyr 设备驱动开发教程', 'FreeRTOS 内存调试实战',
+    '嵌入式 Linux 设备树配置实践', 'RISC-V 裸机固件构建指南',
+  ].map((title, i) => ({
+    title, link: `https://example.com/previous-${i}`, source: 'Fixture',
+    date: '2026-10-08', summary: '包含代码与配置步骤。', lang: 'zh', depthVerified: true,
+  }));
+  const oldFeeds = { updatedAt: '2026-10-08T03:25:59.057Z', boards: { en: [], zh: oldItems } };
+  fs.writeFileSync(feedFile, `window.FEEDS = ${JSON.stringify(oldFeeds)};\n`);
+  fs.writeFileSync(archiveFile, `window.FEED_ARCHIVE = ${JSON.stringify({
+    days: [{ date: '2026-10-08', boards: oldFeeds.boards }],
+  })};\n`);
+  const before = [feedFile, archiveFile].map((file) => fs.readFileSync(file, 'utf8'));
+  const logs = [];
+  const rss = (items) => '<rss><channel>' + items.map(([title, link]) =>
+    `<item><title>${title}</title><link>${link}</link>` +
+    '<description>STM32 固件驱动开发教程，包含代码和配置步骤。</description>' +
+    '<pubDate>Mon, 19 Oct 2026 01:00:00 GMT</pubDate></item>'
+  ).join('') + '</channel></rss>';
+  const network = {
+    get(url, options, callback) {
+      const req = new EventEmitter();
+      req.destroy = (error) => req.emit('error', error);
+      setImmediate(() => {
+        const response = new EventEmitter();
+        response.statusCode = failAll ? 503 : 200;
+        response.headers = {};
+        response.setEncoding = () => {};
+        response.resume = () => {};
+        callback(response);
+        let body = rss([]);
+        if (url === 'https://www.cnx-software.com/feed/' && international) {
+          body = rss([['New STM32 embedded development board', 'https://example.com/new-en']]);
+        } else if (url === 'https://www.solidot.org/index.rss' && domestic) {
+          body = rss([
+            ['STM32 DMA 环形缓冲接收驱动教程', 'https://example.com/new-zh-dma'],
+            ['ESP32 图像采集模型部署实践', 'https://example.com/new-zh-vision'],
+          ]);
+        } else if (url.startsWith('https://example.com/new-zh-')) {
+          body = `<article>${DEEP_EMBEDDED_BODY}</article>`;
+        }
+        response.emit('data', body);
+        response.emit('end');
+      });
+      return req;
+    },
+  };
+  class FixedDate extends Date {
+    constructor(...args) { super(...(args.length ? args : ['2026-10-19T03:00:00.000Z'])); }
+    static now() { return Date.parse('2026-10-19T03:00:00.000Z'); }
+  }
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'fetch-feeds.js');
+  const sandbox = {
+    module: { exports: {} }, __dirname: path.join(root, 'scripts'),
+    Date: FixedDate, URL, Buffer, process: { env: {} },
+    console: Object.fromEntries(['log', 'warn', 'error'].map((level) =>
+      [level, (...args) => logs.push(args.join(' '))])),
+    require(id) {
+      if (id === 'https') return network;
+      if (id.includes('url-policy')) return require('../public/assets/js/url-policy.js');
+      return require(id);
+    },
+  };
+  vm.runInNewContext(fs.readFileSync(scriptPath, 'utf8'), sandbox, { filename: scriptPath });
+  return {
+    run: sandbox.module.exports.main, logs, before, feedFile, archiveFile,
+    feeds: () => parseGeneratedFeeds(fs.readFileSync(feedFile, 'utf8')),
+    archive: () => JSON.parse(fs.readFileSync(archiveFile, 'utf8')
+      .replace(/^[\s\S]*?window\.FEED_ARCHIVE = /, '').replace(/;\s*$/, '')),
+  };
+}
+
+test('publishes both boards and a new archive day with two fresh and four previous domestic picks', async (t) => {
+  const fixture = publicationFixture(t);
+  await fixture.run();
+  const feeds = fixture.feeds();
+  assert.equal(feeds.updatedAt, '2026-10-19T03:00:00.000Z');
+  assert.deepEqual(feeds.boards.en.map((item) => item.link), ['https://example.com/new-en']);
+  assert.equal(feeds.boards.zh.length, 6);
+  assert.ok(feeds.boards.zh.every((item) => item.depthVerified === true));
+  assert.equal(feeds.boards.zh[2].date, '2026-10-08', 'fallback dates must remain truthful');
+  assert.deepEqual(fixture.archive().days.map((day) => day.date), ['2026-10-19']);
+  assert.equal(fixture.archive().days[0].boards.zh.length, 6);
+  assert.match(fixture.logs.join('\n'), /::warning::.*6.*8/);
+});
+
+test('updates the international board when no new domestic article qualifies', async (t) => {
+  const fixture = publicationFixture(t, { domestic: false });
+  await fixture.run();
+  assert.equal(fixture.feeds().boards.en[0].link, 'https://example.com/new-en');
+  assert.equal(fixture.feeds().boards.zh.length, 4);
+});
+
+test('publishes qualified domestic content when the international board is empty', async (t) => {
+  const fixture = publicationFixture(t, { international: false });
+  await fixture.run();
+  assert.equal(fixture.feeds().boards.en.length, 0);
+  assert.equal(fixture.feeds().boards.zh.length, 6);
+});
+
+test('a total source outage fails without rewriting old feeds or advancing their timestamp', async (t) => {
+  const fixture = publicationFixture(t, { failAll: true });
+  await assert.rejects(fixture.run(), /No feed items were fetched/);
+  assert.deepEqual(
+    [fixture.feedFile, fixture.archiveFile].map((file) => fs.readFileSync(file, 'utf8')),
+    fixture.before
   );
 });
 
